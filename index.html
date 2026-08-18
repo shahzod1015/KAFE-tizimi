@@ -14,13 +14,15 @@
         .active { display: block !important; }
         input, select, button.btn-save { width: 100%; padding: 12px; margin: 6px 0 12px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; }
         button.btn-save { background: #34c759; color: white; border: none; font-weight: bold; cursor: pointer; }
-        .card { border: 1px solid #e5e5e5; padding: 12px; margin-bottom: 10px; border-radius: 8px; background: #fafafa; position: relative; }
+        .card { border: 1px solid #e5e5e5; padding: 12px; margin-bottom: 10px; border-radius: 8px; background: #fafafa; position: relative; overflow: hidden; }
+        .menu-card { display: flex; gap: 12px; align-items: center; }
+        .menu-img { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; background: #eee; flex-shrink: 0; }
         .tag-cost { color: #d97706; font-weight: bold; }
         .tag-price { color: #2563eb; font-weight: bold; }
         .status-pending { background: #fef08a; color: #854d0e; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .status-ready { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .btn-ready { background: #34c759; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; }
-        .btn-delete { background: #ff3b30; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; float: right; }
+        .btn-delete { background: #ff3b30; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .history-card { border-left: 4px solid #007aff; background: #f8fafc; padding: 10px; margin-bottom: 8px; border-radius: 4px; }
     </style>
 </head>
@@ -44,7 +46,7 @@
         <button class="btn-save" onclick="buyurtmaBering()">👨‍🍳 Oshxonaga Yuborish</button>
     </div>
 
-    <!-- 2. OSHXONA (IKKINCHI IPHONE UCHUN) -->
+    <!-- 2. OSHXONA -->
     <div id="kitchen" class="tab-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h3>👨‍🍳 Oshxona Ekrani</h3>
@@ -53,12 +55,13 @@
         <div id="kitchen-orders-list">Yuklanmoqda...</div>
     </div>
 
-    <!-- 3. MENYU (TAOMLAR) -->
+    <!-- 3. MENYU (TAOMLAR VA RASM) -->
     <div id="recipes" class="tab-content">
         <h3>Yangi Taom Yaratish</h3>
         <input type="text" id="menu-title" placeholder="Taom nomi (masalan: Classic Hotdog)">
         <input type="number" id="menu-price" placeholder="Sotuv narxi (masalan: 12000 so'm)">
         <input type="number" id="menu-cost" placeholder="Tan narxi (masalan: 6000 so'm)">
+        <input type="text" id="menu-image" placeholder="Rasm havolasi/URL (Internetdagi rasm ssilkasi)">
         <button class="btn-save" onclick="taomQoshish()">Taomni Saqlash</button>
 
         <h4 style="margin-top:15px;">Mavjud Taomlar:</h4>
@@ -78,7 +81,7 @@
         <div id="stock-list"></div>
     </div>
 
-    <!-- 5. KASSA VA KUNLIK TARIX -->
+    <!-- 5. KASSA VA SANA TARIXI -->
     <div id="reports" class="tab-content">
         <h3>📊 Bugungi Kassa (<span id="today-date-str"></span>)</h3>
         <div class="card">Bugungi Tushum: <b id="rep-rev" class="tag-price">0</b> so'm</div>
@@ -105,13 +108,11 @@
             if(id === 'reports') hisobotniYuklash();
         }
 
-        // Bugungi sanani olish (YYYY-MM-DD)
         function getTodayString() {
-            const today = new Date();
-            return today.toISOString().split('T')[0];
+            return new Date().toISOString().split('T')[0];
         }
 
-        // 1. Masalliq Qo'shish (Ombor)
+        // Ombor
         async function masalliqQoshish() {
             const name = document.getElementById('ing-name').value;
             const quantity = parseFloat(document.getElementById('ing-qty').value);
@@ -141,21 +142,23 @@
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
-        // 2. Taom Qo'shish & O'chirish
+        // Taom qo'shish (Rasm bilan)
         async function taomQoshish() {
             const title = document.getElementById('menu-title').value;
             const price = parseFloat(document.getElementById('menu-price').value);
             const cost = parseFloat(document.getElementById('menu-cost').value) || 0;
+            const image_url = document.getElementById('menu-image').value;
 
             if(!title || isNaN(price)) return alert("Taom nomi va sotuv narxini kiriting!");
 
-            const { error } = await db.from('menu').insert([{ title, price, cost }]);
+            const { error } = await db.from('menu').insert([{ title, price, cost, image_url }]);
             if(error) alert("Xato: " + error.message);
             else { 
                 alert("Taom saqlandi!"); 
                 document.getElementById('menu-title').value = '';
                 document.getElementById('menu-price').value = '';
                 document.getElementById('menu-cost').value = '';
+                document.getElementById('menu-image').value = '';
                 tanlovlarniYuklash(); 
             }
         }
@@ -175,17 +178,27 @@
             let menuCards = '';
             (menu || []).forEach(m => {
                 const costVal = m.cost || 0;
+                const defaultImg = 'https://via.placeholder.com/70?text=No+Img';
+                const imgSrc = m.image_url && m.image_url.startsWith('http') ? m.image_url : defaultImg;
+
                 menuCards += `<div class="card">
-                    <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑 O'chirish</button>
-                    <b>${m.title}</b><br>
-                    Sotuv: <span class="tag-price">${m.price.toLocaleString()} so'm</span> | 
-                    Tan narx: <span class="tag-cost">${costVal.toLocaleString()} so'm</span>
+                    <div class="menu-card">
+                        <img src="${imgSrc}" class="menu-img" alt="${m.title}">
+                        <div style="flex-grow:1;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <b>${m.title}</b>
+                                <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑 O'chirish</button>
+                            </div>
+                            <small>Sotuv: <span class="tag-price">${m.price.toLocaleString()} so'm</span></small><br>
+                            <small>Tan narx: <span class="tag-cost">${costVal.toLocaleString()} so'm</span></small>
+                        </div>
+                    </div>
                 </div>`;
             });
             document.getElementById('menu-with-cost-list').innerHTML = menuCards || 'Taomlar yo\'q';
         }
 
-        // 3. OFITSIANT: Buyurtma berish
+        // POS
         async function buyurtmaBering() {
             const menu_id = document.getElementById('pos-select').value;
             if(!menu_id) return alert("Taom tanlanmagan!");
@@ -207,7 +220,7 @@
             else alert("Buyurtma oshxonaga yuborildi!");
         }
 
-        // 4. OSHXONA: Buyurtmalarni ko'rish va "Tayyor" deb belgilash
+        // Oshxona
         async function oshxonaniYuklash() {
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
             let html = '';
@@ -236,7 +249,7 @@
             else oshxonaniYuklash();
         }
 
-        // 5. KASSA VA SANA BO'YICHA XISOBO
+        // Kassa va Tarix
         async function hisobotniYuklash() {
             const todayStr = getTodayString();
             document.getElementById('today-date-str').innerText = todayStr;
@@ -247,7 +260,7 @@
             let dailyGroups = {};
 
             (sales || []).forEach(s => {
-                const dateStr = s.created_at.split('T')[0]; // Sanani ajratib olish (YYYY-MM-DD)
+                const dateStr = s.created_at.split('T')[0];
 
                 if (!dailyGroups[dateStr]) {
                     dailyGroups[dateStr] = { rev: 0, cost: 0, profit: 0, count: 0 };
@@ -262,7 +275,6 @@
                 dailyGroups[dateStr].profit += profit;
                 dailyGroups[dateStr].count += 1;
 
-                // Agar bugungi sana bo'lsa
                 if (dateStr === todayStr) {
                     todayRev += rev;
                     todayCost += cost;
@@ -270,15 +282,13 @@
                 }
             });
 
-            // Bugungi ko'rsatkichlar
             document.getElementById('rep-rev').innerText = todayRev.toLocaleString();
             document.getElementById('rep-cost').innerText = todayCost.toLocaleString();
             document.getElementById('rep-profit').innerText = todayProfit.toLocaleString();
 
-            // O'tgan kunlar tarixi
             let historyHtml = '';
             Object.keys(dailyGroups).sort().reverse().forEach(date => {
-                if (date !== todayStr) { // Faqat o'tib ketgan kunlarni ro'yxatga chiqarish
+                if (date !== todayStr) {
                     const item = dailyGroups[date];
                     historyHtml += `<div class="history-card">
                         <b>📅 ${date} Sanadagi Savdo:</b><br>
@@ -291,10 +301,7 @@
             document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali o\'tgan kunlar tarixi yo\'q.</i>';
         }
 
-        // Dasturiy ishga tushirish
         tanlovlarniYuklash();
-        
-        // Oshxona va Kassa uchun har 10 soniyada avtomatik yangilab turish (ixtiyoriy)
         setInterval(() => {
             if(document.getElementById('kitchen').classList.contains('active')) oshxonaniYuklash();
         }, 10000);
