@@ -10,11 +10,23 @@
         body { background: #f0f2f5; padding: 15px; color: #333; }
         .nav { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
         .nav button { padding: 10px 14px; background: #007aff; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; white-space: nowrap; cursor: pointer; }
-        .tab-content { display: none; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .tab-content { display: none; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .active { display: block !important; }
         input, select, button.btn-save { width: 100%; padding: 12px; margin: 6px 0 12px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; }
         button.btn-save { background: #34c759; color: white; border: none; font-weight: bold; cursor: pointer; }
-        .card { border: 1px solid #e5e5e5; padding: 12px; margin-bottom: 10px; border-radius: 8px; background: #fafafa; position: relative; overflow: hidden; }
+        
+        /* Kartochka va Menyular dizayni */
+        .card { border: 1px solid #e5e5e5; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: #fff; }
+        
+        /* Ofitsiant Menyu Setkasi (Grid) */
+        .pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 10px; }
+        .pos-card { border: 1px solid #eee; border-radius: 12px; padding: 10px; text-align: center; background: #fafafa; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+        .pos-card img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; background: #e2e8f0; margin-bottom: 8px; }
+        .pos-card h4 { font-size: 14px; margin-bottom: 4px; color: #1e293b; line-height: 1.2; }
+        .pos-card .price { color: #2563eb; font-weight: bold; font-size: 13px; margin-bottom: 8px; }
+        .pos-card button { background: #34c759; color: white; border: none; padding: 8px 5px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; width: 100%; }
+        
+        /* Boshqa teglar */
         .menu-card { display: flex; gap: 12px; align-items: center; }
         .menu-img { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; background: #eee; flex-shrink: 0; }
         .tag-cost { color: #d97706; font-weight: bold; }
@@ -31,31 +43,30 @@
     <h2 style="margin-bottom: 15px;">☕ Kafe Boshqaruvi</h2>
 
     <div class="nav">
-        <button onclick="switchTab('pos')">📱 Ofitsiant</button>
+        <button onclick="switchTab('pos')">📱 Ofitsiant (Menyu)</button>
         <button onclick="switchTab('kitchen')">👨‍🍳 Oshxona</button>
-        <button onclick="switchTab('recipes')">📖 Menyu (Taomlar)</button>
+        <button onclick="switchTab('recipes')">📖 Menyu Yaratish</button>
         <button onclick="switchTab('stock')">📦 Ombor</button>
         <button onclick="switchTab('reports')">📊 Kassa va Tarix</button>
     </div>
 
-    <!-- 1. OFITSIANT -->
+    <!-- 1. OFITSIANT (RASMLI KATALOG) -->
     <div id="pos" class="tab-content active">
-        <h3>Yangi Buyurtma</h3>
-        <label>Taomni tanlang:</label>
-        <select id="pos-select"></select>
-        <button class="btn-save" onclick="buyurtmaBering()">👨‍🍳 Oshxonaga Yuborish</button>
+        <h3>🍽 Taomlar Katalogi</h3>
+        <p style="font-size:12px; color:#666; margin-bottom:10px;">Buyurtma berish uchun taom ostidagi tugmani bosing:</p>
+        <div id="pos-menu-grid" class="pos-grid">Yuklanmoqda...</div>
     </div>
 
     <!-- 2. OSHXONA -->
     <div id="kitchen" class="tab-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h3>👨‍🍳 Oshxona Ekrani</h3>
-            <button onclick="oshxonaniYuklash()" style="padding:5px 10px; background:#007aff; color:white; border:none; border-radius:6px;">🔄 Yangilash</button>
+            <button onclick="oshxonaniYuklash()" style="padding:6px 12px; background:#007aff; color:white; border:none; border-radius:6px; font-weight:bold;">🔄 Yangilash</button>
         </div>
         <div id="kitchen-orders-list">Yuklanmoqda...</div>
     </div>
 
-    <!-- 3. MENYU (TAOMLAR VA FOTO) -->
+    <!-- 3. MENYU YARATISH -->
     <div id="recipes" class="tab-content">
         <h3>Yangi Taom Yaratish</h3>
         <input type="text" id="menu-title" placeholder="Taom nomi (masalan: Classic Hotdog)">
@@ -67,7 +78,7 @@
         
         <button class="btn-save" id="btn-save-menu" onclick="taomQoshish()">Taomni Saqlash</button>
 
-        <h4 style="margin-top:15px;">Mavjud Taomlar:</h4>
+        <h4 style="margin-top:15px;">Mavjud Taomlar Sozlamasi:</h4>
         <div id="menu-with-cost-list"></div>
     </div>
 
@@ -84,7 +95,7 @@
         <div id="stock-list"></div>
     </div>
 
-    <!-- 5. KASSA VA SANA TARIXI -->
+    <!-- 5. KASSA VA TARIX -->
     <div id="reports" class="tab-content">
         <h3>📊 Bugungi Kassa (<span id="today-date-str"></span>)</h3>
         <div class="card">Bugungi Tushum: <b id="rep-rev" class="tag-price">0</b> so'm</div>
@@ -115,7 +126,7 @@
             return new Date().toISOString().split('T')[0];
         }
 
-        // Taom qo'shish (Galereyadagi Rasm bilan)
+        // Taom qo'shish
         async function taomQoshish() {
             const title = document.getElementById('menu-title').value;
             const price = parseFloat(document.getElementById('menu-price').value);
@@ -127,7 +138,6 @@
 
             let image_url = '';
 
-            // Agar rasm tanlangan bo'lsa, Supabase Storage'ga yuklaymiz
             if(fileInput.files.length > 0) {
                 saveBtn.innerText = "⏳ Rasm yuklanmoqda...";
                 saveBtn.disabled = true;
@@ -147,7 +157,6 @@
                     return;
                 }
 
-                // Public URL olish
                 const { data: publicUrlData } = db.storage.from('menu-images').getPublicUrl(fileName);
                 image_url = publicUrlData.publicUrl;
             }
@@ -175,15 +184,31 @@
             }
         }
 
+        // Menyu va Rasmli Kataloglarni Yuklash
         async function tanlovlarniYuklash() {
             const { data: menu } = await db.from('menu').select('*');
-            let mOpt = (menu || []).map(m => `<option value="${m.id}">${m.title} (${m.price} so'm)</option>`).join('');
-            document.getElementById('pos-select').innerHTML = mOpt || '<option>Taomlar yo\'q</option>';
+            const defaultImg = 'https://via.placeholder.com/150?text=Rasm+Yo%27q';
 
+            // 1. Ofitsiant uchun Rasmli Setka (Grid)
+            let posHtml = '';
+            (menu || []).forEach(m => {
+                const imgSrc = m.image_url || defaultImg;
+                posHtml += `
+                <div class="pos-card">
+                    <div>
+                        <img src="${imgSrc}" alt="${m.title}">
+                        <h4>${m.title}</h4>
+                        <div class="price">${m.price.toLocaleString()} so'm</div>
+                    </div>
+                    <button onclick="buyurtmaBeringDirect(${m.id})">🛒 Buyurtma</button>
+                </div>`;
+            });
+            document.getElementById('pos-menu-grid').innerHTML = posHtml || '<p style="grid-column:1/-1;">Hali taomlar qo\'shilmagan.</p>';
+
+            // 2. Menyu sozlamalari ro'yxati
             let menuCards = '';
             (menu || []).forEach(m => {
                 const costVal = m.cost || 0;
-                const defaultImg = 'https://via.placeholder.com/70?text=Rasm+yoq';
                 const imgSrc = m.image_url || defaultImg;
 
                 menuCards += `<div class="card">
@@ -201,6 +226,25 @@
                 </div>`;
             });
             document.getElementById('menu-with-cost-list').innerHTML = menuCards || 'Taomlar yo\'q';
+        }
+
+        // Ofitsiant menyudan tugmani bosganda buyurtma ketishi
+        async function buyurtmaBeringDirect(menu_id) {
+            const { data: menuItem } = await db.from('menu').select('*').eq('id', menu_id).single();
+            if(!menuItem) return alert("Taom topilmadi!");
+
+            const price = menuItem.price || 0;
+            const cost = menuItem.cost || 0;
+
+            const { error } = await db.from('sales').insert([{ 
+                total_amount: price, 
+                total_cost: cost, 
+                profit: (price - cost),
+                status: 'kutilmoqda'
+            }]);
+
+            if(error) alert("Xato: " + error.message);
+            else alert(`✅ "${menuItem.title}" buyurtmaga qo'shildi va oshxonaga yuborildi!`);
         }
 
         // Ombor
@@ -231,28 +275,6 @@
                 html += `<div class="card"><b>${i.name}</b>: ${i.quantity} ${i.unit} (${i.cost_per_unit || 0} so'm)</div>`;
             });
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
-        }
-
-        // POS
-        async function buyurtmaBering() {
-            const menu_id = document.getElementById('pos-select').value;
-            if(!menu_id) return alert("Taom tanlanmagan!");
-
-            const { data: menuItem } = await db.from('menu').select('*').eq('id', menu_id).single();
-            if(!menuItem) return alert("Taom topilmadi!");
-
-            const price = menuItem.price || 0;
-            const cost = menuItem.cost || 0;
-
-            const { error } = await db.from('sales').insert([{ 
-                total_amount: price, 
-                total_cost: cost, 
-                profit: (price - cost),
-                status: 'kutilmoqda'
-            }]);
-
-            if(error) alert("Xato: " + error.message);
-            else alert("Buyurtma oshxonaga yuborildi!");
         }
 
         // Oshxona
