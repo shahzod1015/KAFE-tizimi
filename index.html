@@ -19,12 +19,18 @@
         .card { border: 1px solid #e5e5e5; padding: 12px; margin-bottom: 10px; border-radius: 10px; background: #fff; }
         
         /* Ofitsiant Menyu Setkasi (Grid) */
-        .pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 10px; }
+        .pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 12px; margin-top: 10px; }
         .pos-card { border: 1px solid #eee; border-radius: 12px; padding: 10px; text-align: center; background: #fafafa; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
-        .pos-card img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; background: #e2e8f0; margin-bottom: 8px; }
-        .pos-card h4 { font-size: 14px; margin-bottom: 4px; color: #1e293b; line-height: 1.2; }
-        .pos-card .price { color: #2563eb; font-weight: bold; font-size: 13px; margin-bottom: 8px; }
-        .pos-card button { background: #34c759; color: white; border: none; padding: 8px 5px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; width: 100%; }
+        .pos-card img { width: 100%; height: 95px; object-fit: cover; border-radius: 8px; background: #e2e8f0; margin-bottom: 6px; }
+        .pos-card h4 { font-size: 14px; margin-bottom: 2px; color: #1e293b; line-height: 1.2; }
+        .pos-card .price { color: #2563eb; font-weight: bold; font-size: 13px; margin-bottom: 6px; }
+        
+        /* Soni (Kolichestvo) boshqaruvi */
+        .qty-box { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px; }
+        .qty-btn { width: 28px; height: 28px; background: #e2e8f0; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .qty-val { font-weight: bold; font-size: 14px; width: 20px; }
+
+        .pos-card button.btn-order { background: #34c759; color: white; border: none; padding: 8px 5px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; width: 100%; }
         
         /* Boshqa teglar */
         .menu-card { display: flex; gap: 12px; align-items: center; }
@@ -55,10 +61,26 @@
         <button onclick="switchTab('reports')">📊 Kassa va Tarix</button>
     </div>
 
-    <!-- 1. OFITSIANT (RASMLI KATALOG) -->
+    <!-- 1. OFITSIANT (STOL VA MIQDOR BILAN) -->
     <div id="pos" class="tab-content active">
+        <div style="background:#e0f2fe; padding:10px; border-radius:8px; margin-bottom:12px;">
+            <label style="font-size:13px; font-weight:bold; color:#0369a1;">🪑 Stol raqamini tanlang:</label>
+            <select id="table-select" style="margin: 4px 0 0 0; padding: 8px; font-weight: bold;">
+                <option value="1">1-Stol</option>
+                <option value="2">2-Stol</option>
+                <option value="3">3-Stol</option>
+                <option value="4">4-Stol</option>
+                <option value="5">5-Stol</option>
+                <option value="6">6-Stol</option>
+                <option value="7">7-Stol</option>
+                <option value="8">8-Stol</option>
+                <option value="VIP">VIP Xona</option>
+                <option value="Soba">Soba / Gazebo</option>
+            </select>
+        </div>
+
         <h3>🍽 Taomlar Katalogi</h3>
-        <p style="font-size:12px; color:#666; margin-bottom:10px;">Buyurtma berish uchun taom ostidagi tugmani bosing:</p>
+        <p style="font-size:12px; color:#666; margin-bottom:10px;">Miqdorni tanlang va buyurtma bering:</p>
         <div id="pos-menu-grid" class="pos-grid">Yuklanmoqda...</div>
     </div>
 
@@ -117,6 +139,9 @@
         const SUPABASE_URL = "https://wrrsvrgdinfmnuwewtoa.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Har bir taomning tanlangan miqdorini saqlash uchun
+        let itemQuantities = {};
 
         function switchTab(id) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -189,6 +214,14 @@
             }
         }
 
+        // Miqdorni o'zgartirish (+ va - tugmalari)
+        function changeQty(id, delta) {
+            if (!itemQuantities[id]) itemQuantities[id] = 1;
+            itemQuantities[id] += delta;
+            if (itemQuantities[id] < 1) itemQuantities[id] = 1;
+            document.getElementById(`qty-val-${id}`).innerText = itemQuantities[id];
+        }
+
         // Menyu va Rasmli Kataloglarni Yuklash
         async function tanlovlarniYuklash() {
             const { data: menu } = await db.from('menu').select('*');
@@ -197,7 +230,9 @@
             // 1. Ofitsiant uchun Rasmli Setka (Grid)
             let posHtml = '';
             (menu || []).forEach(m => {
+                if (!itemQuantities[m.id]) itemQuantities[m.id] = 1;
                 const imgSrc = m.image_url || defaultImg;
+
                 posHtml += `
                 <div class="pos-card">
                     <div>
@@ -205,7 +240,14 @@
                         <h4>${m.title}</h4>
                         <div class="price">${m.price.toLocaleString()} so'm</div>
                     </div>
-                    <button onclick="buyurtmaBeringDirect(${m.id})">🛒 Buyurtma</button>
+                    <div>
+                        <div class="qty-box">
+                            <button class="qty-btn" onclick="changeQty(${m.id}, -1)">-</button>
+                            <span class="qty-val" id="qty-val-${m.id}">${itemQuantities[m.id]}</span>
+                            <button class="qty-btn" onclick="changeQty(${m.id}, 1)">+</button>
+                        </div>
+                        <button class="btn-order" onclick="buyurtmaBeringDirect(${m.id})">🛒 Buyurtma</button>
+                    </div>
                 </div>`;
             });
             document.getElementById('pos-menu-grid').innerHTML = posHtml || '<p style="grid-column:1/-1;">Hali taomlar qo\'shilmagan.</p>';
@@ -233,23 +275,31 @@
             document.getElementById('menu-with-cost-list').innerHTML = menuCards || 'Taomlar yo\'q';
         }
 
-        // Ofitsiant buyurtma berishi
+        // Buyurtma berish (Stol raqami va miqdori bilan)
         async function buyurtmaBeringDirect(menu_id) {
+            const tableNum = document.getElementById('table-select').value;
+            const qty = itemQuantities[menu_id] || 1;
+
             const { data: menuItem } = await db.from('menu').select('*').eq('id', menu_id).single();
             if(!menuItem) return alert("Taom topilmadi!");
 
-            const price = menuItem.price || 0;
-            const cost = menuItem.cost || 0;
+            const totalPrice = (menuItem.price || 0) * qty;
+            const totalCost = (menuItem.cost || 0) * qty;
 
             const { error } = await db.from('sales').insert([{ 
-                total_amount: price, 
-                total_cost: cost, 
-                profit: (price - cost),
-                status: 'kutilmoqda'
+                total_amount: totalPrice, 
+                total_cost: totalCost, 
+                profit: (totalPrice - totalCost),
+                status: `Stol #${tableNum} - ${menuItem.title} (x${qty})`
             }]);
 
             if(error) alert("Xato: " + error.message);
-            else alert(`✅ "${menuItem.title}" buyurtmaga qo'shildi va oshxonaga yuborildi!`);
+            else {
+                alert(`✅ Stol #${tableNum}: ${qty}x ${menuItem.title} oshxonaga yuborildi!`);
+                // Miqdorni qayta 1 ga tushirib qo'yamiz
+                itemQuantities[menu_id] = 1;
+                document.getElementById(`qty-val-${menu_id}`).innerText = 1;
+            }
         }
 
         // Ombor
@@ -288,19 +338,21 @@
             let html = '';
 
             (sales || []).slice(0, 30).forEach((s, idx) => {
-                const isReady = s.status === 'tayyor';
+                const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
                 const timeStr = new Date(s.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
                 html += `<div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b>#${sales.length - idx} Buyurtma (${timeStr})</b>
+                        <b>#${sales.length - idx} (${timeStr})</b>
                         <span class="${isReady ? 'status-ready' : 'status-pending'}">
                             ${isReady ? '✅ TAYYOR' : '⏱ TAYYORLANMOQDA'}
                         </span>
                     </div>
-                    <p style="margin-top:5px;">Summa: ${s.total_amount.toLocaleString()} so'm</p>
+                    <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#0f172a;">${s.status || 'Buyurtma'}</p>
+                    <p style="margin-top:2px; font-size:13px; color:#475569;">Summa: <b>${s.total_amount.toLocaleString()}</b> so'm</p>
+                    
                     <div class="kitchen-actions">
-                        ${!isReady ? `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id})">✅ TAYYOR BO'LDI</button>` : ''}
+                        ${!isReady ? `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${s.status}')">✅ TAYYOR BO'LDI</button>` : ''}
                         <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
                     </div>
                 </div>`;
@@ -308,13 +360,13 @@
             document.getElementById('kitchen-orders-list').innerHTML = html || 'Buyurtmalar yo\'q';
         }
 
-        async function buyurtmaniTayyorLash(id) {
-            const { error } = await db.from('sales').update({ status: 'tayyor' }).eq('id', id);
+        async function buyurtmaniTayyorLash(id, currentStatus) {
+            const updatedStatus = currentStatus + " [TAYYOR BO'LDI]";
+            const { error } = await db.from('sales').update({ status: updatedStatus }).eq('id', id);
             if(error) alert("Xatolik: " + error.message);
             else oshxonaniYuklash();
         }
 
-        // Buyurtmani bekor qilish (o'chirish)
         async function buyurtmaniBekorQilish(id) {
             if(confirm("Ushbu buyurtmani bekor qilmoqchimisiz? (Baza va kassadan o'chiriladi)")) {
                 const { error } = await db.from('sales').delete().eq('id', id);
