@@ -14,11 +14,11 @@
         .active { display: block !important; }
         input, select, button.btn-save { width: 100%; padding: 12px; margin: 6px 0 12px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; }
         button.btn-save { background: #34c759; color: white; border: none; font-weight: bold; cursor: pointer; }
-        .card { border: 1px solid #e5e5e5; padding: 12px; margin-bottom: 10px; border-radius: 8px; background: #fafafa; }
+        .card { border: 1px solid #e5e5e5; padding: 12px; margin-bottom: 10px; border-radius: 8px; background: #fafafa; position: relative; }
         .tag-cost { color: #d97706; font-weight: bold; }
         .tag-price { color: #2563eb; font-weight: bold; }
         .order-status { display: inline-block; padding: 4px 8px; border-radius: 4px; background: #fef08a; color: #854d0e; font-size: 12px; font-weight: bold; }
-        .btn-delete { background: #ff3b30; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; float: right; }
+        .btn-delete { background: #ff3b30; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; float: right; }
     </style>
 </head>
 <body>
@@ -55,7 +55,7 @@
         <input type="number" id="menu-cost" placeholder="Tan narxi / O'zingizga tushishi (masalan: 6000 so'm)">
         <button class="btn-save" onclick="taomQoshish()">Taomni Saqlash</button>
 
-        <h4 style="margin-top:15px;">Mavjud Taomlar va Narxlari:</h4>
+        <h4 style="margin-top:15px;">Mavjud Taomlar:</h4>
         <div id="menu-with-cost-list"></div>
     </div>
 
@@ -116,7 +116,7 @@
         }
 
         async function omborniYuklash() {
-            const { data, error } = await db.from('ingredients').select('*');
+            const { data } = await db.from('ingredients').select('*');
             let html = '';
             (data || []).forEach(i => {
                 html += `<div class="card">
@@ -126,7 +126,7 @@
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
-        // 2. Taom Qo'shish (Sotuv Narxi va Tan Narxi Bilan)
+        // 2. Taom Qo'shish
         async function taomQoshish() {
             const title = document.getElementById('menu-title').value;
             const price = parseFloat(document.getElementById('menu-price').value);
@@ -145,7 +145,19 @@
             }
         }
 
-        // 3. Menyuni yuklash
+        // 3. Taomni O'chirish 🗑
+        async function taomniOchirish(id, title) {
+            if(confirm(`Rostdan ham "${title}" taomini o'chirmoqchimisiz?`)) {
+                const { error } = await db.from('menu').delete().eq('id', id);
+                if(error) alert("O'chirishda xatolik: " + error.message);
+                else {
+                    alert("Taom o'chirildi!");
+                    tanlovlarniYuklash();
+                }
+            }
+        }
+
+        // 4. Menyuni yuklash va ko'rsatish
         async function tanlovlarniYuklash() {
             const { data: menu } = await db.from('menu').select('*');
 
@@ -157,16 +169,17 @@
                 const costVal = m.cost || 0;
                 const profitVal = m.price - costVal;
                 menuCards += `<div class="card">
+                    <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑 O'chirish</button>
                     <b>${m.title}</b><br>
                     Sotuv narxi: <span class="tag-price">${m.price.toLocaleString()} so'm</span> | 
-                    Tan narxi: <span class="tag-cost">${costVal.toLocaleString()} so'm</span> | 
+                    Tan narxi: <span class="tag-cost">${costVal.toLocaleString()} so'm</span><br>
                     Kutilayotgan foyda: <b style="color:green">${profitVal.toLocaleString()} so'm</b>
                 </div>`;
             });
             document.getElementById('menu-with-cost-list').innerHTML = menuCards || 'Taomlar hali kiritilmagan';
         }
 
-        // 4. Ofitsiant: Buyurtma Yuborish (POS)
+        // 5. Ofitsiant: Buyurtma Yuborish (POS)
         async function buyurtmaBering() {
             const menu_id = document.getElementById('pos-select').value;
             if(!menu_id) return alert("Taom tanlanmagan!");
@@ -185,23 +198,23 @@
             }]);
 
             if(error) alert("Xato: " + error.message);
-            else alert(`Buyurtma oshxonaga yuborildi! (Foyda: ${profit} so'm)`);
+            else alert(`Buyurtma yuborildi! (Sof foyda: ${profit.toLocaleString()} so'm)`);
         }
 
-        // 5. Oshxona Ekranini Yuklash
+        // 6. Oshxona Ekranini Yuklash
         async function oshxonaniYuklash() {
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
             let html = '';
             (sales || []).slice(0, 20).forEach((s, idx) => {
                 html += `<div class="card">
                     <b>#${sales.length - idx} Buyurtma</b> — <span class="order-status">Oshxonada</span><br>
-                    <small>Sotildi: ${s.total_amount} so'm | Tan narx: ${s.total_cost || 0} so'm</small>
+                    <small>Sotildi: ${s.total_amount.toLocaleString()} so'm | Tan narx: ${(s.total_cost || 0).toLocaleString()} so'm</small>
                 </div>`;
             });
             document.getElementById('kitchen-orders-list').innerHTML = html || 'Hozircha buyurtmalar yo\'q';
         }
 
-        // 6. Kassa Hisoboti (Foyda Otchoti)
+        // 7. Kassa Hisoboti
         async function hisobotniYuklash() {
             const { data } = await db.from('sales').select('*');
             let rev = 0, cost = 0, profit = 0;
@@ -215,7 +228,7 @@
             document.getElementById('rep-profit').innerText = profit.toLocaleString();
         }
 
-        // Boshlanishida yuklash
+        // Boshlang'ich
         tanlovlarniYuklash();
     </script>
 </body>
