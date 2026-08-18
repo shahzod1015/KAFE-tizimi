@@ -3,11 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kafe POS & Boshqaruv</title>
+    <title>CHEF Hotdog POS</title>
+
+    <!-- TELEFON EKRANI UCHUN LOGOTIP (App Icon / Favicon) -->
+    <link rel="icon" type="image/png" href="https://i.ibb.co/L6S9f31/chef-hotdog-logo.png">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/L6S9f31/chef-hotdog-logo.png">
+    
+    <!-- PWA (Ilova sifatida saqlash) sozlamalari -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CHEF hotdog">
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; }
         body { background: #f0f2f5; padding: 15px; color: #333; }
+        
+        /* Yuqori logotip va sarlavha qismi */
+        .app-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; background: #fff; padding: 10px 15px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        .app-header img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #ffcc00; }
+        .app-header h2 { font-size: 20px; font-weight: 800; color: #1e293b; }
+
         .nav { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
         .nav button { padding: 10px 14px; background: #007aff; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; white-space: nowrap; cursor: pointer; }
         .tab-content { display: none; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
@@ -51,7 +67,11 @@
 </head>
 <body>
 
-    <h2 style="margin-bottom: 15px;">☕ Kafe Boshqaruvi</h2>
+    <!-- LOGOTIP VA SARLAVHA -->
+    <div class="app-header">
+        <img src="https://i.ibb.co/L6S9f31/chef-hotdog-logo.png" alt="CHEF HOTDOG Logo">
+        <h2>CHEF HOTDOG</h2>
+    </div>
 
     <div class="nav">
         <button onclick="switchTab('pos')">📱 Ofitsiant (Menyu)</button>
@@ -140,7 +160,6 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Har bir taomning tanlangan miqdorini saqlash uchun
         let itemQuantities = {};
 
         function switchTab(id) {
@@ -156,7 +175,6 @@
             return new Date().toISOString().split('T')[0];
         }
 
-        // Taom qo'shish
         async function taomQoshish() {
             const title = document.getElementById('menu-title').value;
             const price = parseFloat(document.getElementById('menu-price').value);
@@ -214,7 +232,6 @@
             }
         }
 
-        // Miqdorni o'zgartirish (+ va - tugmalari)
         function changeQty(id, delta) {
             if (!itemQuantities[id]) itemQuantities[id] = 1;
             itemQuantities[id] += delta;
@@ -222,12 +239,10 @@
             document.getElementById(`qty-val-${id}`).innerText = itemQuantities[id];
         }
 
-        // Menyu va Rasmli Kataloglarni Yuklash
         async function tanlovlarniYuklash() {
             const { data: menu } = await db.from('menu').select('*');
             const defaultImg = 'https://via.placeholder.com/150?text=Rasm+Yo%27q';
 
-            // 1. Ofitsiant uchun Rasmli Setka (Grid)
             let posHtml = '';
             (menu || []).forEach(m => {
                 if (!itemQuantities[m.id]) itemQuantities[m.id] = 1;
@@ -252,7 +267,6 @@
             });
             document.getElementById('pos-menu-grid').innerHTML = posHtml || '<p style="grid-column:1/-1;">Hali taomlar qo\'shilmagan.</p>';
 
-            // 2. Menyu sozlamalari ro'yxati
             let menuCards = '';
             (menu || []).forEach(m => {
                 const costVal = m.cost || 0;
@@ -275,7 +289,6 @@
             document.getElementById('menu-with-cost-list').innerHTML = menuCards || 'Taomlar yo\'q';
         }
 
-        // Buyurtma berish (Stol raqami va miqdori bilan)
         async function buyurtmaBeringDirect(menu_id) {
             const tableNum = document.getElementById('table-select').value;
             const qty = itemQuantities[menu_id] || 1;
@@ -296,13 +309,11 @@
             if(error) alert("Xato: " + error.message);
             else {
                 alert(`✅ Stol #${tableNum}: ${qty}x ${menuItem.title} oshxonaga yuborildi!`);
-                // Miqdorni qayta 1 ga tushirib qo'yamiz
                 itemQuantities[menu_id] = 1;
                 document.getElementById(`qty-val-${menu_id}`).innerText = 1;
             }
         }
 
-        // Ombor
         async function masalliqQoshish() {
             const name = document.getElementById('ing-name').value;
             const quantity = parseFloat(document.getElementById('ing-qty').value);
@@ -332,7 +343,6 @@
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
-        // Oshxona
         async function oshxonaniYuklash() {
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
             let html = '';
@@ -375,7 +385,6 @@
             }
         }
 
-        // Kassa
         async function hisobotniYuklash() {
             const todayStr = getTodayString();
             document.getElementById('today-date-str').innerText = todayStr;
