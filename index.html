@@ -1,216 +1,183 @@
-SHAHZOD, [17 авг. 2026 в 21:32]
 <!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kafe Boshqaruv Tizimi</title>
+    <title>Kafe Tizimi</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; }
-        body { background-color: #f4f6f8; padding: 15px; color: #333; }
-        .nav { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
-        .nav button { padding: 10px 15px; border: none; background: #007aff; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap; }
-        .tab-content { display: none; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .active { display: block; }
-        input, select, button { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
-        button.action-btn { background: #34c759; color: white; border: none; font-weight: bold; cursor: pointer; }
-        .card { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 8px; background: #fafafa; }
-        .price { font-weight: bold; color: #007aff; }
-        .stat-box { background: #eef2ff; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+        * { box-sizing: border-box; font-family: sans-serif; margin: 0; padding: 0; }
+        body { background: #f0f2f5; padding: 15px; }
+        .nav { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; }
+        .nav button { padding: 10px 14px; background: #007aff; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; white-space: nowrap; }
+        .tab-content { display: none; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .active { display: block !important; }
+        input, select, button.btn-save { width: 100%; padding: 12px; margin: 6px 0 12px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; }
+        button.btn-save { background: #34c759; color: white; border: none; font-weight: bold; cursor: pointer; }
+        .card { border: 1px solid #e5e5e5; padding: 10px; margin-bottom: 8px; border-radius: 6px; background: #fafafa; }
     </style>
 </head>
 <body>
 
-    <h2 style="margin-bottom: 15px;">☕ Kafe POS & Ombor</h2>
+    <h2 style="margin-bottom: 15px;">☕ Kafe Boshqaruvi</h2>
 
-    <!-- Menyu tugmalari -->
     <div class="nav">
-        <button onclick="showTab('pos')">📱 Ofitsiant (POS)</button>
-        <button onclick="showTab('kitchen')">👨‍🍳 Oshxona</button>
-        <button onclick="showTab('stock')">📦 Ombor (Sklad)</button>
-        <button onclick="showTab('recipes')">📖 Retseptlar</button>
-        <button onclick="showTab('reports')">📊 Kassa & Foyda</button>
+        <button onclick="switchTab('pos')">📱 POS</button>
+        <button onclick="switchTab('stock')">📦 Ombor</button>
+        <button onclick="switchTab('recipes')">📖 Menyu va Retsept</button>
+        <button onclick="switchTab('reports')">📊 Kassa</button>
     </div>
 
-    <!-- 1. OFITSIANT PANELI -->
+    <!-- 1. POS -->
     <div id="pos" class="tab-content active">
-        <h3>Yangi Buyurtma</h3>
+        <h3>POS (Ofitsiant)</h3>
         <label>Taomni tanlang:</label>
-        <select id="pos-menu-select"></select>
-        <button class="action-btn" onclick="addOrder()">Oshxonaga Yuborish</button>
+        <select id="pos-select"></select>
+        <button class="btn-save" onclick="buyurtmaBering()">Buyurtma Olish</button>
     </div>
 
-    <!-- 2. OSHXONA PANELI -->
-    <div id="kitchen" class="tab-content">
-        <h3>Oshxona Buyurtmalari</h3>
-        <div id="kitchen-orders-list">Yuklanmoqda...</div>
-    </div>
-
-    <!-- 3. OMBOR PANELI -->
+    <!-- 2. OMBOR -->
     <div id="stock" class="tab-content">
         <h3>Ombor Masalliqlari</h3>
-        <input type="text" id="ing-name" placeholder="Masalliq nomi (masalan: Tuxum)">
+        <input type="text" id="ing-name" placeholder="Masalliq nomi (masalan: Go'sht)">
         <input type="number" id="ing-qty" placeholder="Miqdori">
-        <input type="text" id="ing-unit" placeholder="Birligi (dona, kg, litr)">
+        <input type="text" id="ing-unit" placeholder="Birligi (kg, dona)">
         <input type="number" id="ing-cost" placeholder="1 birlik narxi (so'm)">
-        <button class="action-btn" onclick="addIngredient()">Masalliq Qo'shish</button>
-
-        <h4 style="margin-top:15px;">Mavjud Masalliqlar:</h4>
-        <div id="ingredients-list"></div>
+        <button class="btn-save" onclick="masalliqQoshish()">Saqlash</button>
+        <h4>Mavjud Masalliqlar:</h4>
+        <div id="stock-list"></div>
     </div>
 
-    <!-- 4. RETSEPTLAR PANELI -->
+    <!-- 3. RETSEPT -->
     <div id="recipes" class="tab-content">
-        <h3>Taom va Retsept</h3>
-        <h4>1. Yangi Taom Qo'shish:</h4>
-        <input type="text" id="menu-title" placeholder="Taom nomi (masalan: Tuxum & Sasiska)">
+        <h3>1. Taom Yaratish</h3>
+        <input type="text" id="menu-title" placeholder="Taom nomi (masalan: Osh)">
         <input type="number" id="menu-price" placeholder="Sotuv narxi (so'm)">
-        <button class="action-btn" onclick="addMenuItem()">Taomni Saqlash</button>
+        <button class="btn-save" onclick="taomQoshish()">Taomni Saqlash</button>
 
-        <h4 style="margin-top:15px;">2. Taomga Masalliq Biriktirish:</h4>
+        <hr style="margin: 15px 0;">
+
+        <h3>2. Taomga Masalliq Biriktirish</h3>
         <label>Taom:</label>
-        <select id="recipe-menu-select"></select>
+        <select id="rec-menu-select"></select>
         <label>Masalliq:</label>
-        <select id="recipe-ing-select"></select>
-        <input type="number" id="recipe-qty" placeholder="Ketadigan miqdori">
-        <button class="action-btn" onclick="addRecipeItem()">Retseptga Qo'shish</button>
+        <select id="rec-ing-select"></select>
+        <input type="number" step="0.01" id="rec-qty" placeholder="Ketadigan miqdori">
+        <button class="btn-save" onclick="retseptQoshish()">Retseptni Saqlash</button>
     </div>
 
-    <!-- 5. KASSA VA STATISTIKA -->
+    <!-- 4. KASSA -->
     <div id="reports" class="tab-content">
-        <h3>Moliyaviy Hisobot</h3>
-        <div class="stat-box">
- SHAHZOD, [17 авг. 2026 в 21:32]
-<h4>Jami Tushum: <span id="total-revenue" class="price">0</span> so'm</h4>
-        </div>
-        <div class="stat-box">
-            <h4>Jami Tan Narxi: <span id="total-cost" style="color:#ff9500;">0</span> so'm</h4>
-        </div>
-        <div class="stat-box">
-            <h4>Saf Foyda: <span id="total-profit" style="color:#34c759;">0</span> so'm</h4>
-        </div>
+        <h3>Kassa Hisoboti</h3>
+        <div class="card">Jami Tushum: <b id="rep-rev">0</b> so'm</div>
+        <div class="card">Jami Tan Narx: <b id="rep-cost">0</b> so'm</div>
+        <div class="card">Saf Foyda: <b id="rep-profit" style="color:green;">0</b> so'm</div>
     </div>
 
     <script>
-        // Supabase Sozlamalari (O'zingiznikiga almashtiring)
         const SUPABASE_URL = "https://wrrsvrgdinfmnuwewtoa.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function showTab(tabId) {
+        function switchTab(id) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            if(tabId === 'pos' || tabId === 'recipes') loadDropdowns();
-            if(tabId === 'stock') loadStock();
-            if(tabId === 'kitchen') loadKitchen();
-            if(tabId === 'reports') loadReports();
+            document.getElementById(id).classList.add('active');
+            if(id === 'stock') omborniYuklash();
+            if(id === 'pos' || id === 'recipes') tanlovlarniYuklash();
+            if(id === 'reports') hisobotniYuklash();
         }
 
-        // Omborga masalliq qo'shish
-        async function addIngredient() {
+        async function masalliqQoshish() {
             const name = document.getElementById('ing-name').value;
             const quantity = parseFloat(document.getElementById('ing-qty').value);
             const unit = document.getElementById('ing-unit').value;
             const cost_per_unit = parseFloat(document.getElementById('ing-cost').value);
 
-            await _supabase.from('ingredients').insert([{ name, quantity, unit, cost_per_unit }]);
-            alert("Masalliq qo'shildi!");
-            loadStock();
+            if(!name || !quantity || !unit || !cost_per_unit) return alert("Barcha maydonlarni to'ldiring!");
+
+            const { error } = await db.from('ingredients').insert([{ name, quantity, unit, cost_per_unit }]);
+            if(error) alert("Xato: " + error.message);
+            else { alert("Masalliq qo'shildi!"); omborniYuklash(); }
         }
 
-        // Omborni yuklash
-        async function loadStock() {
-            const { data } = await _supabase.from('ingredients').select('*');
+        async function omborniYuklash() {
+            const { data } = await db.from('ingredients').select('*');
             let html = '';
-            data.forEach(item => {
-                html += <div class="card"><b>${item.name}</b>: ${item.quantity} ${item.unit} (${item.cost_per_unit} so'm/unit)</div>;
-            });
-            document.getElementById('ingredients-list').innerHTML = html;
+            (data || []).forEach(i => html += `<div class="card"><b>${i.name}</b>: ${i.quantity} ${i.unit} (${i.cost_per_unit} so'm)</div>`);
+            document.getElementById('stock-list').innerHTML = html || 'Bo\'sh';
         }
 
-        // Menyu qo'shish
-        async function addMenuItem() {
+        async function taomQoshish() {
             const title = document.getElementById('menu-title').value;
             const price = parseFloat(document.getElementById('menu-price').value);
-            await _supabase.from('menu').insert([{ title, price }]);
-            alert("Taom qo'shildi!");
-            loadDropdowns();
+
+            if(!title || !price) return alert("Taom nomi va narxini kiriting!");
+
+            const { error } = await db.from('menu').insert([{ title, price }]);
+            if(error) alert("Xato: " + error.message);
+            else { alert("Taom saqlandi!"); tanlovlarniYuklash(); }
         }
 
-        // Dropdownlarni to'ldirish
-        async function loadDropdowns() {
-            const { data: menu } = await _supabase.from('menu').select('*');
-            const { data: ing } = await _supabase.from('ingredients').select('*');
+        async function tanlovlarniYuklash() {
+            const { data: menu } = await db.from('menu').select('*');
+            const { data: ing } = await db.from('ingredients').select('*');
 
-            let menuOpts = menu.map(m => `<option value="${m.id}">${m.title} (${m.price} so'm)</option>`).join('');
-            let ingOpts = ing.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+            let mOpt = (menu || []).map(m => `<option value="${m.id}">${m.title} (${m.price} so'm)</option>`).join('');
+            let iOpt = (ing || []).map(i => `<option value="${i.id}">${i.name}</option>`).join('');
 
-            document.getElementById('pos-menu-select').innerHTML = menuOpts;
-            document.getElementById('recipe-menu-select').innerHTML = menuOpts;
-            document.getElementById('recipe-ing-select').innerHTML = ingOpts;
+            document.getElementById('pos-select').innerHTML = mOpt;
+            document.getElementById('rec-menu-select').innerHTML = mOpt;
+            document.getElementById('rec-ing-select').innerHTML = iOpt;
         }
 
-        // Retsept biriktirish
-        async function addRecipeItem() {
-            const menu_id = document.getElementById('recipe-menu-select').value;
-            const ingredient_id = document.getElementById('recipe-ing-select').value;
-            const required_quantity = parseFloat(document.getElementById('recipe-qty').value);
+        async function retseptQoshish() {
+            const menu_id = document.getElementById('rec-menu-select').value;
+            const ingredient_id = document.getElementById('rec-ing-select').value;
+            const required_quantity = parseFloat(document.getElementById('rec-qty').value);
 
-            await _supabase.from('recipes').insert([{ menu_id, ingredient_id, required_quantity }]);
-            alert("Retsept saqlandi!");
+            if(!menu_id || !ingredient_id || !required_quantity) return alert("To'liq kiriting!");
+
+            const { error } = await db.from('recipes').insert([{ menu_id, ingredient_id, required_quantity }]);
+            if(error) alert("Xato: " + error.message);
+            else alert("Retsept biriktirildi!");
         }
 
-        // BUYURTMA BERISH (Ofitsiant)
- SHAHZOD, [17 авг. 2026 в 21:32]
-async function addOrder() {
-            const menu_id = document.getElementById('pos-menu-select').value;
+        async function buyurtmaBering() {
+            const menu_id = document.getElementById('pos-select').value;
+            if(!menu_id) return alert("Taom tanlanmagan!");
 
-            // 1. Taom va retseptni olish
-            const { data: menuItem } = await _supabase.from('menu').select('*').eq('id', menu_id).single();
-            const { data: recipe } = await _supabase.from('recipes').select('*').eq('menu_id', menu_id);
+            const { data: menuItem } = await db.from('menu').select('*').eq('id', menu_id).single();
+            const { data: recipe } = await db.from('recipes').select('*').eq('menu_id', menu_id);
 
             let total_cost = 0;
-
-            // 2. Ombordan avtomatik ayirish va tan narxni hisoblash
-            for (let item of recipe) {
-                const { data: ing } = await _supabase.from('ingredients').select('*').eq('id', item.ingredient_id).single();
-                
-                // Tan narxga qo'shish
-                total_cost += item.required_quantity * ing.cost_per_unit;
-
-                // Ombordan kamaytirish
-                const newQty = ing.quantity - item.required_quantity;
-                await _supabase.from('ingredients').update({ quantity: newQty }).eq('id', ing.id);
+            if(recipe) {
+                for(let r of recipe) {
+                    const { data: ing } = await db.from('ingredients').select('*').eq('id', r.ingredient_id).single();
+                    if(ing) {
+                        total_cost += r.required_quantity * ing.cost_per_unit;
+                        await db.from('ingredients').update({ quantity: ing.quantity - r.required_quantity }).eq('id', ing.id);
+                    }
+                }
             }
 
-            // 3. Kassaga sotuvni yozish
-            const profit = menuItem.price - total_cost;
-            await _supabase.from('sales').insert([{ 
-                total_amount: menuItem.price, 
-                total_cost: total_cost, 
-                profit: profit 
-            }]);
-
-            alert("Buyurtma oshxonaga yuborildi va ombordan ayirildi!");
+            await db.from('sales').insert([{ total_amount: menuItem.price, total_cost, profit: menuItem.price - total_cost }]);
+            alert("Buyurtma qabul qilindi!");
         }
 
-        // Hisobotlarni yuklash
-        async function loadReports() {
-            const { data } = await _supabase.from('sales').select('*');
+        async function hisobotniYuklash() {
+            const { data } = await db.from('sales').select('*');
             let rev = 0, cost = 0, profit = 0;
-            data.forEach(s => {
-                rev += parseFloat(s.total_amount);
-                cost += parseFloat(s.total_cost);
-                profit += parseFloat(s.profit);
+            (data || []).forEach(s => {
+                rev += s.total_amount || 0;
+                cost += s.total_cost || 0;
+                profit += s.profit || 0;
             });
-            document.getElementById('total-revenue').innerText = rev.toLocaleString();
-            document.getElementById('total-cost').innerText = cost.toLocaleString();
-            document.getElementById('total-profit').innerText = profit.toLocaleString();
+            document.getElementById('rep-rev').innerText = rev;
+            document.getElementById('rep-cost').innerText = cost;
+            document.getElementById('rep-profit').innerText = profit;
         }
 
-        // Boshlang'ich yuklash
-        loadDropdowns();
+        tanlovlarniYuklash();
     </script>
 </body>
 </html>
