@@ -33,7 +33,12 @@
         .tag-price { color: #2563eb; font-weight: bold; }
         .status-pending { background: #fef08a; color: #854d0e; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .status-ready { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-        .btn-ready { background: #34c759; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; }
+        
+        /* Oshxona tugmalari */
+        .kitchen-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-ready { background: #34c759; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 2; }
+        .btn-cancel { background: #ff3b30; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1; }
+        
         .btn-delete { background: #ff3b30; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .history-card { border-left: 4px solid #007aff; background: #f8fafc; padding: 10px; margin-bottom: 8px; border-radius: 4px; }
     </style>
@@ -228,7 +233,7 @@
             document.getElementById('menu-with-cost-list').innerHTML = menuCards || 'Taomlar yo\'q';
         }
 
-        // Ofitsiant menyudan tugmani bosganda buyurtma ketishi
+        // Ofitsiant buyurtma berishi
         async function buyurtmaBeringDirect(menu_id) {
             const { data: menuItem } = await db.from('menu').select('*').eq('id', menu_id).single();
             if(!menuItem) return alert("Taom topilmadi!");
@@ -294,7 +299,10 @@
                         </span>
                     </div>
                     <p style="margin-top:5px;">Summa: ${s.total_amount.toLocaleString()} so'm</p>
-                    ${!isReady ? `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id})">✅ TAYYOR BO'LDI</button>` : ''}
+                    <div class="kitchen-actions">
+                        ${!isReady ? `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id})">✅ TAYYOR BO'LDI</button>` : ''}
+                        <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
+                    </div>
                 </div>`;
             });
             document.getElementById('kitchen-orders-list').innerHTML = html || 'Buyurtmalar yo\'q';
@@ -304,6 +312,15 @@
             const { error } = await db.from('sales').update({ status: 'tayyor' }).eq('id', id);
             if(error) alert("Xatolik: " + error.message);
             else oshxonaniYuklash();
+        }
+
+        // Buyurtmani bekor qilish (o'chirish)
+        async function buyurtmaniBekorQilish(id) {
+            if(confirm("Ushbu buyurtmani bekor qilmoqchimisiz? (Baza va kassadan o'chiriladi)")) {
+                const { error } = await db.from('sales').delete().eq('id', id);
+                if(error) alert("Xatolik: " + error.message);
+                else oshxonaniYuklash();
+            }
         }
 
         // Kassa
