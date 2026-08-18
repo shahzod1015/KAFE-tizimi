@@ -1,1 +1,217 @@
 
+SHAHZOD, [17 авг. 2026 в 21:32]
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafe Boshqaruv Tizimi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f4f6f8; padding: 15px; color: #333; }
+        .nav { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+        .nav button { padding: 10px 15px; border: none; background: #007aff; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+        .tab-content { display: none; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .active { display: block; }
+        input, select, button { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+        button.action-btn { background: #34c759; color: white; border: none; font-weight: bold; cursor: pointer; }
+        .card { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 8px; background: #fafafa; }
+        .price { font-weight: bold; color: #007aff; }
+        .stat-box { background: #eef2ff; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2 style="margin-bottom: 15px;">☕ Kafe POS & Ombor</h2>
+
+    <!-- Menyu tugmalari -->
+    <div class="nav">
+        <button onclick="showTab('pos')">📱 Ofitsiant (POS)</button>
+        <button onclick="showTab('kitchen')">👨‍🍳 Oshxona</button>
+        <button onclick="showTab('stock')">📦 Ombor (Sklad)</button>
+        <button onclick="showTab('recipes')">📖 Retseptlar</button>
+        <button onclick="showTab('reports')">📊 Kassa & Foyda</button>
+    </div>
+
+    <!-- 1. OFITSIANT PANELI -->
+    <div id="pos" class="tab-content active">
+        <h3>Yangi Buyurtma</h3>
+        <label>Taomni tanlang:</label>
+        <select id="pos-menu-select"></select>
+        <button class="action-btn" onclick="addOrder()">Oshxonaga Yuborish</button>
+    </div>
+
+    <!-- 2. OSHXONA PANELI -->
+    <div id="kitchen" class="tab-content">
+        <h3>Oshxona Buyurtmalari</h3>
+        <div id="kitchen-orders-list">Yuklanmoqda...</div>
+    </div>
+
+    <!-- 3. OMBOR PANELI -->
+    <div id="stock" class="tab-content">
+        <h3>Ombor Masalliqlari</h3>
+        <input type="text" id="ing-name" placeholder="Masalliq nomi (masalan: Tuxum)">
+        <input type="number" id="ing-qty" placeholder="Miqdori">
+        <input type="text" id="ing-unit" placeholder="Birligi (dona, kg, litr)">
+        <input type="number" id="ing-cost" placeholder="1 birlik narxi (so'm)">
+        <button class="action-btn" onclick="addIngredient()">Masalliq Qo'shish</button>
+
+        <h4 style="margin-top:15px;">Mavjud Masalliqlar:</h4>
+        <div id="ingredients-list"></div>
+    </div>
+
+    <!-- 4. RETSEPTLAR PANELI -->
+    <div id="recipes" class="tab-content">
+        <h3>Taom va Retsept</h3>
+        <h4>1. Yangi Taom Qo'shish:</h4>
+        <input type="text" id="menu-title" placeholder="Taom nomi (masalan: Tuxum & Sasiska)">
+        <input type="number" id="menu-price" placeholder="Sotuv narxi (so'm)">
+        <button class="action-btn" onclick="addMenuItem()">Taomni Saqlash</button>
+
+        <h4 style="margin-top:15px;">2. Taomga Masalliq Biriktirish:</h4>
+        <label>Taom:</label>
+        <select id="recipe-menu-select"></select>
+        <label>Masalliq:</label>
+        <select id="recipe-ing-select"></select>
+        <input type="number" id="recipe-qty" placeholder="Ketadigan miqdori">
+        <button class="action-btn" onclick="addRecipeItem()">Retseptga Qo'shish</button>
+    </div>
+
+    <!-- 5. KASSA VA STATISTIKA -->
+    <div id="reports" class="tab-content">
+        <h3>Moliyaviy Hisobot</h3>
+        <div class="stat-box">
+ SHAHZOD, [17 авг. 2026 в 21:32]
+<h4>Jami Tushum: <span id="total-revenue" class="price">0</span> so'm</h4>
+        </div>
+        <div class="stat-box">
+            <h4>Jami Tan Narxi: <span id="total-cost" style="color:#ff9500;">0</span> so'm</h4>
+        </div>
+        <div class="stat-box">
+            <h4>Saf Foyda: <span id="total-profit" style="color:#34c759;">0</span> so'm</h4>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Sozlamalari (O'zingiznikiga almashtiring)
+        const SUPABASE_URL = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Njk3MzQ4MiwiZXhwIjoyMTAyNTQ5NDgyfQ.9L0JAsQvB1GHGyyFyNMxPHboDn5MK4ZMrjGQnw-eEHs";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if(tabId === 'pos' || tabId === 'recipes') loadDropdowns();
+            if(tabId === 'stock') loadStock();
+            if(tabId === 'kitchen') loadKitchen();
+            if(tabId === 'reports') loadReports();
+        }
+
+        // Omborga masalliq qo'shish
+        async function addIngredient() {
+            const name = document.getElementById('ing-name').value;
+            const quantity = parseFloat(document.getElementById('ing-qty').value);
+            const unit = document.getElementById('ing-unit').value;
+            const cost_per_unit = parseFloat(document.getElementById('ing-cost').value);
+
+            await _supabase.from('ingredients').insert([{ name, quantity, unit, cost_per_unit }]);
+            alert("Masalliq qo'shildi!");
+            loadStock();
+        }
+
+        // Omborni yuklash
+        async function loadStock() {
+            const { data } = await _supabase.from('ingredients').select('*');
+            let html = '';
+            data.forEach(item => {
+                html += <div class="card"><b>${item.name}</b>: ${item.quantity} ${item.unit} (${item.cost_per_unit} so'm/unit)</div>;
+            });
+            document.getElementById('ingredients-list').innerHTML = html;
+        }
+
+        // Menyu qo'shish
+        async function addMenuItem() {
+            const title = document.getElementById('menu-title').value;
+            const price = parseFloat(document.getElementById('menu-price').value);
+            await _supabase.from('menu').insert([{ title, price }]);
+            alert("Taom qo'shildi!");
+            loadDropdowns();
+        }
+
+        // Dropdownlarni to'ldirish
+        async function loadDropdowns() {
+            const { data: menu } = await _supabase.from('menu').select('*');
+            const { data: ing } = await _supabase.from('ingredients').select('*');
+
+            let menuOpts = menu.map(m => `<option value="${m.id}">${m.title} (${m.price} so'm)</option>`).join('');
+            let ingOpts = ing.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+
+            document.getElementById('pos-menu-select').innerHTML = menuOpts;
+            document.getElementById('recipe-menu-select').innerHTML = menuOpts;
+            document.getElementById('recipe-ing-select').innerHTML = ingOpts;
+        }
+
+        // Retsept biriktirish
+        async function addRecipeItem() {
+            const menu_id = document.getElementById('recipe-menu-select').value;
+            const ingredient_id = document.getElementById('recipe-ing-select').value;
+            const required_quantity = parseFloat(document.getElementById('recipe-qty').value);
+
+            await _supabase.from('recipes').insert([{ menu_id, ingredient_id, required_quantity }]);
+            alert("Retsept saqlandi!");
+        }
+
+        // BUYURTMA BERISH (Ofitsiant)
+ SHAHZOD, [17 авг. 2026 в 21:32]
+async function addOrder() {
+            const menu_id = document.getElementById('pos-menu-select').value;
+
+            // 1. Taom va retseptni olish
+            const { data: menuItem } = await _supabase.from('menu').select('*').eq('id', menu_id).single();
+            const { data: recipe } = await _supabase.from('recipes').select('*').eq('menu_id', menu_id);
+
+            let total_cost = 0;
+
+            // 2. Ombordan avtomatik ayirish va tan narxni hisoblash
+            for (let item of recipe) {
+                const { data: ing } = await _supabase.from('ingredients').select('*').eq('id', item.ingredient_id).single();
+                
+                // Tan narxga qo'shish
+                total_cost += item.required_quantity * ing.cost_per_unit;
+
+                // Ombordan kamaytirish
+                const newQty = ing.quantity - item.required_quantity;
+                await _supabase.from('ingredients').update({ quantity: newQty }).eq('id', ing.id);
+            }
+
+            // 3. Kassaga sotuvni yozish
+            const profit = menuItem.price - total_cost;
+            await _supabase.from('sales').insert([{ 
+                total_amount: menuItem.price, 
+                total_cost: total_cost, 
+                profit: profit 
+            }]);
+
+            alert("Buyurtma oshxonaga yuborildi va ombordan ayirildi!");
+        }
+
+        // Hisobotlarni yuklash
+        async function loadReports() {
+            const { data } = await _supabase.from('sales').select('*');
+            let rev = 0, cost = 0, profit = 0;
+            data.forEach(s => {
+                rev += parseFloat(s.total_amount);
+                cost += parseFloat(s.total_cost);
+                profit += parseFloat(s.profit);
+            });
+            document.getElementById('total-revenue').innerText = rev.toLocaleString();
+            document.getElementById('total-cost').innerText = cost.toLocaleString();
+            document.getElementById('total-profit').innerText = profit.toLocaleString();
+        }
+
+        // Boshlang'ich yuklash
+        loadDropdowns();
+    </script>
+</body>
+</html>
