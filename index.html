@@ -55,14 +55,17 @@
         <div id="kitchen-orders-list">Yuklanmoqda...</div>
     </div>
 
-    <!-- 3. MENYU (TAOMLAR VA RASM) -->
+    <!-- 3. MENYU (TAOMLAR VA FOTO) -->
     <div id="recipes" class="tab-content">
         <h3>Yangi Taom Yaratish</h3>
         <input type="text" id="menu-title" placeholder="Taom nomi (masalan: Classic Hotdog)">
         <input type="number" id="menu-price" placeholder="Sotuv narxi (masalan: 12000 so'm)">
         <input type="number" id="menu-cost" placeholder="Tan narxi (masalan: 6000 so'm)">
-        <input type="text" id="menu-image" placeholder="Rasm havolasi/URL (Internetdagi rasm ssilkasi)">
-        <button class="btn-save" onclick="taomQoshish()">Taomni Saqlash</button>
+        
+        <label style="font-size:13px; font-weight:bold; color:#555;">📱 Galereyadan rasm tanlang:</label>
+        <input type="file" id="menu-file" accept="image/*">
+        
+        <button class="btn-save" id="btn-save-menu" onclick="taomQoshish()">Taomni Saqlash</button>
 
         <h4 style="margin-top:15px;">Mavjud Taomlar:</h4>
         <div id="menu-with-cost-list"></div>
@@ -112,6 +115,94 @@
             return new Date().toISOString().split('T')[0];
         }
 
+        // Taom qo'shish (Galereyadagi Rasm bilan)
+        async function taomQoshish() {
+            const title = document.getElementById('menu-title').value;
+            const price = parseFloat(document.getElementById('menu-price').value);
+            const cost = parseFloat(document.getElementById('menu-cost').value) || 0;
+            const fileInput = document.getElementById('menu-file');
+            const saveBtn = document.getElementById('btn-save-menu');
+
+            if(!title || isNaN(price)) return alert("Taom nomi va sotuv narxini kiriting!");
+
+            let image_url = '';
+
+            // Agar rasm tanlangan bo'lsa, Supabase Storage'ga yuklaymiz
+            if(fileInput.files.length > 0) {
+                saveBtn.innerText = "⏳ Rasm yuklanmoqda...";
+                saveBtn.disabled = true;
+
+                const file = fileInput.files[0];
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}.${fileExt}`;
+
+                const { data: uploadData, error: uploadErr } = await db.storage
+                    .from('menu-images')
+                    .upload(fileName, file);
+
+                if(uploadErr) {
+                    alert("Rasm yuklashda xatolik: " + uploadErr.message);
+                    saveBtn.innerText = "Taomni Saqlash";
+                    saveBtn.disabled = false;
+                    return;
+                }
+
+                // Public URL olish
+                const { data: publicUrlData } = db.storage.from('menu-images').getPublicUrl(fileName);
+                image_url = publicUrlData.publicUrl;
+            }
+
+            const { error } = await db.from('menu').insert([{ title, price, cost, image_url }]);
+            
+            saveBtn.innerText = "Taomni Saqlash";
+            saveBtn.disabled = false;
+
+            if(error) alert("Xato: " + error.message);
+            else { 
+                alert("Taom saqlandi!"); 
+                document.getElementById('menu-title').value = '';
+                document.getElementById('menu-price').value = '';
+                document.getElementById('menu-cost').value = '';
+                fileInput.value = '';
+                tanlovlarniYuklash(); 
+            }
+        }
+
+        async function taomniOchirish(id, title) {
+            if(confirm(`"${title}" taomini o'chirmoqchimisiz?`)) {
+                await db.from('menu').delete().eq('id', id);
+                tanlovlarniYuklash();
+            }
+        }
+
+        async function tanlovlarniYuklash() {
+            const { data: menu } = await db.from('menu').select('*');
+            let mOpt = (menu || []).map(m => `<option value="${m.id}">${m.title} (${m.price} so'm)</option>`).join('');
+            document.getElementById('pos-select').innerHTML = mOpt || '<option>Taomlar yo\'q</option>';
+
+            let menuCards = '';
+            (menu || []).forEach(m => {
+                const costVal = m.cost || 0;
+                const defaultImg = 'https://via.placeholder.com/70?text=Rasm+yoq';
+                const imgSrc = m.image_url || defaultImg;
+
+                menuCards += `<div class="card">
+                    <div class="menu-card">
+                        <img src="${imgSrc}" class="menu-img" alt="${m.title}">
+                        <div style="flex-grow:1;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <b>${m.title}</b>
+                                <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑 O'chirish</button>
+                            </div>
+                            <small>Sotuv: <span class="tag-price">${m.price.toLocaleString()} so'm</span></small><br>
+                            <small>Tan narx: <span class="tag-cost">${costVal.toLocaleString()} so'm</span></small>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('menu-with-cost-list').innerHTML = menuCards || 'Taomlar yo\'q';
+        }
+
         // Ombor
         async function masalliqQoshish() {
             const name = document.getElementById('ing-name').value;
@@ -140,62 +231,6 @@
                 html += `<div class="card"><b>${i.name}</b>: ${i.quantity} ${i.unit} (${i.cost_per_unit || 0} so'm)</div>`;
             });
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
-        }
-
-        // Taom qo'shish (Rasm bilan)
-        async function taomQoshish() {
-            const title = document.getElementById('menu-title').value;
-            const price = parseFloat(document.getElementById('menu-price').value);
-            const cost = parseFloat(document.getElementById('menu-cost').value) || 0;
-            const image_url = document.getElementById('menu-image').value;
-
-            if(!title || isNaN(price)) return alert("Taom nomi va sotuv narxini kiriting!");
-
-            const { error } = await db.from('menu').insert([{ title, price, cost, image_url }]);
-            if(error) alert("Xato: " + error.message);
-            else { 
-                alert("Taom saqlandi!"); 
-                document.getElementById('menu-title').value = '';
-                document.getElementById('menu-price').value = '';
-                document.getElementById('menu-cost').value = '';
-                document.getElementById('menu-image').value = '';
-                tanlovlarniYuklash(); 
-            }
-        }
-
-        async function taomniOchirish(id, title) {
-            if(confirm(`"${title}" taomini o'chirmoqchimisiz?`)) {
-                await db.from('menu').delete().eq('id', id);
-                tanlovlarniYuklash();
-            }
-        }
-
-        async function tanlovlarniYuklash() {
-            const { data: menu } = await db.from('menu').select('*');
-            let mOpt = (menu || []).map(m => `<option value="${m.id}">${m.title} (${m.price} so'm)</option>`).join('');
-            document.getElementById('pos-select').innerHTML = mOpt || '<option>Taomlar yo\'q</option>';
-
-            let menuCards = '';
-            (menu || []).forEach(m => {
-                const costVal = m.cost || 0;
-                const defaultImg = 'https://via.placeholder.com/70?text=No+Img';
-                const imgSrc = m.image_url && m.image_url.startsWith('http') ? m.image_url : defaultImg;
-
-                menuCards += `<div class="card">
-                    <div class="menu-card">
-                        <img src="${imgSrc}" class="menu-img" alt="${m.title}">
-                        <div style="flex-grow:1;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <b>${m.title}</b>
-                                <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑 O'chirish</button>
-                            </div>
-                            <small>Sotuv: <span class="tag-price">${m.price.toLocaleString()} so'm</span></small><br>
-                            <small>Tan narx: <span class="tag-cost">${costVal.toLocaleString()} so'm</span></small>
-                        </div>
-                    </div>
-                </div>`;
-            });
-            document.getElementById('menu-with-cost-list').innerHTML = menuCards || 'Taomlar yo\'q';
         }
 
         // POS
@@ -249,7 +284,7 @@
             else oshxonaniYuklash();
         }
 
-        // Kassa va Tarix
+        // Kassa
         async function hisobotniYuklash() {
             const todayStr = getTodayString();
             document.getElementById('today-date-str').innerText = todayStr;
