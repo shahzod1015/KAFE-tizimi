@@ -64,7 +64,7 @@
             background-size: contain;
         }
 
-        /* Ekran Boylab Ingichka Oltin Ramka (Outer Screen Border) */
+        /* Ekran Boylab Ingichka Oltin Ramka */
         .screen-frame {
             border: var(--gold-border-thin);
             border-radius: 20px;
@@ -206,6 +206,20 @@
             transition: transform 0.2s;
         }
         .pos-card:hover { transform: translateY(-2px); border-color: rgba(212, 175, 55, 0.5); }
+        
+        /* STOP-LIST DA BO'LGAN TAOMLAR STILI */
+        .pos-card.is-stopped {
+            opacity: 0.55;
+            filter: grayscale(0.8);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+        .pos-card.is-stopped .btn-order {
+            background: #334155 !important;
+            color: #94a3b8 !important;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
         .pos-card img { 
             width: 100%; 
             height: 110px; 
@@ -219,8 +233,40 @@
             color: var(--gold-text); 
             font-weight: 800; 
             font-size: 14px; 
-            margin-bottom: 8px; 
+            margin-bottom: 4px; 
         }
+
+        /* Oshxona miqdori va Stop Tugmalari */
+        .stock-qty-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: #6ee7b7;
+            background: rgba(6, 78, 59, 0.5);
+            padding: 2px 6px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 6px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .stock-qty-badge.zero {
+            color: #fca5a5;
+            background: rgba(127, 29, 29, 0.5);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .stop-toggle-btn {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            margin-bottom: 8px;
+            width: 100%;
+            text-transform: uppercase;
+        }
+        .stop-toggle-btn.btn-stop { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
+        .stop-toggle-btn.btn-activate { background: #064e3b; color: #6ee7b7; border: 1px solid #10b981; }
         
         /* Qty Plus/Minus Buttons */
         .qty-box { 
@@ -324,7 +370,7 @@
             <h3 style="color: var(--gold-text); font-size: 17px; margin-bottom: 2px; display: flex; align-items: center; gap: 6px;">
                 🍽 Taomlar Katalogi
             </h3>
-            <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 12px;">Miqdorni tanlang va buyurtma bering:</p>
+            <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 12px;">Stop-listni boshqarish va buyurtma berish:</p>
             <div id="pos-menu-grid" class="pos-grid">Yuklanmoqda...</div>
         </div>
 
@@ -343,6 +389,7 @@
             <input type="text" id="menu-title" placeholder="Taom nomi (masalan: Classic Hotdog)">
             <input type="number" id="menu-price" placeholder="Sotuv narxi (masalan: 12000 so'm)">
             <input type="number" id="menu-cost" placeholder="Tan narxi (masalan: 6000 so'm)">
+            <input type="number" id="menu-quantity" placeholder="Oshxonadagi porsiya miqdori (Masalan: 20 ta)">
             
             <label style="font-size:13px; font-weight:bold; color:#d4d4d8;">📱 Galereyadan rasm tanlang:</label>
             <input type="file" id="menu-file" accept="image/*">
@@ -409,6 +456,7 @@
             const title = document.getElementById('menu-title').value;
             const price = parseFloat(document.getElementById('menu-price').value);
             const cost = parseFloat(document.getElementById('menu-cost').value) || 0;
+            const quantity = parseInt(document.getElementById('menu-quantity').value) || 0;
             const fileInput = document.getElementById('menu-file');
             const saveBtn = document.getElementById('btn-save-menu');
 
@@ -439,7 +487,14 @@
                 image_url = publicUrlData.publicUrl;
             }
 
-            const { error } = await db.from('menu').insert([{ title, price, cost, image_url }]);
+            const { error } = await db.from('menu').insert([{ 
+                title, 
+                price, 
+                cost, 
+                quantity,
+                is_active: true,
+                image_url 
+            }]);
             
             saveBtn.innerText = "Taomni Saqlash";
             saveBtn.disabled = false;
@@ -450,9 +505,18 @@
                 document.getElementById('menu-title').value = '';
                 document.getElementById('menu-price').value = '';
                 document.getElementById('menu-cost').value = '';
+                document.getElementById('menu-quantity').value = '';
                 fileInput.value = '';
                 tanlovlarniYuklash(); 
             }
+        }
+
+        /* QO'LDA STOP-LISTGA QO'YISH VA CHIQARISH FUNKSIYASI */
+        async function toggleStopList(menu_id, currentStatus) {
+            const newStatus = !currentStatus;
+            const { error } = await db.from('menu').update({ is_active: newStatus }).eq('id', menu_id);
+            if(error) alert("Xatolik: " + error.message);
+            else tanlovlarniYuklash();
         }
 
         async function taomniOchirish(id, title) {
@@ -477,21 +541,41 @@
             (menu || []).forEach(m => {
                 if (!itemQuantities[m.id]) itemQuantities[m.id] = 1;
                 const imgSrc = m.image_url || defaultImg;
+                
+                // Stop statusi va porsiya miqdori
+                const isActive = m.is_active !== false && (m.quantity === undefined || m.quantity > 0);
+                const stockQty = m.quantity !== undefined ? m.quantity : 'Cheksiz';
 
                 posHtml += `
-                <div class="pos-card">
+                <div class="pos-card ${!isActive ? 'is-stopped' : ''}">
                     <div>
                         <img src="${imgSrc}" alt="${m.title}">
                         <h4>${m.title}</h4>
                         <div class="price">${m.price.toLocaleString()} so'm</div>
+                        
+                        <div class="stock-qty-badge ${!isActive || stockQty === 0 ? 'zero' : ''}">
+                            Oshxonada: ${stockQty} ta
+                        </div>
+
+                        <!-- Stop-list qo'lda boshqarish tugmasi -->
+                        <button class="stop-toggle-btn ${isActive ? 'btn-stop' : 'btn-activate'}" 
+                                onclick="toggleStopList(${m.id}, ${isActive})">
+                            ${isActive ? '🔴 STOP-LISTGA' : '🟢 FAOL QILISH'}
+                        </button>
                     </div>
+
                     <div>
                         <div class="qty-box">
                             <button class="qty-btn" onclick="changeQty(${m.id}, -1)">-</button>
                             <span class="qty-val" id="qty-val-${m.id}">${itemQuantities[m.id]}</span>
                             <button class="qty-btn" onclick="changeQty(${m.id}, 1)">+</button>
                         </div>
-                        <button class="btn-order" onclick="buyurtmaBeringDirect(${m.id})">🛒 Buyurtma</button>
+
+                        <button class="btn-order" 
+                                ${!isActive ? 'disabled' : ''} 
+                                onclick="buyurtmaBeringDirect(${m.id})">
+                            ${isActive ? '🛒 Buyurtma' : '⛔ TUGAGAN'}
+                        </button>
                     </div>
                 </div>`;
             });
@@ -511,7 +595,8 @@
                                 <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑 O'chirish</button>
                             </div>
                             <small>Sotuv: <span class="tag-price">${m.price.toLocaleString()} so'm</span></small><br>
-                            <small>Tan narx: <span class="tag-cost">${costVal.toLocaleString()} so'm</span></small>
+                            <small>Tan narx: <span class="tag-cost">${costVal.toLocaleString()} so'm</span></small> | 
+                            <small>Qoldiq: <b>${m.quantity || 0} ta</b></small>
                         </div>
                     </div>
                 </div>`;
@@ -526,6 +611,14 @@
             const { data: menuItem } = await db.from('menu').select('*').eq('id', menu_id).single();
             if(!menuItem) return alert("Taom topilmadi!");
 
+            if(menuItem.is_active === false) {
+                return alert("Ushbu taom STOP-listga qo'yilgan!");
+            }
+
+            if(menuItem.quantity !== undefined && menuItem.quantity < qty) {
+                return alert(`Oshxonada yetarli taom yo'q! Qolgan miqdor: ${menuItem.quantity} ta`);
+            }
+
             const totalPrice = (menuItem.price || 0) * qty;
             const totalCost = (menuItem.cost || 0) * qty;
 
@@ -536,11 +629,22 @@
                 status: `Stol #${tableNum} - ${menuItem.title} (x${qty})`
             }]);
 
-            if(error) alert("Xato: " + error.message);
-            else {
+            if(error) {
+                alert("Xato: " + error.message);
+            } else {
+                // Sotilgach, oshxonadagi miqdorni kamaytirish
+                if(menuItem.quantity !== undefined && menuItem.quantity > 0) {
+                    const newQty = menuItem.quantity - qty;
+                    await db.from('menu').update({ 
+                        quantity: newQty,
+                        is_active: newQty > 0
+                    }).eq('id', menu_id);
+                }
+
                 alert(`✅ Stol #${tableNum}: ${qty}x ${menuItem.title} oshxonaga yuborildi!`);
                 itemQuantities[menu_id] = 1;
                 document.getElementById(`qty-val-${menu_id}`).innerText = 1;
+                tanlovlarniYuklash();
             }
         }
 
