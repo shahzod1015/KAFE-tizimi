@@ -3,18 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHEF Hotdog POS</title>
+    <title>CHEF Hotdog POS & Delivery Admin</title>
 
-    <!-- App Icon -->
     <link rel="apple-touch-icon" sizes="180x180" href="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png">
-    <link rel="apple-touch-icon-precomposed" href="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png">
     <link rel="icon" type="image/png" sizes="32x32" href="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png">
-    <link rel="shortcut icon" href="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png">
     
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="CHEF hotdog">
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -29,399 +22,93 @@
         }
 
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
-        
-        body { 
-            background-color: var(--dark-bg);
-            background-image: 
-                radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 60%),
-                radial-gradient(circle at 100% 100%, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
-            padding: 12px; 
-            color: #f1f5f9; 
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
-        }
+        body { background-color: var(--dark-bg); padding: 12px; color: #f1f5f9; min-height: 100vh; }
+        .screen-frame { border: var(--gold-border-thin); border-radius: 20px; padding: 10px; background: rgba(10, 10, 13, 0.6); }
 
-        .screen-frame {
-            border: var(--gold-border-thin);
-            border-radius: 20px;
-            padding: 10px;
-            box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.05), 0 10px 30px rgba(0,0,0,0.8);
-            position: relative;
-            background: rgba(10, 10, 13, 0.6);
-            backdrop-filter: blur(5px);
-        }
+        .sticky-top-container { position: sticky; top: 0; z-index: 1000; background: rgba(10, 10, 13, 0.95); padding: 6px 0; border-bottom: 1px solid rgba(212, 175, 55, 0.15); margin-bottom: 12px; }
+        .app-header { display: flex; align-items: center; gap: 14px; background: var(--card-bg); padding: 10px 16px; border-radius: 16px; border: var(--gold-border); }
+        .app-header img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid #d4af37; }
+        .app-header h2 { font-size: 18px; font-weight: 800; background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        .sticky-top-container {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: rgba(10, 10, 13, 0.95);
-            backdrop-filter: blur(10px);
-            padding-top: 4px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-            margin-bottom: 12px;
-        }
+        .nav { display: flex; gap: 8px; overflow-x: auto; padding: 2px; }
+        .nav button { padding: 9px 14px; background: rgba(20, 20, 22, 0.9); color: var(--gold-text); border: var(--gold-border-thin); border-radius: 12px; font-weight: 600; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
+        .nav button.active-tab { border-color: #d4af37; background: rgba(35, 30, 20, 0.9); }
 
-        .app-header { 
-            display: flex; 
-            align-items: center; 
-            gap: 14px; 
-            margin-bottom: 8px; 
-            background: var(--card-bg); 
-            padding: 10px 16px; 
-            border-radius: 16px; 
-            border: var(--gold-border);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), 0 0 10px rgba(212, 175, 55, 0.1);
-        }
-        .app-header img { 
-            width: 42px; 
-            height: 42px; 
-            border-radius: 50%; 
-            object-fit: cover; 
-            border: 1.5px solid #d4af37; 
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
-        }
-        .app-header h2 { 
-            font-size: 18px; 
-            font-weight: 800; 
-            background: var(--gold-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .nav { 
-            display: flex; 
-            gap: 8px; 
-            overflow-x: auto; 
-            padding: 2px 2px;
-        }
-        .nav::-webkit-scrollbar { display: none; }
-        .nav button { 
-            padding: 9px 14px; 
-            background: rgba(20, 20, 22, 0.9); 
-            color: var(--gold-text); 
-            border: var(--gold-border-thin); 
-            border-radius: 12px; 
-            font-weight: 600; 
-            font-size: 12.5px; 
-            white-space: nowrap; 
-            cursor: pointer; 
-            transition: all 0.25s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .nav button:hover, .nav button.active-tab {
-            border-color: #d4af37;
-            background: rgba(35, 30, 20, 0.9);
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
-        }
-        .nav button:active { transform: scale(0.96); }
-
-        .tab-content { 
-            display: none; 
-            background: var(--card-bg); 
-            padding: 14px; 
-            border-radius: 16px; 
-            border: var(--gold-border-thin);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-        }
+        .tab-content { display: none; background: var(--card-bg); padding: 14px; border-radius: 16px; border: var(--gold-border-thin); }
         .active { display: block !important; }
+
+        input, select, button.btn-save { width: 100%; padding: 12px; margin: 6px 0 12px 0; border: var(--gold-border-thin); border-radius: 10px; font-size: 14px; background: #08080a; color: #fff; }
+        button.btn-save { background: var(--gold-btn-grad); color: #000; border: none; font-weight: 800; cursor: pointer; }
+
+        .card { border: var(--gold-border-thin); padding: 12px; margin-bottom: 10px; border-radius: 12px; background: rgba(12, 12, 14, 0.8); color: #f1f5f9; }
+        .daily-orders-block { border: var(--green-border); border-radius: 14px; padding: 12px; margin-bottom: 16px; background: rgba(6, 78, 59, 0.12); }
+        .daily-title { color: #34d399; font-weight: 800; font-size: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; }
+
+        .pos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px; }
+        .pos-card { border: var(--gold-border-thin); border-radius: 16px; padding: 10px; text-align: center; background: rgba(12, 12, 14, 0.95); display: flex; flex-direction: column; justify-content: space-between; }
+        .pos-card img { width: 100%; height: 110px; object-fit: cover; border-radius: 12px; }
         
-        input, select, button.btn-save { 
-            width: 100%; 
-            padding: 12px; 
-            margin: 6px 0 12px 0; 
-            border: var(--gold-border-thin); 
-            border-radius: 10px; 
-            font-size: 14px; 
-            background: #08080a; 
-            color: #fff; 
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
-        }
-        select:focus, input:focus { border-color: #d4af37; outline: none; }
-
-        button.btn-save { 
-            background: var(--gold-btn-grad); 
-            color: #000; 
-            border: none; 
-            font-weight: 800; 
-            cursor: pointer; 
-            text-transform: uppercase;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
-        }
-
-        .card { 
-            border: var(--gold-border-thin); 
-            padding: 12px; 
-            margin-bottom: 10px; 
-            border-radius: 12px; 
-            background: rgba(12, 12, 14, 0.8); 
-            color: #f1f5f9; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-        }
-
-        .daily-orders-block {
-            border: var(--green-border);
-            border-radius: 14px;
-            padding: 12px;
-            margin-bottom: 16px;
-            background: rgba(6, 78, 59, 0.12);
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
-        }
-        .daily-title {
-            color: #34d399;
-            font-weight: 800;
-            font-size: 15px;
-            margin-bottom: 10px;
-            padding-bottom: 6px;
-            border-bottom: 1px dashed rgba(16, 185, 129, 0.3);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .pos-grid { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 12px; 
-            margin-top: 10px; 
-        }
-        @media (min-width: 600px) {
-            .pos-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-        }
-
-        .pos-card { 
-            border: var(--gold-border-thin); 
-            border-radius: 16px; 
-            padding: 10px; 
-            text-align: center; 
-            background: linear-gradient(180deg, rgba(22, 22, 25, 0.9) 0%, rgba(12, 12, 14, 0.95) 100%); 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.6), 0 0 10px rgba(212, 175, 55, 0.05); 
-            position: relative;
-            transition: transform 0.2s;
-        }
-        .pos-card:hover { transform: translateY(-2px); border-color: rgba(212, 175, 55, 0.5); }
-        
-        .pos-card.is-stopped {
-            opacity: 0.55;
-            filter: grayscale(0.8);
-            border-color: rgba(239, 68, 68, 0.4);
-        }
-        .pos-card.is-stopped .btn-order {
-            background: #334155 !important;
-            color: #94a3b8 !important;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        .pos-card img { 
-            width: 100%; 
-            height: 110px; 
-            object-fit: cover; 
-            border-radius: 12px; 
-            border: var(--gold-border-thin); 
-            margin-bottom: 8px; 
-        }
-        .pos-card h4 { font-size: 13px; margin-bottom: 4px; color: #ffffff; font-weight: 700; line-height: 1.2; }
-        .pos-card .price { 
-            color: var(--gold-text); 
-            font-weight: 800; 
-            font-size: 14px; 
-            margin-bottom: 4px; 
-        }
-
-        .stock-qty-badge {
-            font-size: 11px;
-            font-weight: 700;
-            color: #6ee7b7;
-            background: rgba(6, 78, 59, 0.5);
-            padding: 2px 6px;
-            border-radius: 6px;
-            display: inline-block;
-            margin-bottom: 6px;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-        .stock-qty-badge.zero {
-            color: #fca5a5;
-            background: rgba(127, 29, 29, 0.5);
-            border-color: rgba(239, 68, 68, 0.3);
-        }
-
-        .stop-toggle-btn {
-            font-size: 10px;
-            font-weight: 800;
-            padding: 4px 6px;
-            border-radius: 6px;
-            cursor: pointer;
-            border: none;
-            margin-bottom: 8px;
-            width: 100%;
-            text-transform: uppercase;
-        }
-        .stop-toggle-btn.btn-stop { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
-        .stop-toggle-btn.btn-activate { background: #064e3b; color: #6ee7b7; border: 1px solid #10b981; }
-        
-        .qty-box { 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 10px; 
-            margin-bottom: 8px; 
-        }
-        .qty-btn { 
-            width: 28px; 
-            height: 28px; 
-            background: rgba(35, 30, 20, 0.8); 
-            color: var(--gold-text); 
-            border: var(--gold-border-thin); 
-            border-radius: 8px; 
-            font-size: 14px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-        }
-        .qty-val { font-weight: bold; font-size: 14px; color: #fff; width: 16px; text-align: center; }
-
-        .pos-card button.btn-order { 
-            background: var(--gold-btn-grad); 
-            color: #000; 
-            border: none; 
-            padding: 8px 4px; 
-            border-radius: 10px; 
-            font-weight: 800; 
-            font-size: 12px; 
-            cursor: pointer; 
-            width: 100%; 
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-        }
-
-        .menu-card { display: flex; gap: 12px; align-items: center; }
-        .menu-img { width: 65px; height: 65px; border-radius: 10px; object-fit: cover; border: var(--gold-border-thin); flex-shrink: 0; }
-        .tag-cost { color: #f59e0b; font-weight: bold; }
-        .tag-price { color: var(--gold-text); font-weight: bold; }
-        .status-pending { background: rgba(120, 53, 15, 0.4); color: #fde047; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; border: 1px solid rgba(245, 158, 11, 0.4); }
-        .status-ready { background: rgba(4, 120, 87, 0.4); color: #6ee7b7; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .status-pending { background: rgba(120, 53, 15, 0.4); color: #fde047; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+        .status-ready { background: rgba(4, 120, 87, 0.4); color: #6ee7b7; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+        .delivery-badge { background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         
         .kitchen-actions { display: flex; gap: 8px; margin-top: 10px; }
-        .btn-ready { background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 2; }
-        .btn-cancel { background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; }
-        .btn-delete { background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .history-card { border-left: 3px solid #d4af37; background: rgba(12, 12, 14, 0.8); padding: 10px; margin-bottom: 8px; border-radius: 6px; border-top: var(--gold-border-thin); border-right: var(--gold-border-thin); border-bottom: var(--gold-border-thin); }
+        .btn-ready { background: #10b981; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 2; }
+        .btn-cancel { background: #ef4444; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; }
     </style>
 </head>
 <body>
 
     <div class="screen-frame">
-
         <div class="sticky-top-container">
             <div class="app-header">
-                <img src="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png" alt="CHEF HOTDOG Logo">
-                <h2>CHEF HOTDOG</h2>
+                <img src="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png" alt="Logo">
+                <h2>CHEF HOTDOG (ADMIN)</h2>
             </div>
-
             <div class="nav">
-                <button id="tab-pos" class="active-tab" onclick="switchTab('pos')">📱 Ofitsiant (Menyu)</button>
+                <button id="tab-pos" class="active-tab" onclick="switchTab('pos')">📱 Ofitsiant</button>
                 <button id="tab-kitchen" onclick="switchTab('kitchen')">👨‍🍳 Oshxona</button>
-                <button id="tab-recipes" onclick="switchTab('recipes')">📖 Menyu va Retsept</button>
-                <button id="tab-stock" onclick="switchTab('stock')">📦 Ombor</button>
-                <button id="tab-reports" onclick="switchTab('reports')">📊 Kassa va Tarix</button>
+                <button id="tab-recipes" onclick="switchTab('recipes')">📖 Menyu</button>
+                <button id="tab-reports" onclick="switchTab('reports')">📊 Kassa</button>
             </div>
         </div>
 
-        <!-- 1. OFITSIANT -->
+        <!-- POS -->
         <div id="pos" class="tab-content active">
-            <div style="background: rgba(15, 15, 18, 0.9); border: var(--gold-border-thin); padding: 12px; border-radius: 14px; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                <label style="font-size: 13px; font-weight: bold; color: var(--gold-text); display: flex; align-items: center; gap: 6px;">
-                    🪑 Stol raqamini tanlang:
-                </label>
-                <select id="table-select" style="margin: 8px 0 0 0; padding: 10px; font-weight: bold; border-color: rgba(212, 175, 55, 0.3);">
-                    <option value="1">1-Stol</option>
-                    <option value="2">2-Stol</option>
-                    <option value="3">3-Stol</option>
-                    <option value="4">4-Stol</option>
-                    <option value="5">5-Stol</option>
-                    <option value="6">6-Stol</option>
-                    <option value="7">7-Stol</option>
-                    <option value="8">8-Stol</option>
-                    <option value="VIP">VIP Xona</option>
-                    <option value="Soba">Soba / Gazebo</option>
-                </select>
-            </div>
-
-            <h3 style="color: var(--gold-text); font-size: 17px; margin-bottom: 2px;">🍽 Taomlar Katalogi</h3>
-            <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 12px;">Stop-listni boshqarish va buyurtma berish:</p>
-            <div id="pos-menu-grid" class="pos-grid">Yuklanmoqda...</div>
+            <select id="table-select">
+                <option value="1">1-Stol</option>
+                <option value="2">2-Stol</option>
+                <option value="3">3-Stol</option>
+                <option value="VIP">VIP Xona</option>
+            </select>
+            <div id="pos-menu-grid" class="pos-grid"></div>
         </div>
 
-        <!-- 2. OSHXONA -->
+        <!-- OSHXONA -->
         <div id="kitchen" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <h3 style="color:var(--gold-text);">👨‍🍳 Oshxona Buyurtmalari</h3>
-                <button onclick="oshxonaniYuklash()" style="padding:6px 12px; background:var(--gold-btn-grad); color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">🔄 Yangilash</button>
+                <button onclick="oshxonaniYuklash()" style="padding:6px 12px; background:var(--gold-btn-grad); border:none; border-radius:8px; font-weight:bold; cursor:pointer;">🔄 Yangilash</button>
             </div>
-            <div id="kitchen-orders-list">Yuklanmoqda...</div>
+            <div id="kitchen-orders-list"></div>
         </div>
 
-        <!-- 3. MENYU VA RETSEPT -->
+        <!-- MENYU -->
         <div id="recipes" class="tab-content">
-            <h3 style="color:var(--gold-text); margin-bottom:10px;">Yangi Taom Yaratish</h3>
-            <input type="text" id="menu-title" placeholder="Taom nomi (masalan: Classic Hotdog)">
-            <input type="number" id="menu-price" placeholder="Sotuv narxi (masalan: 12000 so'm)">
-            <input type="number" id="menu-cost" placeholder="Tan narxi (masalan: 6000 so'm)">
-            <input type="number" id="menu-quantity" placeholder="Oshxonadagi porsiya miqdori (Masalan: 20 ta)">
-            
-            <label style="font-size:13px; font-weight:bold; color:#d4d4d8;">📱 Galereyadan rasm tanlang:</label>
+            <input type="text" id="menu-title" placeholder="Taom nomi">
+            <input type="number" id="menu-price" placeholder="Sotuv narxi">
+            <input type="number" id="menu-cost" placeholder="Tan narxi">
             <input type="file" id="menu-file" accept="image/*">
-            
-            <button class="btn-save" id="btn-save-menu" onclick="taomQoshish()">Taomni Saqlash</button>
-
-            <h4 style="margin-top:15px; color:var(--gold-text);">Mavjud Taomlar Sozlamasi:</h4>
+            <button class="btn-save" id="btn-save-menu" onclick="taomQoshish()">Saqlash</button>
             <div id="menu-with-cost-list" style="margin-top:10px;"></div>
         </div>
 
-        <!-- 4. OMBOR -->
-        <div id="stock" class="tab-content">
-            <h3 style="color:var(--gold-text); margin-bottom:10px;">Ombor Masalliqlari</h3>
-            <input type="text" id="ing-name" placeholder="Masalliq nomi">
-            <input type="number" id="ing-qty" placeholder="Miqdori">
-            <input type="text" id="ing-unit" placeholder="Birligi (dona, kg, litr)">
-            <input type="number" id="ing-cost" placeholder="1 birlik narxi">
-            <button class="btn-save" onclick="masalliqQoshish()">Masalliq Saqlash</button>
-            
-            <h4 style="margin-top:15px; color:var(--gold-text);">Mavjud Masalliqlar:</h4>
-            <div id="stock-list" style="margin-top:10px;"></div>
-        </div>
-
-        <!-- 5. KASSA VA TARIX -->
+        <!-- KASSA -->
         <div id="reports" class="tab-content">
-            <h3 style="color:var(--gold-text);">📊 Bugungi Kassa (<span id="today-date-str"></span>)</h3>
-            <div class="card" style="margin-top:10px;">Bugungi Tushum: <b id="rep-rev" class="tag-price">0</b> so'm</div>
-            <div class="card">Bugungi Tan Narx: <b id="rep-cost" class="tag-cost">0</b> so'm</div>
-            <div class="card">Bugungi Saf Foyda: <b id="rep-profit" style="color:#34d399; font-size:18px;">0</b> so'm</div>
-
-            <hr style="margin: 20px 0; border-color:rgba(212, 175, 55, 0.2);">
-
-            <h3 style="color:var(--gold-text);">📅 O'tgan Kunlar Tarixi</h3>
-            <div id="daily-history-list" style="margin-top:10px;">Yuklanmoqda...</div>
+            <h3 style="color:var(--gold-text);">📊 Kassa (<span id="today-date-str"></span>)</h3>
+            <div class="card">Jami Tushum: <b id="rep-rev" style="color:var(--gold-text)">0</b> so'm</div>
+            <div class="card">Saf Foyda: <b id="rep-profit" style="color:#34d399">0</b> so'm</div>
         </div>
-
     </div>
 
     <script>
@@ -434,24 +121,19 @@
         function switchTab(id) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav button').forEach(btn => btn.classList.remove('active-tab'));
-            
             document.getElementById(id).classList.add('active');
             document.getElementById(`tab-${id}`).classList.add('active-tab');
 
-            if(id === 'stock') omborniYuklash();
             if(id === 'pos' || id === 'recipes') tanlovlarniYuklash();
             if(id === 'kitchen') oshxonaniYuklash();
             if(id === 'reports') hisobotniYuklash();
         }
 
-        // VAQT VA SANANING TO'G'RI CHIQISHI UCHUN TUZATILGAN FUNKSIYA (UTC+5)
         function formatLocalDateTime(dateString) {
             let date = dateString ? new Date(dateString) : new Date();
-
             if (dateString && typeof dateString === 'string' && !dateString.includes('Z') && !dateString.includes('+')) {
                 date = new Date(dateString + 'Z');
             }
-
             const hours = String(date.getHours()).padStart(2, '0');
             const minutes = String(date.getMinutes()).padStart(2, '0');
             const seconds = String(date.getSeconds()).padStart(2, '0');
@@ -462,364 +144,127 @@
             return {
                 timeStr: `${hours}:${minutes}:${seconds}`,
                 dateStr: `${day}.${month}.${year}`,
-                fullStr: `${hours}:${minutes}:${seconds}, ${day}.${month}.${year}`,
-                isoDate: `${year}-${month}-${day}`
+                fullStr: `${hours}:${minutes}:${seconds}, ${day}.${month}.${year}`
             };
-        }
-
-        async function taomQoshish() {
-            const title = document.getElementById('menu-title').value;
-            const price = parseFloat(document.getElementById('menu-price').value);
-            const cost = parseFloat(document.getElementById('menu-cost').value) || 0;
-            const quantity = parseInt(document.getElementById('menu-quantity').value) || 0;
-            const fileInput = document.getElementById('menu-file');
-            const saveBtn = document.getElementById('btn-save-menu');
-
-            if(!title || isNaN(price)) return alert("Taom nomi va sotuv narxini kiriting!");
-
-            let image_url = '';
-
-            if(fileInput.files.length > 0) {
-                saveBtn.innerText = "⏳ Rasm yuklanmoqda...";
-                saveBtn.disabled = true;
-
-                const file = fileInput.files[0];
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}.${fileExt}`;
-
-                const { data: uploadData, error: uploadErr } = await db.storage
-                    .from('menu-images')
-                    .upload(fileName, file);
-
-                if(uploadErr) {
-                    alert("Rasm yuklashda xatolik: " + uploadErr.message);
-                    saveBtn.innerText = "Taomni Saqlash";
-                    saveBtn.disabled = false;
-                    return;
-                }
-
-                const { data: publicUrlData } = db.storage.from('menu-images').getPublicUrl(fileName);
-                image_url = publicUrlData.publicUrl;
-            }
-
-            const { error } = await db.from('menu').insert([{ 
-                title, 
-                price, 
-                cost, 
-                quantity,
-                is_active: true,
-                image_url 
-            }]);
-            
-            saveBtn.innerText = "Taomni Saqlash";
-            saveBtn.disabled = false;
-
-            if(error) alert("Xato: " + error.message);
-            else { 
-                alert("Taom saqlandi!"); 
-                document.getElementById('menu-title').value = '';
-                document.getElementById('menu-price').value = '';
-                document.getElementById('menu-cost').value = '';
-                document.getElementById('menu-quantity').value = '';
-                fileInput.value = '';
-                tanlovlarniYuklash(); 
-            }
-        }
-
-        async function toggleStopList(menu_id, currentStatus) {
-            const newStatus = !currentStatus;
-            const { error } = await db.from('menu').update({ is_active: newStatus }).eq('id', menu_id);
-            if(error) {
-                await db.from('menu').update({ quantity: newStatus ? 10 : 0 }).eq('id', menu_id);
-            }
-            tanlovlarniYuklash();
-        }
-
-        async function taomniOchirish(id, title) {
-            if(confirm(`"${title}" taomini o'chirmoqchimisiz?`)) {
-                await db.from('menu').delete().eq('id', id);
-                tanlovlarniYuklash();
-            }
-        }
-
-        function changeQty(id, delta) {
-            if (!itemQuantities[id]) itemQuantities[id] = 1;
-            itemQuantities[id] += delta;
-            if (itemQuantities[id] < 1) itemQuantities[id] = 1;
-            document.getElementById(`qty-val-${id}`).innerText = itemQuantities[id];
-        }
-
-        async function tanlovlarniYuklash() {
-            const { data: menu } = await db.from('menu').select('*');
-            const defaultImg = 'https://via.placeholder.com/150?text=Rasm+Yo%27q';
-
-            let posHtml = '';
-            (menu || []).forEach(m => {
-                if (!itemQuantities[m.id]) itemQuantities[m.id] = 1;
-                const imgSrc = m.image_url || defaultImg;
-                
-                const isActive = m.is_active !== false && (m.quantity === undefined || m.quantity > 0);
-                const stockQty = m.quantity !== undefined ? m.quantity : 'Cheksiz';
-
-                posHtml += `
-                <div class="pos-card ${!isActive ? 'is-stopped' : ''}">
-                    <div>
-                        <img src="${imgSrc}" alt="${m.title}">
-                        <h4>${m.title}</h4>
-                        <div class="price">${m.price.toLocaleString()} so'm</div>
-                        
-                        <div class="stock-qty-badge ${!isActive || stockQty === 0 ? 'zero' : ''}">
-                            Oshxonada: ${stockQty} ta
-                        </div>
-
-                        <button class="stop-toggle-btn ${isActive ? 'btn-stop' : 'btn-activate'}" 
-                                onclick="toggleStopList(${m.id}, ${isActive})">
-                            ${isActive ? '🔴 STOP-LISTGA' : '🟢 FAOL QILISH'}
-                        </button>
-                    </div>
-
-                    <div>
-                        <div class="qty-box">
-                            <button class="qty-btn" onclick="changeQty(${m.id}, -1)">-</button>
-                            <span class="qty-val" id="qty-val-${m.id}">${itemQuantities[m.id]}</span>
-                            <button class="qty-btn" onclick="changeQty(${m.id}, 1)">+</button>
-                        </div>
-
-                        <button class="btn-order" 
-                                ${!isActive ? 'disabled' : ''} 
-                                onclick="buyurtmaBeringDirect(${m.id})">
-                            ${isActive ? '🛒 Buyurtma' : '⛔ TUGAGAN'}
-                        </button>
-                    </div>
-                </div>`;
-            });
-            document.getElementById('pos-menu-grid').innerHTML = posHtml || '<p style="grid-column:1/-1;">Hali taomlar qo\'shilmagan.</p>';
-
-            let menuCards = '';
-            (menu || []).forEach(m => {
-                const costVal = m.cost || 0;
-                const imgSrc = m.image_url || defaultImg;
-
-                menuCards += `<div class="card">
-                    <div class="menu-card">
-                        <img src="${imgSrc}" class="menu-img" alt="${m.title}">
-                        <div style="flex-grow:1;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <b>${m.title}</b>
-                                <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑 O'chirish</button>
-                            </div>
-                            <small>Sotuv: <span class="tag-price">${m.price.toLocaleString()} so'm</span></small><br>
-                            <small>Tan narx: <span class="tag-cost">${costVal.toLocaleString()} so'm</span></small> | 
-                            <small>Qoldiq: <b>${m.quantity || 0} ta</b></small>
-                        </div>
-                    </div>
-                </div>`;
-            });
-            document.getElementById('menu-with-cost-list').innerHTML = menuCards || 'Taomlar yo\'q';
-        }
-
-        async function buyurtmaBeringDirect(menu_id) {
-            const tableNum = document.getElementById('table-select').value;
-            const qty = itemQuantities[menu_id] || 1;
-
-            const { data: menuItem } = await db.from('menu').select('*').eq('id', menu_id).single();
-            if(!menuItem) return alert("Taom topilmadi!");
-
-            if(menuItem.is_active === false) {
-                return alert("Ushbu taom STOP-listga qo'yilgan!");
-            }
-
-            if(menuItem.quantity !== undefined && menuItem.quantity < qty) {
-                return alert(`Oshxonada yetarli taom yo'q! Qolgan miqdor: ${menuItem.quantity} ta`);
-            }
-
-            const totalPrice = (menuItem.price || 0) * qty;
-            const totalCost = (menuItem.cost || 0) * qty;
-
-            const { error } = await db.from('sales').insert([{ 
-                total_amount: totalPrice, 
-                total_cost: totalCost, 
-                profit: (totalPrice - totalCost),
-                status: `Stol #${tableNum} - ${menuItem.title} (x${qty})`
-            }]);
-
-            if(error) {
-                alert("Xato: " + error.message);
-            } else {
-                if(menuItem.quantity !== undefined && menuItem.quantity > 0) {
-                    const newQty = menuItem.quantity - qty;
-                    await db.from('menu').update({ 
-                        quantity: newQty,
-                        is_active: newQty > 0
-                    }).eq('id', menu_id);
-                }
-
-                alert(`✅ Stol #${tableNum}: ${qty}x ${menuItem.title} oshxonaga yuborildi!`);
-                itemQuantities[menu_id] = 1;
-                document.getElementById(`qty-val-${menu_id}`).innerText = 1;
-                tanlovlarniYuklash();
-            }
-        }
-
-        async function masalliqQoshish() {
-            const name = document.getElementById('ing-name').value;
-            const quantity = parseFloat(document.getElementById('ing-qty').value);
-            const unit = document.getElementById('ing-unit').value;
-            const cost_per_unit = parseFloat(document.getElementById('ing-cost').value);
-
-            if(!name || isNaN(quantity) || !unit) return alert("Nom va miqdorni kiriting!");
-
-            const { error } = await db.from('ingredients').insert([{ name, quantity, unit, cost_per_unit: cost_per_unit || 0 }]);
-            if(error) alert("Xato: " + error.message);
-            else { 
-                alert("Masalliq qo'shildi!"); 
-                document.getElementById('ing-name').value = '';
-                document.getElementById('ing-qty').value = '';
-                document.getElementById('ing-unit').value = '';
-                document.getElementById('ing-cost').value = '';
-                omborniYuklash(); 
-            }
-        }
-
-        async function omborniYuklash() {
-            const { data } = await db.from('ingredients').select('*');
-            let html = '';
-            (data || []).forEach(i => {
-                html += `<div class="card"><b>${i.name}</b>: ${i.quantity} ${i.unit} (${i.cost_per_unit || 0} so'm)</div>`;
-            });
-            document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
         async function oshxonaniYuklash() {
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
-            
             if(!sales || sales.length === 0) {
-                document.getElementById('kitchen-orders-list').innerHTML = '<p style="color:#a1a1aa; text-align:center;">Buyurtmalar mavjud emas</p>';
+                document.getElementById('kitchen-orders-list').innerHTML = '<p style="text-align:center;">Buyurtmalar yo\'q</p>';
                 return;
             }
 
             let groupedSales = {};
-
             sales.forEach((s) => {
                 const dt = formatLocalDateTime(s.created_at);
-                const dateKey = dt.dateStr;
-
-                if (!groupedSales[dateKey]) {
-                    groupedSales[dateKey] = [];
-                }
-                groupedSales[dateKey].push({ ...s, formattedTime: dt.fullStr });
+                if (!groupedSales[dt.dateStr]) groupedSales[dt.dateStr] = [];
+                groupedSales[dt.dateStr].push({ ...s, formattedTime: dt.fullStr });
             });
 
             let finalHtml = '';
-
             Object.keys(groupedSales).forEach(dateKey => {
                 const items = groupedSales[dateKey];
-                
-                finalHtml += `
-                <div class="daily-orders-block">
-                    <div class="daily-title">
-                        <span>📅 Kun: ${dateKey}</span>
-                        <span style="font-size:12px; color:#6ee7b7;">Jami: ${items.length} ta zakaz</span>
-                    </div>`;
+                finalHtml += `<div class="daily-orders-block"><div class="daily-title"><span>📅 ${dateKey}</span><span>Jami: ${items.length} ta</span></div>`;
 
                 items.forEach((s, idx) => {
                     const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
+                    const isDelivery = s.status && s.status.includes('🛵 DOSTAVKA');
 
                     finalHtml += `
-                    <div class="card" style="margin-bottom: 8px;">
+                    <div class="card">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <b>#${items.length - idx} (⏰ ${s.formattedTime})</b>
-                            <span class="${isReady ? 'status-ready' : 'status-pending'}">
-                                ${isReady ? '✅ TAYYOR' : '⏱ TAYYORLANMOQDA'}
-                            </span>
+                            ${isDelivery ? '<span class="delivery-badge">🛵 DOSTAVKA</span>' : ''}
+                            <span class="${isReady ? 'status-ready' : 'status-pending'}">${isReady ? '✅ TAYYOR' : '⏱ TAYYORLANMOQDA'}</span>
                         </div>
-                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${s.status || 'Buyurtma'}</p>
-                        <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${s.total_amount.toLocaleString()}</b> so'm</p>
-                        
+                        <p style="margin-top:6px; font-weight:bold; font-size:15px; color:#fff;">${s.status || ''}</p>
+                        <p style="font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${(s.total_amount || 0).toLocaleString()}</b> so'm</p>
                         <div class="kitchen-actions">
                             ${!isReady ? `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${s.status}')">✅ TAYYOR BO'LDI</button>` : ''}
                             <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
                         </div>
                     </div>`;
                 });
-
                 finalHtml += `</div>`;
             });
-
             document.getElementById('kitchen-orders-list').innerHTML = finalHtml;
         }
 
         async function buyurtmaniTayyorLash(id, currentStatus) {
-            const updatedStatus = currentStatus + " [TAYYOR BO'LDI]";
-            const { error } = await db.from('sales').update({ status: updatedStatus }).eq('id', id);
-            if(error) alert("Xatolik: " + error.message);
-            else oshxonaniYuklash();
+            await db.from('sales').update({ status: currentStatus + " [TAYYOR BO'LDI]" }).eq('id', id);
+            oshxonaniYuklash();
         }
 
         async function buyurtmaniBekorQilish(id) {
-            if(confirm("Ushbu buyurtmani bekor qilmoqchimisiz?")) {
-                const { error } = await db.from('sales').delete().eq('id', id);
-                if(error) alert("Xatolik: " + error.message);
-                else oshxonaniYuklash();
+            if(confirm("O'chirilsinmi?")) {
+                await db.from('sales').delete().eq('id', id);
+                oshxonaniYuklash();
             }
+        }
+
+        async function tanlovlarniYuklash() {
+            const { data: menu } = await db.from('menu').select('*');
+            let posHtml = '';
+            (menu || []).forEach(m => {
+                posHtml += `
+                <div class="pos-card">
+                    <img src="${m.image_url || 'https://via.placeholder.com/150'}">
+                    <h4>${m.title}</h4>
+                    <div style="color:var(--gold-text); font-weight:bold;">${m.price.toLocaleString()} so'm</div>
+                    <button onclick="buyurtmaBeringDirect(${m.id})" style="background:var(--gold-btn-grad); border:none; padding:8px; border-radius:8px; font-weight:bold; margin-top:6px; cursor:pointer;">🛒 Buyurtma</button>
+                </div>`;
+            });
+            document.getElementById('pos-menu-grid').innerHTML = posHtml;
+        }
+
+        async function buyurtmaBeringDirect(menu_id) {
+            const tableNum = document.getElementById('table-select').value;
+            const { data: menuItem } = await db.from('menu').select('*').eq('id', menu_id).single();
+            await db.from('sales').insert([{ total_amount: menuItem.price, total_cost: menuItem.cost, profit: (menuItem.price - menuItem.cost), status: `Stol #${tableNum} - ${menuItem.title} (x1)` }]);
+            alert("Buyurtma oshxonaga ketdi!");
+        }
+
+        async function taomQoshish() {
+            const title = document.getElementById('menu-title').value;
+            const price = parseFloat(document.getElementById('menu-price').value);
+            const cost = parseFloat(document.getElementById('menu-cost').value) || 0;
+            const fileInput = document.getElementById('menu-file');
+            let image_url = '';
+
+            if(fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const fileName = `${Date.now()}.${file.name.split('.').pop()}`;
+                await db.storage.from('menu-images').upload(fileName, file);
+                const { data } = db.storage.from('menu-images').getPublicUrl(fileName);
+                image_url = data.publicUrl;
+            }
+
+            await db.from('menu').insert([{ title, price, cost, image_url }]);
+            alert("Taom saqlandi!");
+            tanlovlarniYuklash();
         }
 
         async function hisobotniYuklash() {
             const todayDt = formatLocalDateTime();
             document.getElementById('today-date-str').innerText = todayDt.dateStr;
-
-            const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
-
-            let todayRev = 0, todayCost = 0, todayProfit = 0;
-            let dailyGroups = {};
-
+            const { data: sales } = await db.from('sales').select('*');
+            let todayRev = 0, todayProfit = 0;
             (sales || []).forEach(s => {
                 const dt = formatLocalDateTime(s.created_at);
-                const dateStr = dt.dateStr;
-
-                if (!dailyGroups[dateStr]) {
-                    dailyGroups[dateStr] = { rev: 0, cost: 0, profit: 0, count: 0 };
-                }
-
-                const rev = parseFloat(s.total_amount || 0);
-                const cost = parseFloat(s.total_cost || 0);
-                const profit = parseFloat(s.profit || 0);
-
-                dailyGroups[dateStr].rev += rev;
-                dailyGroups[dateStr].cost += cost;
-                dailyGroups[dateStr].profit += profit;
-                dailyGroups[dateStr].count += 1;
-
-                if (dateStr === todayDt.dateStr) {
-                    todayRev += rev;
-                    todayCost += cost;
-                    todayProfit += profit;
+                if (dt.dateStr === todayDt.dateStr) {
+                    todayRev += parseFloat(s.total_amount || 0);
+                    todayProfit += parseFloat(s.profit || 0);
                 }
             });
-
             document.getElementById('rep-rev').innerText = todayRev.toLocaleString();
-            document.getElementById('rep-cost').innerText = todayCost.toLocaleString();
             document.getElementById('rep-profit').innerText = todayProfit.toLocaleString();
-
-            let historyHtml = '';
-            Object.keys(dailyGroups).sort().reverse().forEach(date => {
-                if (date !== todayDt.dateStr) {
-                    const item = dailyGroups[date];
-                    historyHtml += `<div class="history-card">
-                        <b>📅 ${date} Sanadagi Savdo:</b><br>
-                        Jami savdo: <b style="color:var(--gold-text);">${item.rev.toLocaleString()}</b> so'm (${item.count} ta buyurtma)<br>
-                        Saf Foyda: <b style="color:#34d399;">+${item.profit.toLocaleString()} so'm</b>
-                    </div>`;
-                }
-            });
-
-            document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali o\'tgan kunlar tarixi yo\'q.</i>';
         }
 
         tanlovlarniYuklash();
         setInterval(() => {
             if(document.getElementById('kitchen').classList.contains('active')) oshxonaniYuklash();
-        }, 8000);
+        }, 5000);
     </script>
 </body>
 </html>
