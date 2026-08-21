@@ -23,8 +23,9 @@
             --gold-border: 1px solid rgba(212, 175, 55, 0.4);
             --gold-border-thin: 1px solid rgba(212, 175, 55, 0.25);
             --gold-text: #f5d061;
-            --card-bg: rgba(18, 18, 18, 0.85);
+            --card-bg: rgba(18, 18, 18, 0.9);
             --dark-bg: #0a0a0d;
+            --green-border: 2px solid #10b981;
         }
 
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
@@ -41,29 +42,6 @@
             overflow-x: hidden;
         }
 
-        /* Tepa va Pastki Burchaklardagi Oltin Barglar Dekoratsiyasi */
-        .leaf-decor {
-            position: fixed;
-            pointer-events: none;
-            z-index: 999;
-            opacity: 0.35;
-            width: 120px;
-            height: 120px;
-        }
-        .leaf-top-right {
-            top: 0;
-            right: 0;
-            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23d4af37' d='M100,0 C70,10 50,30 40,60 C35,40 20,20 0,10 C30,25 45,45 50,70 C60,40 80,20 100,0 Z'/%3E%3Cpath fill='%23d4af37' d='M100,30 C80,40 65,55 60,80 C70,60 85,45 100,30 Z'/%3E%3C/svg%3E") no-repeat;
-            background-size: contain;
-        }
-        .leaf-bottom-left {
-            bottom: 0;
-            left: 0;
-            transform: rotate(180deg);
-            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23d4af37' d='M100,0 C70,10 50,30 40,60 C35,40 20,20 0,10 C30,25 45,45 50,70 C60,40 80,20 100,0 Z'/%3E%3Cpath fill='%23d4af37' d='M100,30 C80,40 65,55 60,80 C70,60 85,45 100,30 Z'/%3E%3C/svg%3E") no-repeat;
-            background-size: contain;
-        }
-
         /* Ekran Boylab Ingichka Oltin Ramka */
         .screen-frame {
             border: var(--gold-border-thin);
@@ -75,12 +53,25 @@
             backdrop-filter: blur(5px);
         }
 
+        /* TEPAGA SVAYP QILGANDA QOTIB TURADIGAN YUQORI QISIM (STICKY HEADER) */
+        .sticky-top-container {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(10, 10, 13, 0.95);
+            backdrop-filter: blur(10px);
+            padding-top: 4px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+            margin-bottom: 12px;
+        }
+
         /* Header */
         .app-header { 
             display: flex; 
             align-items: center; 
             gap: 14px; 
-            margin-bottom: 12px; 
+            margin-bottom: 8px; 
             background: var(--card-bg); 
             padding: 10px 16px; 
             border-radius: 16px; 
@@ -88,15 +79,15 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), 0 0 10px rgba(212, 175, 55, 0.1);
         }
         .app-header img { 
-            width: 46px; 
-            height: 46px; 
+            width: 42px; 
+            height: 42px; 
             border-radius: 50%; 
             object-fit: cover; 
             border: 1.5px solid #d4af37; 
             box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
         }
         .app-header h2 { 
-            font-size: 20px; 
+            font-size: 18px; 
             font-weight: 800; 
             background: var(--gold-gradient);
             -webkit-background-clip: text;
@@ -109,19 +100,18 @@
         .nav { 
             display: flex; 
             gap: 8px; 
-            margin-bottom: 14px; 
             overflow-x: auto; 
-            padding: 4px 2px;
+            padding: 2px 2px;
         }
         .nav::-webkit-scrollbar { display: none; }
         .nav button { 
-            padding: 10px 16px; 
+            padding: 9px 14px; 
             background: rgba(20, 20, 22, 0.9); 
             color: var(--gold-text); 
             border: var(--gold-border-thin); 
             border-radius: 12px; 
             font-weight: 600; 
-            font-size: 13px; 
+            font-size: 12.5px; 
             white-space: nowrap; 
             cursor: pointer; 
             transition: all 0.25s ease;
@@ -180,7 +170,28 @@
             color: #f1f5f9; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
-        
+
+        /* OSHXONA HAR KUNLIK ZAKAZLARNING YASHIL KONTEYNERI */
+        .daily-orders-block {
+            border: var(--green-border);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 16px;
+            background: rgba(6, 78, 59, 0.12);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+        }
+        .daily-title {
+            color: #34d399;
+            font-weight: 800;
+            font-size: 15px;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed rgba(16, 185, 129, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         /* POS Grid (Taomlar) */
         .pos-grid { 
             display: grid; 
@@ -207,7 +218,6 @@
         }
         .pos-card:hover { transform: translateY(-2px); border-color: rgba(212, 175, 55, 0.5); }
         
-        /* STOP-LIST DA BO'LGAN TAOMLAR STILI */
         .pos-card.is-stopped {
             opacity: 0.55;
             filter: grayscale(0.8);
@@ -236,7 +246,6 @@
             margin-bottom: 4px; 
         }
 
-        /* Oshxona miqdori va Stop Tugmalari */
         .stock-qty-badge {
             font-size: 11px;
             font-weight: 700;
@@ -268,7 +277,6 @@
         .stop-toggle-btn.btn-stop { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
         .stop-toggle-btn.btn-activate { background: #064e3b; color: #6ee7b7; border: 1px solid #10b981; }
         
-        /* Qty Plus/Minus Buttons */
         .qty-box { 
             display: flex; 
             align-items: center; 
@@ -327,24 +335,22 @@
 </head>
 <body>
 
-    <!-- Burchakdagi Oltin Barglar Bezagii -->
-    <div class="leaf-decor leaf-top-right"></div>
-    <div class="leaf-decor leaf-bottom-left"></div>
-
-    <!-- EKRAN ATROFIDAGI INGICHKA OLTIN RAMKA -->
     <div class="screen-frame">
 
-        <div class="app-header">
-            <img src="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png" alt="CHEF HOTDOG Logo">
-            <h2>CHEF HOTDOG</h2>
-        </div>
+        <!-- TEPADA QOTIB TURADIGAN BO'LIMLAR (STICKY HEADER) -->
+        <div class="sticky-top-container">
+            <div class="app-header">
+                <img src="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png" alt="CHEF HOTDOG Logo">
+                <h2>CHEF HOTDOG</h2>
+            </div>
 
-        <div class="nav">
-            <button id="tab-pos" class="active-tab" onclick="switchTab('pos')">📱 Ofitsiant (Menyu)</button>
-            <button id="tab-kitchen" onclick="switchTab('kitchen')">👨‍🍳 Oshxona</button>
-            <button id="tab-recipes" onclick="switchTab('recipes')">📖 Menyu Yaratish</button>
-            <button id="tab-stock" onclick="switchTab('stock')">📦 Ombor</button>
-            <button id="tab-reports" onclick="switchTab('reports')">📊 Kassa va Tarix</button>
+            <div class="nav">
+                <button id="tab-pos" class="active-tab" onclick="switchTab('pos')">📱 Ofitsiant (Menyu)</button>
+                <button id="tab-kitchen" onclick="switchTab('kitchen')">👨‍🍳 Oshxona</button>
+                <button id="tab-recipes" onclick="switchTab('recipes')">📖 Menyu va Retsept</button>
+                <button id="tab-stock" onclick="switchTab('stock')">📦 Ombor</button>
+                <button id="tab-reports" onclick="switchTab('reports')">📊 Kassa va Tarix</button>
+            </div>
         </div>
 
         <!-- 1. OFITSIANT -->
@@ -367,23 +373,21 @@
                 </select>
             </div>
 
-            <h3 style="color: var(--gold-text); font-size: 17px; margin-bottom: 2px; display: flex; align-items: center; gap: 6px;">
-                🍽 Taomlar Katalogi
-            </h3>
+            <h3 style="color: var(--gold-text); font-size: 17px; margin-bottom: 2px;">🍽 Taomlar Katalogi</h3>
             <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 12px;">Stop-listni boshqarish va buyurtma berish:</p>
             <div id="pos-menu-grid" class="pos-grid">Yuklanmoqda...</div>
         </div>
 
         <!-- 2. OSHXONA -->
         <div id="kitchen" class="tab-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 style="color:var(--gold-text);">👨‍🍳 Oshxona Ekrani</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="color:var(--gold-text);">👨‍🍳 Oshxona Buyurtmalari</h3>
                 <button onclick="oshxonaniYuklash()" style="padding:6px 12px; background:var(--gold-btn-grad); color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">🔄 Yangilash</button>
             </div>
             <div id="kitchen-orders-list">Yuklanmoqda...</div>
         </div>
 
-        <!-- 3. MENYU YARATISH -->
+        <!-- 3. MENYU VA RETSEPT -->
         <div id="recipes" class="tab-content">
             <h3 style="color:var(--gold-text); margin-bottom:10px;">Yangi Taom Yaratish</h3>
             <input type="text" id="menu-title" placeholder="Taom nomi (masalan: Classic Hotdog)">
@@ -448,8 +452,22 @@
             if(id === 'reports') hisobotniYuklash();
         }
 
-        function getTodayString() {
-            return new Date().toISOString().split('T')[0];
+        // TELEFON VAQTI VA SANASINI FORMATLASH FUNKSIYASI
+        function formatLocalDateTime(dateString) {
+            const date = dateString ? new Date(dateString) : new Date();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+
+            return {
+                timeStr: `${hours}:${minutes}:${seconds}`,
+                dateStr: `${day}.${month}.${year}`,
+                fullStr: `${hours}:${minutes}:${seconds}, ${day}.${month}.${year}`,
+                isoDate: `${year}-${month}-${day}`
+            };
         }
 
         async function taomQoshish() {
@@ -511,12 +529,14 @@
             }
         }
 
-        /* QO'LDA STOP-LISTGA QO'YISH VA CHIQARISH FUNKSIYASI */
         async function toggleStopList(menu_id, currentStatus) {
             const newStatus = !currentStatus;
             const { error } = await db.from('menu').update({ is_active: newStatus }).eq('id', menu_id);
-            if(error) alert("Xatolik: " + error.message);
-            else tanlovlarniYuklash();
+            if(error) {
+                // Agar is_active ustuni yo'q bo'lsa, xatoga tushmasdan quantity bilan boshqaradi
+                await db.from('menu').update({ quantity: newStatus ? 10 : 0 }).eq('id', menu_id);
+            }
+            tanlovlarniYuklash();
         }
 
         async function taomniOchirish(id, title) {
@@ -542,7 +562,6 @@
                 if (!itemQuantities[m.id]) itemQuantities[m.id] = 1;
                 const imgSrc = m.image_url || defaultImg;
                 
-                // Stop statusi va porsiya miqdori
                 const isActive = m.is_active !== false && (m.quantity === undefined || m.quantity > 0);
                 const stockQty = m.quantity !== undefined ? m.quantity : 'Cheksiz';
 
@@ -557,7 +576,6 @@
                             Oshxonada: ${stockQty} ta
                         </div>
 
-                        <!-- Stop-list qo'lda boshqarish tugmasi -->
                         <button class="stop-toggle-btn ${isActive ? 'btn-stop' : 'btn-activate'}" 
                                 onclick="toggleStopList(${m.id}, ${isActive})">
                             ${isActive ? '🔴 STOP-LISTGA' : '🟢 FAOL QILISH'}
@@ -632,7 +650,6 @@
             if(error) {
                 alert("Xato: " + error.message);
             } else {
-                // Sotilgach, oshxonadagi miqdorni kamaytirish
                 if(menuItem.quantity !== undefined && menuItem.quantity > 0) {
                     const newQty = menuItem.quantity - qty;
                     await db.from('menu').update({ 
@@ -677,31 +694,66 @@
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
+        /* OSHXONA BUYURTMALARINI KUNLAR BO'YICHA YASHIL RAMKAGA GURUHLAB CHIQARISH */
         async function oshxonaniYuklash() {
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
-            let html = '';
+            
+            if(!sales || sales.length === 0) {
+                document.getElementById('kitchen-orders-list').innerHTML = '<p style="color:#a1a1aa; text-align:center;">Buyurtmalar mavjud emas</p>';
+                return;
+            }
 
-            (sales || []).slice(0, 30).forEach((s, idx) => {
-                const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
-                const timeStr = new Date(s.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            // Buyurtmalarni kunlar bo'yicha guruhlash
+            let groupedSales = {};
 
-                html += `<div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b>#${sales.length - idx} (${timeStr})</b>
-                        <span class="${isReady ? 'status-ready' : 'status-pending'}">
-                            ${isReady ? '✅ TAYYOR' : '⏱ TAYYORLANMOQDA'}
-                        </span>
-                    </div>
-                    <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${s.status || 'Buyurtma'}</p>
-                    <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${s.total_amount.toLocaleString()}</b> so'm</p>
-                    
-                    <div class="kitchen-actions">
-                        ${!isReady ? `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${s.status}')">✅ TAYYOR BO'LDI</button>` : ''}
-                        <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
-                    </div>
-                </div>`;
+            sales.forEach((s) => {
+                const dt = formatLocalDateTime(s.created_at);
+                const dateKey = dt.dateStr; // Masalan: "21.08.2026"
+
+                if (!groupedSales[dateKey]) {
+                    groupedSales[dateKey] = [];
+                }
+                groupedSales[dateKey].push({ ...s, formattedTime: dt.fullStr });
             });
-            document.getElementById('kitchen-orders-list').innerHTML = html || 'Buyurtmalar yo\'q';
+
+            let finalHtml = '';
+
+            // Har bir kun uchun yashil chegarali konteyner yaratamiz
+            Object.keys(groupedSales).forEach(dateKey => {
+                const items = groupedSales[dateKey];
+                
+                finalHtml += `
+                <div class="daily-orders-block">
+                    <div class="daily-title">
+                        <span>📅 Kun: ${dateKey}</span>
+                        <span style="font-size:12px; color:#6ee7b7;">Jami: ${items.length} ta zakaz</span>
+                    </div>`;
+
+                items.forEach((s, idx) => {
+                    const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
+
+                    finalHtml += `
+                    <div class="card" style="margin-bottom: 8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <b>#${items.length - idx} (⏰ ${s.formattedTime})</b>
+                            <span class="${isReady ? 'status-ready' : 'status-pending'}">
+                                ${isReady ? '✅ TAYYOR' : '⏱ TAYYORLANMOQDA'}
+                            </span>
+                        </div>
+                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${s.status || 'Buyurtma'}</p>
+                        <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${s.total_amount.toLocaleString()}</b> so'm</p>
+                        
+                        <div class="kitchen-actions">
+                            ${!isReady ? `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${s.status}')">✅ TAYYOR BO'LDI</button>` : ''}
+                            <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
+                        </div>
+                    </div>`;
+                });
+
+                finalHtml += `</div>`; // Yashil blok yopilishi
+            });
+
+            document.getElementById('kitchen-orders-list').innerHTML = finalHtml;
         }
 
         async function buyurtmaniTayyorLash(id, currentStatus) {
@@ -712,7 +764,7 @@
         }
 
         async function buyurtmaniBekorQilish(id) {
-            if(confirm("Ushbu buyurtmani bekor qilmoqchimisiz? (Baza va kassadan o'chiriladi)")) {
+            if(confirm("Ushbu buyurtmani bekor qilmoqchimisiz?")) {
                 const { error } = await db.from('sales').delete().eq('id', id);
                 if(error) alert("Xatolik: " + error.message);
                 else oshxonaniYuklash();
@@ -720,8 +772,8 @@
         }
 
         async function hisobotniYuklash() {
-            const todayStr = getTodayString();
-            document.getElementById('today-date-str').innerText = todayStr;
+            const todayDt = formatLocalDateTime();
+            document.getElementById('today-date-str').innerText = todayDt.dateStr;
 
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
 
@@ -729,7 +781,8 @@
             let dailyGroups = {};
 
             (sales || []).forEach(s => {
-                const dateStr = s.created_at.split('T')[0];
+                const dt = formatLocalDateTime(s.created_at);
+                const dateStr = dt.dateStr;
 
                 if (!dailyGroups[dateStr]) {
                     dailyGroups[dateStr] = { rev: 0, cost: 0, profit: 0, count: 0 };
@@ -744,7 +797,7 @@
                 dailyGroups[dateStr].profit += profit;
                 dailyGroups[dateStr].count += 1;
 
-                if (dateStr === todayStr) {
+                if (dateStr === todayDt.dateStr) {
                     todayRev += rev;
                     todayCost += cost;
                     todayProfit += profit;
@@ -757,7 +810,7 @@
 
             let historyHtml = '';
             Object.keys(dailyGroups).sort().reverse().forEach(date => {
-                if (date !== todayStr) {
+                if (date !== todayDt.dateStr) {
                     const item = dailyGroups[date];
                     historyHtml += `<div class="history-card">
                         <b>📅 ${date} Sanadagi Savdo:</b><br>
@@ -773,7 +826,7 @@
         tanlovlarniYuklash();
         setInterval(() => {
             if(document.getElementById('kitchen').classList.contains('active')) oshxonaniYuklash();
-        }, 10000);
+        }, 8000);
     </script>
 </body>
 </html>
