@@ -42,7 +42,6 @@
             overflow-x: hidden;
         }
 
-        /* Ekran Boylab Ingichka Oltin Ramka */
         .screen-frame {
             border: var(--gold-border-thin);
             border-radius: 20px;
@@ -53,7 +52,6 @@
             backdrop-filter: blur(5px);
         }
 
-        /* TEPAGA SVAYP QILGANDA QOTIB TURADIGAN YUQORI QISIM (STICKY HEADER) */
         .sticky-top-container {
             position: sticky;
             top: 0;
@@ -66,7 +64,6 @@
             margin-bottom: 12px;
         }
 
-        /* Header */
         .app-header { 
             display: flex; 
             align-items: center; 
@@ -96,7 +93,6 @@
             text-transform: uppercase;
         }
 
-        /* Navigatsiya tugmalari */
         .nav { 
             display: flex; 
             gap: 8px; 
@@ -127,7 +123,6 @@
         }
         .nav button:active { transform: scale(0.96); }
 
-        /* Asosiy Bloklar */
         .tab-content { 
             display: none; 
             background: var(--card-bg); 
@@ -171,7 +166,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
 
-        /* OSHXONA HAR KUNLIK ZAKAZLARNING YASHIL KONTEYNERI */
         .daily-orders-block {
             border: var(--green-border);
             border-radius: 14px;
@@ -192,7 +186,6 @@
             align-items: center;
         }
 
-        /* POS Grid (Taomlar) */
         .pos-grid { 
             display: grid; 
             grid-template-columns: repeat(2, 1fr); 
@@ -337,7 +330,6 @@
 
     <div class="screen-frame">
 
-        <!-- TEPADA QOTIB TURADIGAN BO'LIMLAR (STICKY HEADER) -->
         <div class="sticky-top-container">
             <div class="app-header">
                 <img src="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png" alt="CHEF HOTDOG Logo">
@@ -452,9 +444,14 @@
             if(id === 'reports') hisobotniYuklash();
         }
 
-        // TELEFON VAQTI VA SANASINI FORMATLASH FUNKSIYASI
+        // VAQT VA SANANING TO'G'RI CHIQISHI UCHUN TUZATILGAN FUNKSIYA (UTC+5)
         function formatLocalDateTime(dateString) {
-            const date = dateString ? new Date(dateString) : new Date();
+            let date = dateString ? new Date(dateString) : new Date();
+
+            if (dateString && typeof dateString === 'string' && !dateString.includes('Z') && !dateString.includes('+')) {
+                date = new Date(dateString + 'Z');
+            }
+
             const hours = String(date.getHours()).padStart(2, '0');
             const minutes = String(date.getMinutes()).padStart(2, '0');
             const seconds = String(date.getSeconds()).padStart(2, '0');
@@ -533,7 +530,6 @@
             const newStatus = !currentStatus;
             const { error } = await db.from('menu').update({ is_active: newStatus }).eq('id', menu_id);
             if(error) {
-                // Agar is_active ustuni yo'q bo'lsa, xatoga tushmasdan quantity bilan boshqaradi
                 await db.from('menu').update({ quantity: newStatus ? 10 : 0 }).eq('id', menu_id);
             }
             tanlovlarniYuklash();
@@ -694,7 +690,6 @@
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
-        /* OSHXONA BUYURTMALARINI KUNLAR BO'YICHA YASHIL RAMKAGA GURUHLAB CHIQARISH */
         async function oshxonaniYuklash() {
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
             
@@ -703,12 +698,11 @@
                 return;
             }
 
-            // Buyurtmalarni kunlar bo'yicha guruhlash
             let groupedSales = {};
 
             sales.forEach((s) => {
                 const dt = formatLocalDateTime(s.created_at);
-                const dateKey = dt.dateStr; // Masalan: "21.08.2026"
+                const dateKey = dt.dateStr;
 
                 if (!groupedSales[dateKey]) {
                     groupedSales[dateKey] = [];
@@ -718,7 +712,6 @@
 
             let finalHtml = '';
 
-            // Har bir kun uchun yashil chegarali konteyner yaratamiz
             Object.keys(groupedSales).forEach(dateKey => {
                 const items = groupedSales[dateKey];
                 
@@ -750,7 +743,7 @@
                     </div>`;
                 });
 
-                finalHtml += `</div>`; // Yashil blok yopilishi
+                finalHtml += `</div>`;
             });
 
             document.getElementById('kitchen-orders-list').innerHTML = finalHtml;
