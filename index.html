@@ -52,6 +52,8 @@
         .status-ready { background: rgba(4, 120, 87, 0.4); color: #6ee7b7; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
         .delivery-badge { background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         
+        .map-btn { display: inline-block; background: #2563eb; color: #fff; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; margin-top: 6px; }
+
         .kitchen-actions { display: flex; gap: 8px; margin-top: 10px; }
         .btn-ready { background: #10b981; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 2; }
         .btn-cancel { background: #ef4444; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; }
@@ -116,8 +118,6 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let itemQuantities = {};
-
         function switchTab(id) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav button').forEach(btn => btn.classList.remove('active-tab'));
@@ -170,6 +170,15 @@
                 items.forEach((s, idx) => {
                     const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
                     const isDelivery = s.status && s.status.includes('🛵 DOSTAVKA');
+                    
+                    let cleanStatus = s.status || '';
+                    let mapUrl = '';
+
+                    if(cleanStatus.includes('MAP_LINK:')) {
+                        const parts = cleanStatus.split(' | MAP_LINK:');
+                        cleanStatus = parts[0];
+                        mapUrl = parts[1];
+                    }
 
                     finalHtml += `
                     <div class="card">
@@ -178,10 +187,11 @@
                             ${isDelivery ? '<span class="delivery-badge">🛵 DOSTAVKA</span>' : ''}
                             <span class="${isReady ? 'status-ready' : 'status-pending'}">${isReady ? '✅ TAYYOR' : '⏱ TAYYORLANMOQDA'}</span>
                         </div>
-                        <p style="margin-top:6px; font-weight:bold; font-size:15px; color:#fff;">${s.status || ''}</p>
-                        <p style="font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${(s.total_amount || 0).toLocaleString()}</b> so'm</p>
+                        <p style="margin-top:6px; font-weight:bold; font-size:14px; color:#fff;">${cleanStatus}</p>
+                        ${mapUrl ? `<a href="${mapUrl}" target="_blank" class="map-btn">📍 Xaritada ko'rish (Google Maps)</a>` : ''}
+                        <p style="font-size:13px; color:#d4d4d8; margin-top:6px;">Summa: <b style="color:var(--gold-text);">${(s.total_amount || 0).toLocaleString()}</b> so'm</p>
                         <div class="kitchen-actions">
-                            ${!isReady ? `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${s.status}')">✅ TAYYOR BO'LDI</button>` : ''}
+                            ${!isReady ? `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${s.status.replace(/'/g, "\\'")}')">✅ TAYYOR BO'LDI</button>` : ''}
                             <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
                         </div>
                     </div>`;
