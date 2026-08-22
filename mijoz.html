@@ -4,131 +4,104 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHEF HOTDOG - Buyurtma berish</title>
-    
+
     <!-- iPhone va PWA uchun logotip ulash -->
     <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
     <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-title" content="Chef Hotdog">
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        :root {
-            --gold-gradient: linear-gradient(135deg, #f5d061 0%, #e6a100 100%);
-            --gold-btn: linear-gradient(135deg, #ffc107, #ff9800);
-            --gold-text: #f5d061;
-            --card-bg: rgba(18, 18, 18, 0.75);
-        }
-
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
             background-color: #0d0d0d;
             color: #ffffff;
-            padding-bottom: 90px;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(255, 193, 7, 0.05) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(255, 152, 0, 0.05) 0%, transparent 20%);
-            background-attachment: fixed;
+            padding-bottom: 20px;
         }
 
         header {
-            background: rgba(13, 13, 13, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 15px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid rgba(245, 208, 97, 0.2);
+            padding: 18px 20px 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .logo {
-            font-size: 22px;
-            font-weight: 900;
-            background: var(--gold-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 1.5px;
+            font-size: 24px;
+            font-weight: 800;
+            color: #f3a835;
+            letter-spacing: 1px;
             text-transform: uppercase;
         }
 
         .table-badge {
-            background: rgba(255, 193, 7, 0.15);
-            border: 1px solid var(--gold-text);
-            color: var(--gold-text);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 13px;
+            border: 1px solid #f3a835;
+            color: #f3a835;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 14px;
             font-weight: 600;
         }
 
         .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 15px;
+            padding: 10px 16px;
         }
 
         .categories {
             display: flex;
             gap: 10px;
             overflow-x: auto;
-            padding: 5px 0 15px 0;
+            padding: 10px 0 15px 0;
             scrollbar-width: none;
         }
         .categories::-webkit-scrollbar { display: none; }
 
         .cat-btn {
-            background: #1a1a1a;
-            color: #aaa;
-            border: 1px solid #333;
-            padding: 8px 16px;
-            border-radius: 25px;
+            background: #1c1c1e;
+            color: #8e8e93;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 20px;
             white-space: nowrap;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
+            font-size: 15px;
+            font-weight: 500;
         }
 
         .cat-btn.active {
-            background: var(--gold-btn);
-            color: #000;
-            border-color: #ffc107;
-            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+            background: #f3a835;
+            color: #000000;
+            font-weight: 700;
         }
 
         .menu-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .food-card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #1c1c1e;
             border-radius: 16px;
             overflow: hidden;
             display: flex;
-            position: relative;
-            backdrop-filter: blur(5px);
+            padding: 0;
         }
 
         .food-img {
-            width: 110px;
-            height: 110px;
+            width: 120px;
+            height: 120px;
             object-fit: cover;
         }
 
         .food-info {
-            padding: 12px;
+            padding: 12px 14px;
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -136,17 +109,17 @@
         }
 
         .food-title {
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 700;
-            color: #fff;
-            margin-bottom: 4px;
+            color: #ffffff;
+            margin-bottom: 2px;
         }
 
         .food-desc {
             font-size: 12px;
-            color: #888;
-            margin-bottom: 8px;
+            color: #8e8e93;
             line-height: 1.3;
+            margin-bottom: 8px;
         }
 
         .food-bottom {
@@ -156,151 +129,99 @@
         }
 
         .food-price {
-            font-size: 15px;
-            font-weight: 800;
-            color: var(--gold-text);
+            font-size: 16px;
+            font-weight: 700;
+            color: #f3a835;
         }
 
         .add-btn {
-            background: var(--gold-btn);
-            color: #000;
+            background: #f3a835;
+            color: #000000;
             border: none;
             padding: 6px 14px;
-            border-radius: 8px;
+            border-radius: 10px;
             font-weight: 700;
             font-size: 13px;
             cursor: pointer;
-        }
-
-        .cart-bar {
-            position: fixed;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 30px);
-            max-width: 570px;
-            background: var(--gold-btn);
-            color: #000;
-            padding: 14px 20px;
-            border-radius: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 800;
-            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
-            z-index: 99;
-            cursor: pointer;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: flex-end;
-        }
-
-        .modal-content {
-            background: #141414;
-            width: 100%;
-            max-width: 600px;
-            border-radius: 24px 24px 0 0;
-            padding: 20px;
-            max-height: 85vh;
-            overflow-y: auto;
-            border-top: 1px solid rgba(255, 193, 7, 0.3);
-        }
-
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #222;
-        }
-
-        .qty-btn {
-            background: #222;
-            color: #fff;
-            border: 1px solid #444;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            font-weight: bold;
-        }
-
-        .checkout-btn {
-            width: 100%;
-            background: var(--gold-btn);
-            color: #000;
-            border: none;
-            padding: 15px;
-            border-radius: 14px;
-            font-weight: 800;
-            font-size: 16px;
-            margin-top: 15px;
-        }
-
-        #map {
-            height: 180px;
-            width: 100%;
-            border-radius: 12px;
-            margin-top: 10px;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">Chef Hotdog</div>
-        <div class="table-badge" id="table-display">Stol: --</div>
+        <div class="logo">CHEF HOTDOG</div>
+        <div class="table-badge" id="table-display">Stol: #1</div>
     </header>
 
     <div class="container">
         <div class="categories">
-            <button class="cat-btn active" onclick="filterCat('all', this)">Barchasi</button>
-            <button class="cat-btn" onclick="filterCat('hotdog', this)">Hot-doglar</button>
-            <button class="cat-btn" onclick="filterCat('burger', this)">Burgerlar</button>
-            <button class="cat-btn" onclick="filterCat('drink', this)">Ichimliklar</button>
+            <button class="cat-btn active">Barchasi</button>
+            <button class="cat-btn">Hot-Doglar</button>
+            <button class="cat-btn">Burgerlar</button>
+            <button class="cat-btn">Ichimliklar</button>
         </div>
 
-        <div class="menu-grid" id="menu-container"></div>
-    </div>
-
-    <div class="cart-bar" id="cart-bar" style="display:none;" onclick="openCart()">
-        <span id="cart-count">0 ta mahsulot</span>
-        <span>Savatni ko'rish &rarr;</span>
-    </div>
-
-    <div class="modal" id="cart-modal">
-        <div class="modal-content">
-            <h2 style="margin-bottom: 15px; color: var(--gold-text);">Buyurtmangiz</h2>
-            <div id="cart-items"></div>
-            
-            <div style="margin-top: 20px;">
-                <label style="font-size: 14px; color: #aaa;">Xizmat turi:</label>
-                <select id="order-type" onchange="toggleOrderType()" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #444; border-radius:8px; margin-top:5px;">
-                    <option value="table">Stolda tanavvul qilish</option>
-                    <option value="delivery">Yetkazib berish (Dostavka)</option>
-                </select>
+        <div class="menu-grid">
+            <!-- Qirollik Hot-Dog -->
+            <div class="food-card">
+                <img src="https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=300" class="food-img" alt="Qirollik Hot-Dog">
+                <div class="food-info">
+                    <div>
+                        <div class="food-title">Qirollik Hot-Dog</div>
+                        <div class="food-desc">Maxsus sosiska, pishloq, sous, svejiy ko'katlar</div>
+                    </div>
+                    <div class="food-bottom">
+                        <div class="food-price">25 000 so'm</div>
+                        <button class="add-btn">+ Qo'shish</button>
+                    </div>
+                </div>
             </div>
 
-            <div id="delivery-section" style="display:none; margin-top: 15px;">
-                <input type="text" id="cust-phone" placeholder="Telefon raqamingiz" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #444; border-radius:8px; margin-bottom:10px;">
-                <label style="font-size: 13px; color: #aaa;">Xaritadan manzilingizni belgilang:</label>
-                <div id="map"></div>
+            <!-- Dabl Cheeseburger -->
+            <div class="food-card">
+                <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" class="food-img" alt="Dabl Cheeseburger">
+                <div class="food-info">
+                    <div>
+                        <div class="food-title">Dabl Cheeseburger</div>
+                        <div class="food-desc">Ikkita shershli kotlet, dabl pishloq, marinadlangan bodring</div>
+                    </div>
+                    <div class="food-bottom">
+                        <div class="food-price">38 000 so'm</div>
+                        <button class="add-btn">+ Qo'shish</button>
+                    </div>
+                </div>
             </div>
 
-            <div style="display:flex; justify-content:space-between; margin-top: 20px; font-size:18px; font-weight:bold;">
-                <span>Jami:</span>
-                <span id="cart-total" style="color: var(--gold-text);">0 so'm</span>
+            <!-- Klassik Hot-Dog -->
+            <div class="food-card">
+                <img src="https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?w=300" class="food-img" alt="Klassik Hot-Dog">
+                <div class="food-info">
+                    <div>
+                        <div class="food-title">Klassik Hot-Dog</div>
+                        <div class="food-desc">An'anaviy retsept bo'yicha tayyorlangan ajoyib hot-dog</div>
+                    </div>
+                    <div class="food-bottom">
+                        <div class="food-price">18 000 so'm</div>
+                        <button class="add-btn">+ Qo'shish</button>
+                    </div>
+                </div>
             </div>
 
-            <button class="checkout-btn" onclick="submitOrder()">BUYURTMANI TASDIQLASH</button>
-            <button onclick="closeCart()" style="width:100%; background:transparent; color:#888; border:none; padding:10px; margin-top:5px;">Yopish</button>
+            <!-- Coca-Cola 0.5L -->
+            <div class="food-card">
+                <img src="https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=300" class="food-img" alt="Coca-Cola 0.5L">
+                <div class="food-info">
+                    <div>
+                        <div class="food-title">Coca-Cola 0.5L</div>
+                        <div class="food-desc">Muzdek salqinlantiruvchi ichimlik</div>
+                    </div>
+                    <div class="food-bottom">
+                        <div class="food-price">8 000 so'm</div>
+                        <button class="add-btn">+ Qo'shish</button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -308,157 +229,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         const tableNum = urlParams.get('stol') || '1';
         document.getElementById('table-display').innerText = `Stol: #${tableNum}`;
-
-        const menuData = [
-            { id: 1, name: "Qirollik Hot-Dog", price: 25000, cat: "hotdog", desc: "Maxsus sosiska, pishloq, sous, svejiy ko'katlar", img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=300" },
-            { id: 2, name: "Dabl Cheeseburger", price: 38000, cat: "burger", desc: "Ikkita shershli kotlet, dabl pishloq, marinadlangan bodring", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" },
-            { id: 3, name: "Klassik Hot-Dog", price: 18000, cat: "hotdog", desc: "An'anaviy retsept bo'yicha tayyorlangan ajoyib hot-dog", img: "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?w=300" },
-            { id: 4, name: "Coca-Cola 0.5L", price: 8000, cat: "drink", desc: "Muzdek salqinlantiruvchi ichimlik", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=300" }
-        ];
-
-        let cart = {};
-        let map, marker, userLat = 41.311081, userLng = 69.240562;
-
-        function renderMenu(items) {
-            const container = document.getElementById('menu-container');
-            container.innerHTML = items.map(item => `
-                <div class="food-card">
-                    <img src="${item.img}" class="food-img" alt="${item.name}">
-                    <div class="food-info">
-                        <div>
-                            <div class="food-title">${item.name}</div>
-                            <div class="food-desc">${item.desc}</div>
-                        </div>
-                        <div class="food-bottom">
-                            <div class="food-price">${item.price.toLocaleString()} so'm</div>
-                            <button class="add-btn" onclick="addToCart(${item.id})">+ Qo'shish</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function filterCat(cat, btn) {
-            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            if(cat === 'all') renderMenu(menuData);
-            else renderMenu(menuData.filter(i => i.cat === cat));
-        }
-
-        function addToCart(id) {
-            cart[id] = (cart[id] || 0) + 1;
-            updateCartBar();
-            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Savatga qo\'shildi', showConfirmButton: false, timer: 1000, background: '#222', color: '#fff' });
-        }
-
-        function updateCartBar() {
-            const count = Object.values(cart).reduce((a, b) => a + b, 0);
-            const bar = document.getElementById('cart-bar');
-            if (count > 0) {
-                bar.style.display = 'flex';
-                document.getElementById('cart-count').innerText = `${count} ta mahsulot savatda`;
-            } else {
-                bar.style.display = 'none';
-            }
-        }
-
-        function openCart() {
-            document.getElementById('cart-modal').style.display = 'flex';
-            renderCartItems();
-        }
-
-        function closeCart() {
-            document.getElementById('cart-modal').style.display = 'none';
-        }
-
-        function renderCartItems() {
-            const container = document.getElementById('cart-items');
-            let total = 0;
-            let html = '';
-
-            for (let id in cart) {
-                const item = menuData.find(m => m.id == id);
-                const qty = cart[id];
-                const sum = item.price * qty;
-                total += sum;
-
-                html += `
-                    <div class="cart-item">
-                        <div>
-                            <div style="font-weight:bold;">${item.name}</div>
-                            <div style="font-size:12px; color:#aaa;">${item.price.toLocaleString()} x ${qty}</div>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <button class="qty-btn" onclick="changeQty(${id}, -1)">-</button>
-                            <span>${qty}</span>
-                            <button class="qty-btn" onclick="changeQty(${id}, 1)">+</button>
-                        </div>
-                    </div>
-                `;
-            }
-
-            container.innerHTML = html || '<p style="color:#aaa; text-align:center;">Savat bo\'sh</p>';
-            document.getElementById('cart-total').innerText = `${total.toLocaleString()} so'm`;
-        }
-
-        function changeQty(id, delta) {
-            cart[id] += delta;
-            if (cart[id] <= 0) delete cart[id];
-            updateCartBar();
-            renderCartItems();
-            if (Object.keys(cart).length === 0) closeCart();
-        }
-
-        function toggleOrderType() {
-            const type = document.getElementById('order-type').value;
-            const sec = document.getElementById('delivery-section');
-            if (type === 'delivery') {
-                sec.style.display = 'block';
-                if (!map) initMap();
-            } else {
-                sec.style.display = 'none';
-            }
-        }
-
-        function initMap() {
-            setTimeout(() => {
-                map = L.map('map').setView([userLat, userLng], 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-                marker = L.marker([userLat, userLng], {draggable: true}).addTo(map);
-
-                marker.on('dragend', function(e) {
-                    const pos = marker.getLatLng();
-                    userLat = pos.lat;
-                    userLng = pos.lng;
-                });
-            }, 200);
-        }
-
-        function submitOrder() {
-            const type = document.getElementById('order-type').value;
-            if (type === 'delivery') {
-                const phone = document.getElementById('cust-phone').value;
-                if (!phone) {
-                    Swal.fire({ icon: 'error', title: 'Xatolik', text: 'Iltimos, telefon raqamingizni kiriting!' });
-                    return;
-                }
-            }
-
-            Swal.fire({
-                icon: 'success',
-                title: 'Buyurtma qabul qilindi!',
-                text: 'Tez orada oshpazlarimiz tayyorlashni boshlaydi.',
-                background: '#1a1a1a',
-                color: '#fff',
-                confirmButtonColor: '#ffc107'
-            }).then(() => {
-                cart = {};
-                updateCartBar();
-                closeCart();
-            });
-        }
-
-        renderMenu(menuData);
     </script>
 </body>
 </html>
