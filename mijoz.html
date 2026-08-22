@@ -4,392 +4,195 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHEF HOTDOG - Buyurtma berish</title>
-
-    <!-- iOS va Android logotipi -->
-    <link rel="apple-touch-icon" href="https://i.ibb.co/3ykX4S2/IMG-5133.jpg">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/3ykX4S2/IMG-5133.jpg">
-    <link rel="icon" type="image/jpeg" href="https://i.ibb.co/3ykX4S2/IMG-5133.jpg">
-    <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-title" content="Chef Hotdog">
-
-    <!-- SweetAlert2 & Leaflet Map -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <style>
         :root {
-            --gold-gradient: linear-gradient(135deg, #f5d061 0%, #e3a833 100%);
+            --gold-gradient: linear-gradient(135deg, #d4af37 0%, #fff3a8 30%, #aa771c 70%, #fcf6ba 100%);
+            --gold-btn: linear-gradient(180deg, #f7e089 0%, #c8962c 100%);
             --gold-text: #f5d061;
-            --bg-card: rgba(18, 18, 20, 0.95);
-            --border-color: rgba(245, 208, 97, 0.25);
+            --card-bg: rgba(18, 18, 18, 0.95);
         }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+        body { background: #0a0a0d; color: #fff; padding: 12px; }
+        
+        .header { text-align: center; padding: 15px; border-bottom: 1px solid rgba(212, 175, 55, 0.3); margin-bottom: 15px; }
+        .header h1 { background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 22px; }
+        
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+        .card { background: var(--card-bg); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+        .card img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; }
+        .price { color: var(--gold-text); font-weight: bold; margin: 5px 0; }
+        
+        .qty-control { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 5px; }
+        .qty-btn { background: #222; border: 1px solid #d4af37; color: #fff; width: 26px; height: 26px; border-radius: 6px; font-weight: bold; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background-color: #0d0d0f;
-            color: #ffffff;
-            padding-bottom: 40px;
-        }
-
-        header {
-            padding: 20px 20px 10px 20px;
-            text-align: center;
-        }
-
-        .logo {
-            font-size: 26px;
-            font-weight: 900;
-            background: var(--gold-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-        }
-
-        .sub-logo {
-            font-size: 13px;
-            color: #8e8e93;
-            margin-top: 2px;
-        }
-
-        .container {
-            padding: 10px 16px;
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--gold-text);
-            margin: 15px 0 10px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Taomlar Katakchasi */
-        .menu-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .food-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 10px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-
-        .food-img {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 12px;
-            margin-bottom: 8px;
-        }
-
-        .food-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 4px;
-        }
-
-        .food-price {
-            font-size: 15px;
-            font-weight: 800;
-            color: var(--gold-text);
-            margin-bottom: 8px;
-        }
-
-        .counter-btn-group {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .qty-btn {
-            background: #2c2c2e;
-            color: #fff;
-            border: 1px solid var(--border-color);
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .qty-count {
-            font-size: 15px;
-            font-weight: bold;
-            min-width: 18px;
-        }
-
-        .form-group {
-            margin-top: 20px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 16px;
-        }
-
-        .form-label {
-            font-size: 13px;
-            color: #b0b0b5;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .input-field {
-            width: 100%;
-            padding: 12px;
-            background: #18181a;
-            color: #fff;
-            border: 1px solid #3a3a3c;
-            border-radius: 10px;
-            font-size: 14px;
-            outline: none;
-            margin-bottom: 12px;
-        }
-
-        .input-field:focus {
-            border-color: #f5d061;
-        }
-
-        .btn-location {
-            width: 100%;
-            background: #2563eb;
-            color: #fff;
-            border: none;
-            padding: 11px;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-
-        #map {
-            height: 180px;
-            width: 100%;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 12px;
-        }
-
-        .submit-btn {
-            width: 100%;
-            background: var(--gold-gradient);
-            color: #000;
-            border: none;
-            padding: 15px;
-            border-radius: 14px;
-            font-weight: 800;
-            font-size: 16px;
-            margin-top: 15px;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(227, 168, 51, 0.3);
-            text-transform: uppercase;
-        }
-
-        .total-price-bar {
-            display: flex;
-            justify-content: space-between;
-            font-size: 18px;
-            font-weight: 800;
-            margin-top: 10px;
-        }
+        .order-form { background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.3); }
+        .order-form input, .order-form textarea { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 8px; }
+        
+        #map { height: 200px; width: 100%; border-radius: 10px; margin-bottom: 12px; border: 1px solid #d4af37; }
+        .btn-gps { background: #2563eb; color: #fff; border: none; padding: 8px; width: 100%; border-radius: 8px; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
+        .btn-submit { background: var(--gold-btn); border: none; padding: 14px; width: 100%; font-weight: bold; font-size: 16px; border-radius: 10px; cursor: pointer; color: #000; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">CHEF HOTDOG</div>
-        <div class="sub-logo" id="header-sub">Yetkazib berish xizmati (Dostavka)</div>
-    </header>
+    <div class="header">
+        <h1>CHEF HOTDOG</h1>
+        <p style="font-size:12px; color:#aaa;">Yetkazib berish xizmati (Dostavka)</p>
+    </div>
 
-    <div class="container">
-        <div class="section-title">🍽 Taomni tanlang:</div>
+    <h3 style="color:var(--gold-text); margin-bottom:10px;">🍽 Taomni tanlang:</h3>
+    <div id="menu-grid" class="grid">Yuklanmoqda...</div>
+
+    <div class="order-form">
+        <h3 style="color:var(--gold-text); margin-bottom:10px;">🛵 Yetkazib berish ma'lumotlari:</h3>
+        <label>Ismingiz:</label>
+        <input type="text" id="cust-name" placeholder="Masalan: Ali">
         
-        <div class="menu-grid" id="menu-container"></div>
+        <label>Telefon raqamingiz:</label>
+        <input type="tel" id="cust-phone" placeholder="+998 90 123 45 67">
 
-        <div class="form-group">
-            <div class="section-title" style="margin-top:0;">🛵 Yetkazib berish ma'lumotlari:</div>
+        <label>Kartadan joylashuvni tanlang:</label>
+        <button class="btn-gps" onclick="getCurrentLocation()">📍 Mening joylashuvimni aniqlash</button>
+        <div id="map"></div>
 
-            <label class="form-label">Xizmat turi:</label>
-            <select id="order-type" class="input-field" onchange="toggleType()">
-                <option value="delivery">Yetkazib berish (Dostavka)</option>
-                <option value="table">Stolda tanavvul qilish</option>
-            </select>
+        <label>Qo'shimcha manzil va mo'ljal:</label>
+        <textarea id="cust-address" rows="2" placeholder="Uy/Xonadon raqami, mo'ljal..."></textarea>
 
-            <label class="form-label">Ismingiz:</label>
-            <input type="text" id="cust-name" class="input-field" placeholder="Masalan: Ali">
-
-            <label class="form-label">Telefon raqamingiz:</label>
-            <input type="tel" id="cust-phone" class="input-field" placeholder="+998 90 123 45 67">
-
-            <div id="delivery-box">
-                <label class="form-label">Kartadan joylashuvni tanlang:</label>
-                <button type="button" class="btn-location" onclick="getLocation()">📍 Mening joylashuvimni aniqlash</button>
-                <div id="map"></div>
-
-                <label class="form-label">Qo'shimcha manzil va mo'ljal:</label>
-                <input type="text" id="cust-address" class="input-field" placeholder="Uy/Xonadon raqami, mo'ljal...">
-            </div>
-
-            <div class="total-price-bar">
-                <span>Jami:</span>
-                <span id="total-price" style="color: var(--gold-text);">0 so'm</span>
-            </div>
-
-            <button type="button" class="submit-btn" onclick="sendOrder()">BUYURTMA BERISH</button>
+        <div style="margin-bottom: 12px; font-size: 16px;">
+            Jami: <b id="total-price-sum" style="color:var(--gold-text);">0</b> so'm
         </div>
+
+        <button class="btn-submit" onclick="dostavkaBuyurtmaYuborish()">BUYURTMA BERISH</button>
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const tableNum = urlParams.get('stol');
-
-        if(tableNum) {
-            document.getElementById('header-sub').innerText = `Stol: #${tableNum}`;
-            document.getElementById('order-type').value = 'table';
-        }
-
-        // Asl rasmlaringiz bor bo'lgan menyu ma'lumotlari
-        const menuData = [
-            { id: 1, name: "TUXUM & SASISKA", price: 15000, img: "img/tuxum_sasiska.jpg" },
-            { id: 2, name: "Chicken hotdog", price: 15000, img: "img/chicken_hotdog.jpg" },
-            { id: 3, name: "Classic lavash", price: 28000, img: "img/classic_lavash.jpg" },
-            { id: 4, name: "chicken lavash", price: 22000, img: "img/chicken_lavash.jpg" },
-            { id: 5, name: "SASISKA lavash", price: 25000, img: "img/sasiska_lavash.jpg" },
-            { id: 6, name: "DIL-DIL lagmon", price: 30000, img: "img/dildil_lagmon.jpg" }
-        ];
+        const SUPABASE_URL = "https://wrrsvrgdinfmnuwewtoa.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let cart = {};
-        let map, marker, userLat = 41.311081, userLng = 69.240562;
-
-        function renderMenu() {
-            const container = document.getElementById('menu-container');
-            container.innerHTML = menuData.map(item => {
-                const qty = cart[item.id] || 0;
-                return `
-                    <div class="food-card">
-                        <img src="${item.img}" class="food-img" alt="${item.name}" onerror="this.onerror=null;this.src='https://i.ibb.co/3ykX4S2/IMG-5133.jpg';">
-                        <div class="food-title">${item.name}</div>
-                        <div class="food-price">${item.price.toLocaleString()} so'm</div>
-                        <div class="counter-btn-group">
-                            <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
-                            <span class="qty-count">${qty}</span>
-                            <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            calculateTotal();
-        }
-
-        function updateQty(id, delta) {
-            cart[id] = (cart[id] || 0) + delta;
-            if (cart[id] <= 0) delete cart[id];
-            renderMenu();
-        }
-
-        function calculateTotal() {
-            let total = 0;
-            for (let id in cart) {
-                const item = menuData.find(m => m.id == id);
-                total += item.price * cart[id];
-            }
-            document.getElementById('total-price').innerText = `${total.toLocaleString()} so'm`;
-        }
-
-        function toggleType() {
-            const type = document.getElementById('order-type').value;
-            const box = document.getElementById('delivery-box');
-            if (type === 'delivery') {
-                box.style.display = 'block';
-            } else {
-                box.style.display = 'none';
-            }
-        }
+        let menuItems = [];
+        let selectedLat = 40.1006;
+        let selectedLng = 65.3725;
+        let map, marker;
 
         function initMap() {
-            map = L.map('map').setView([userLat, userLng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            marker = L.marker([userLat, userLng], {draggable: true}).addTo(map);
+            map = L.map('map').setView([selectedLat, selectedLng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
 
-            marker.on('dragend', function() {
-                const pos = marker.getLatLng();
-                userLat = pos.lat;
-                userLng = pos.lng;
+            marker = L.marker([selectedLat, selectedLng], {draggable: true}).addTo(map);
+
+            marker.on('dragend', function(e) {
+                const position = marker.getLatLng();
+                selectedLat = position.lat;
+                selectedLng = position.lng;
+            });
+
+            map.on('click', function(e) {
+                selectedLat = e.latlng.lat;
+                selectedLng = e.latlng.lng;
+                marker.setLatLng(e.latlng);
             });
         }
 
-        function getLocation() {
+        function getCurrentLocation() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    userLat = pos.coords.latitude;
-                    userLng = pos.coords.longitude;
-                    map.setView([userLat, userLng], 16);
-                    marker.setLatLng([userLat, userLng]);
-                }, () => {
-                    alert("Joylashuvni aniqlashga ruxsat berilmadi.");
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    selectedLat = position.coords.latitude;
+                    selectedLng = position.coords.longitude;
+                    map.setView([selectedLat, selectedLng], 16);
+                    marker.setLatLng([selectedLat, selectedLng]);
+                }, function() {
+                    alert("GPS joylashuvingizni aniqlab bo'lmadi. Iltimos kartadan tanlang.");
                 });
             }
         }
 
-        function sendOrder() {
+        async function menyuniYuklash() {
+            const { data } = await db.from('menu').select('*');
+            menuItems = data || [];
+            let html = '';
+            
+            menuItems.forEach(m => {
+                cart[m.id] = 0;
+                html += `
+                <div class="card">
+                    <img src="${m.image_url || 'https://via.placeholder.com/150'}">
+                    <b>${m.title}</b>
+                    <div class="price">${m.price.toLocaleString()} so'm</div>
+                    <div class="qty-control">
+                        <button class="qty-btn" onclick="changeQty(${m.id}, -1)">-</button>
+                        <span id="qty-${m.id}">0</span>
+                        <button class="qty-btn" onclick="changeQty(${m.id}, 1)">+</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('menu-grid').innerHTML = html;
+        }
+
+        function changeQty(id, delta) {
+            if(cart[id] + delta >= 0) {
+                cart[id] += delta;
+                document.getElementById(`qty-${id}`).innerText = cart[id];
+                hisoblaSumma();
+            }
+        }
+
+        function hisoblaSumma() {
+            let total = 0;
+            menuItems.forEach(m => {
+                total += (cart[m.id] || 0) * m.price;
+            });
+            document.getElementById('total-price-sum').innerText = total.toLocaleString();
+        }
+
+        async function dostavkaBuyurtmaYuborish() {
             const name = document.getElementById('cust-name').value;
             const phone = document.getElementById('cust-phone').value;
+            const address = document.getElementById('cust-address').value;
 
-            if (Object.keys(cart).length === 0) {
-                Swal.fire({ icon: 'warning', title: 'Savat bo\'sh', text: 'Iltimos, taom tanlang!', background: '#1c1c1e', color: '#fff' });
-                return;
-            }
+            if(!name || !phone) return alert("Iltimos, ismingiz va telefon raqamingizni kiriting!");
 
-            if (!name || !phone) {
-                Swal.fire({ icon: 'warning', title: 'Ma\'lumot yetarli emas', text: 'Ismingiz va telefon raqamingizni kiriting!', background: '#1c1c1e', color: '#fff' });
-                return;
-            }
+            let itemsText = [];
+            let totalAmount = 0;
+            let totalCost = 0;
 
-            Swal.fire({
-                icon: 'success',
-                title: 'Buyurtma qabul qilindi!',
-                text: 'Tez orada oshpazlarimiz tayyorlashni boshlaydi.',
-                background: '#1c1c1e',
-                color: '#fff',
-                confirmButtonColor: '#f5d061'
-            }).then(() => {
-                cart = {};
-                renderMenu();
+            menuItems.forEach(m => {
+                const qty = cart[m.id] || 0;
+                if(qty > 0) {
+                    itemsText.push(`${m.title} (x${qty})`);
+                    totalAmount += m.price * qty;
+                    totalCost += (m.cost || 0) * qty;
+                }
             });
+
+            if(itemsText.length === 0) return alert("Iltimos, kamida bitta taom tanlang!");
+
+            const mapLink = `https://www.google.com/maps?q=${selectedLat},${selectedLng}`;
+            const fullStatusText = `🛵 DOSTAVKA: ${itemsText.join(', ')} | Mijoz: ${name} (${phone}) | Manzil: ${address || 'Kartada ko\'rsatilgan'} | MAP_LINK:${mapLink}`;
+
+            const { error } = await db.from('sales').insert([{
+                total_amount: totalAmount,
+                total_cost: totalCost,
+                profit: (totalAmount - totalCost),
+                status: fullStatusText
+            }]);
+
+            if(error) alert("Xatolik: " + error.message);
+            else {
+                alert("✅ Buyurtmangiz qabul qilindi! Tez orada siz bilan bog'lanamiz.");
+                location.reload();
+            }
         }
 
         window.onload = function() {
-            renderMenu();
+            menyuniYuklash();
             initMap();
-            toggleType();
         };
     </script>
 </body>
