@@ -428,27 +428,42 @@
             if(id === 'reports') hisobotniYuklash();
         }
 
-        // Qat'iy Toshkent vaqt doirasi bo'yicha vaqtni ko'rsatish
-        function getTashkentTimeString(dateInput) {
-            if (!dateInput) return "00:00";
-            const dateObj = new Date(dateInput);
-            return new Intl.DateTimeFormat('uz-UZ', {
-                timeZone: 'Asia/Tashkent',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-            }).format(dateObj);
+        // Hozirgi Toshkent ISO datetime satrini olish (+05:00 bilanoq)
+        function getTashkentISODateTime() {
+            const now = new Date();
+            const tashkentOffset = 5 * 60; // 5 soat daqiqada
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const tashkentDate = new Date(utc + (tashkentOffset * 60000));
+            return tashkentDate.toISOString().replace('Z', '+05:00');
         }
 
+        // Toshkent vaqti (HH:mm)
+        function getTashkentTimeString(dateInput) {
+            if (!dateInput) return "00:00";
+            let d = new Date(dateInput);
+            if (isNaN(d.getTime())) return "00:00";
+            
+            // UTC vaqtiga +5 soat qo'shish orqali aniq ko'rsatish
+            const utcTime = d.getTime() + (d.getTimezoneOffset() * 60000);
+            const tashkentDate = new Date(utcTime + (5 * 3600000));
+            
+            let hh = String(tashkentDate.getHours()).padStart(2, '0');
+            let mm = String(tashkentDate.getMinutes()).padStart(2, '0');
+            return `${hh}:${mm}`;
+        }
+
+        // Toshkent sanasi (YYYY-MM-DD)
         function getTashkentDateString(dateInput) {
-            const dateObj = dateInput ? new Date(dateInput) : new Date();
-            const formatter = new Intl.DateTimeFormat('en-CA', {
-                timeZone: 'Asia/Tashkent',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            });
-            return formatter.format(dateObj);
+            let d = dateInput ? new Date(dateInput) : new Date();
+            if (isNaN(d.getTime())) d = new Date();
+
+            const utcTime = d.getTime() + (d.getTimezoneOffset() * 60000);
+            const tashkentDate = new Date(utcTime + (5 * 3600000));
+
+            let yyyy = tashkentDate.getFullYear();
+            let mm = String(tashkentDate.getMonth() + 1).padStart(2, '0');
+            let dd = String(tashkentDate.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
         }
 
         function formatOrderTextWithPurpleQty(text) {
@@ -478,7 +493,7 @@
                 zone1_price: z1_pr,
                 zone2_km: z2_km,
                 zone2_price: z2_pr,
-                updated_at: new Date()
+                updated_at: getTashkentISODateTime()
             });
 
             if(error) alert("Xatolik: " + error.message);
@@ -632,11 +647,13 @@
             const totalPrice = (menuItem.price || 0) * qty;
             const totalCost = (menuItem.cost || 0) * qty;
 
+            // created_at Maydonini qat'iy ravishda Toshkent ISO formati bilan bazaga yuborish
             const { error } = await db.from('sales').insert([{ 
                 total_amount: totalPrice, 
                 total_cost: totalCost, 
                 profit: (totalPrice - totalCost),
-                status: `Stol #${tableNum} - ${menuItem.title} (x${qty})`
+                status: `Stol #${tableNum} - ${menuItem.title} (x${qty})`,
+                created_at: getTashkentISODateTime()
             }]);
 
             if(error) alert("Xato: " + error.message);
