@@ -41,7 +41,6 @@
             overflow-x: hidden;
         }
 
-        /* Tepa va Pastki Burchaklardagi Oltin Barglar Dekoratsiyasi */
         .leaf-decor {
             position: fixed;
             pointer-events: none;
@@ -64,7 +63,6 @@
             background-size: contain;
         }
 
-        /* Ekran Boylab Ingichka Oltin Ramka (Outer Screen Border) */
         .screen-frame {
             border: var(--gold-border-thin);
             border-radius: 20px;
@@ -75,7 +73,6 @@
             backdrop-filter: blur(5px);
         }
 
-        /* Header */
         .app-header { 
             display: flex; 
             align-items: center; 
@@ -105,7 +102,6 @@
             text-transform: uppercase;
         }
 
-        /* Navigatsiya tugmalari */
         .nav { 
             display: flex; 
             gap: 8px; 
@@ -137,7 +133,6 @@
         }
         .nav button:active { transform: scale(0.96); }
 
-        /* Asosiy Bloklar */
         .tab-content { 
             display: none; 
             background: var(--card-bg); 
@@ -181,7 +176,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
         
-        /* POS Grid (Taomlar) */
         .pos-grid { 
             display: grid; 
             grid-template-columns: repeat(2, 1fr); 
@@ -214,6 +208,28 @@
             border: var(--gold-border-thin); 
             margin-bottom: 8px; 
         }
+
+        /* STOP-LIST STYLINGI */
+        .pos-card.is-stopped {
+            opacity: 0.45;
+            filter: grayscale(0.8);
+        }
+        .pos-card.is-stopped::after {
+            content: "🛑 STOP LIST";
+            position: absolute;
+            top: 35%;
+            left: 5%;
+            right: 5%;
+            background: rgba(239, 68, 68, 0.95);
+            color: #fff;
+            font-weight: 900;
+            padding: 6px;
+            border-radius: 8px;
+            font-size: 13px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.8);
+            letter-spacing: 0.5px;
+        }
+
         .pos-card h4 { font-size: 13px; margin-bottom: 4px; color: #ffffff; font-weight: 700; line-height: 1.2; }
         .pos-card .price { 
             color: var(--gold-text); 
@@ -222,7 +238,6 @@
             margin-bottom: 8px; 
         }
         
-        /* Qty Plus/Minus Buttons */
         .qty-box { 
             display: flex; 
             align-items: center; 
@@ -264,6 +279,11 @@
             justify-content: center;
             gap: 4px;
         }
+        .pos-card.is-stopped button.btn-order,
+        .pos-card.is-stopped .qty-btn {
+            pointer-events: none;
+            opacity: 0.5;
+        }
 
         .menu-card { display: flex; gap: 12px; align-items: center; }
         .menu-img { width: 65px; height: 65px; border-radius: 10px; object-fit: cover; border: var(--gold-border-thin); flex-shrink: 0; }
@@ -276,16 +296,19 @@
         .btn-ready { background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 2; }
         .btn-cancel { background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; }
         .btn-delete { background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        
+        /* STOP-LIST TUGMALARI */
+        .btn-stop { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .btn-activate { background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+
         .history-card { border-left: 3px solid #d4af37; background: rgba(12, 12, 14, 0.8); padding: 10px; margin-bottom: 8px; border-radius: 6px; border-top: var(--gold-border-thin); border-right: var(--gold-border-thin); border-bottom: var(--gold-border-thin); }
     </style>
 </head>
 <body>
 
-    <!-- Burchakdagi Oltin Barglar Bezagii -->
     <div class="leaf-decor leaf-top-right"></div>
     <div class="leaf-decor leaf-bottom-left"></div>
 
-    <!-- EKRAN ATROFIDAGI INGICHKA OLTIN RAMKA -->
     <div class="screen-frame">
 
         <div class="app-header">
@@ -296,7 +319,7 @@
         <div class="nav">
             <button id="tab-pos" class="active-tab" onclick="switchTab('pos')">📱 Ofitsiant (Menyu)</button>
             <button id="tab-kitchen" onclick="switchTab('kitchen')">👨‍🍳 Oshxona</button>
-            <button id="tab-recipes" onclick="switchTab('recipes')">📖 Menyu Yaratish</button>
+            <button id="tab-recipes" onclick="switchTab('recipes')">📖 Menyu va Stop-List</button>
             <button id="tab-stock" onclick="switchTab('stock')">📦 Ombor</button>
             <button id="tab-reports" onclick="switchTab('reports')">📊 Kassa va Tarix</button>
         </div>
@@ -337,7 +360,7 @@
             <div id="kitchen-orders-list">Yuklanmoqda...</div>
         </div>
 
-        <!-- 3. MENYU YARATISH -->
+        <!-- 3. MENYU VA STOP-LIST -->
         <div id="recipes" class="tab-content">
             <h3 style="color:var(--gold-text); margin-bottom:10px;">Yangi Taom Yaratish</h3>
             <input type="text" id="menu-title" placeholder="Taom nomi (masalan: Classic Hotdog)">
@@ -349,7 +372,7 @@
             
             <button class="btn-save" id="btn-save-menu" onclick="taomQoshish()">Taomni Saqlash</button>
 
-            <h4 style="margin-top:15px; color:var(--gold-text);">Mavjud Taomlar Sozlamasi:</h4>
+            <h4 style="margin-top:15px; color:var(--gold-text);">Mavjud Taomlar Sozlamasi va Stop-List:</h4>
             <div id="menu-with-cost-list" style="margin-top:10px;"></div>
         </div>
 
@@ -387,6 +410,7 @@
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let itemQuantities = {};
+        let stopList = JSON.parse(localStorage.getItem('chef_stop_list')) || [];
 
         function switchTab(id) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -458,8 +482,21 @@
         async function taomniOchirish(id, title) {
             if(confirm(`"${title}" taomini o'chirmoqchimisiz?`)) {
                 await db.from('menu').delete().eq('id', id);
+                stopList = stopList.filter(stopId => stopId !== id);
+                localStorage.setItem('chef_stop_list', JSON.stringify(stopList));
                 tanlovlarniYuklash();
             }
+        }
+
+        // STOP-LISTGA QO'SHISH VA OLISH FUNKSIYASI
+        function toggleStopList(id) {
+            if (stopList.includes(id)) {
+                stopList = stopList.filter(stopId => stopId !== id);
+            } else {
+                stopList.push(id);
+            }
+            localStorage.setItem('chef_stop_list', JSON.stringify(stopList));
+            tanlovlarniYuklash();
         }
 
         function changeQty(id, delta) {
@@ -477,9 +514,10 @@
             (menu || []).forEach(m => {
                 if (!itemQuantities[m.id]) itemQuantities[m.id] = 1;
                 const imgSrc = m.image_url || defaultImg;
+                const isStopped = stopList.includes(m.id);
 
                 posHtml += `
-                <div class="pos-card">
+                <div class="pos-card ${isStopped ? 'is-stopped' : ''}">
                     <div>
                         <img src="${imgSrc}" alt="${m.title}">
                         <h4>${m.title}</h4>
@@ -501,6 +539,7 @@
             (menu || []).forEach(m => {
                 const costVal = m.cost || 0;
                 const imgSrc = m.image_url || defaultImg;
+                const isStopped = stopList.includes(m.id);
 
                 menuCards += `<div class="card">
                     <div class="menu-card">
@@ -508,7 +547,12 @@
                         <div style="flex-grow:1;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <b>${m.title}</b>
-                                <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑 O'chirish</button>
+                                <div>
+                                    <button class="${isStopped ? 'btn-activate' : 'btn-stop'}" onclick="toggleStopList(${m.id})">
+                                        ${isStopped ? '✅ Aktivlash' : '🛑 Stop'}
+                                    </button>
+                                    <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑</button>
+                                </div>
                             </div>
                             <small>Sotuv: <span class="tag-price">${m.price.toLocaleString()} so'm</span></small><br>
                             <small>Tan narx: <span class="tag-cost">${costVal.toLocaleString()} so'm</span></small>
@@ -520,6 +564,10 @@
         }
 
         async function buyurtmaBeringDirect(menu_id) {
+            if (stopList.includes(menu_id)) {
+                return alert("Ushbu taom STOP-LISTda! Tayyorlab bo'lmaydi.");
+            }
+
             const tableNum = document.getElementById('table-select').value;
             const qty = itemQuantities[menu_id] || 1;
 
