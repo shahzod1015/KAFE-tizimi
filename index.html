@@ -404,47 +404,7 @@
 
     </div>
 
-    <script> 
-<script>
-    // Kafe koordinatalari (Qarshi)
-    const KAFE_LAT = 38.849464;
-    const KAFE_LNG = 65.793417;
-
-    // Supabase'dan zonalarni yuklash
-    async function loadAdminDeliverySettings() {
-        // Supabase'dan zonalarni yuklash
-async function loadAdminDeliverySettings() {
-    const { data } = await db.from('delivery_settings').select('*').single();
-    if(data) {
-        document.getElementById('adm-zone1-km').value = data.zone1_km;
-        document.getElementById('adm-zone1-price').value = data.zone1_price;
-        document.getElementById('adm-zone2-km').value = data.zone2_km;
-        document.getElementById('adm-zone2-price').value = data.zone2_price;
-    }
-}
-
-// Zonalarni saqlash
-async function saveDeliverySettings() {
-    const z1_km = parseFloat(document.getElementById('adm-zone1-km').value);
-    const z1_pr = parseFloat(document.getElementById('adm-zone1-price').value);
-    const z2_km = parseFloat(document.getElementById('adm-zone2-km').value);
-    const z2_pr = parseFloat(document.getElementById('adm-zone2-price').value);
-
-    const { error } = await db.from('delivery_settings').upsert({
-        id: 1,
-        zone1_km: z1_km,
-        zone1_price: z1_pr,
-        zone2_km: z2_km,
-        zone2_price: z2_pr,
-        updated_at: new Date()
-    });
-
-    if(error) alert("Xatolik: " + error.message);
-    else alert("✅ Dostavka zonalari saqlandi!");
-}
-
-// Oyna ochilganda ma'lumotlarni chiqarish
-window.addEventListener('DOMContentLoaded', loadAdminDeliverySettings);
+    <script>
         const SUPABASE_URL = "https://wrrsvrgdinfmnuwewtoa.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
