@@ -5,11 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHEF Hotdog POS</title>
 
-    <!-- App Icon -->
     <link rel="apple-touch-icon" sizes="180x180" href="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png">
-    <link rel="apple-touch-icon-precomposed" href="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png">
     <link rel="icon" type="image/png" sizes="32x32" href="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png">
-    <link rel="shortcut icon" href="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -50,14 +47,12 @@
             height: 120px;
         }
         .leaf-top-right {
-            top: 0;
-            right: 0;
+            top: 0; right: 0;
             background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23d4af37' d='M100,0 C70,10 50,30 40,60 C35,40 20,20 0,10 C30,25 45,45 50,70 C60,40 80,20 100,0 Z'/%3E%3Cpath fill='%23d4af37' d='M100,30 C80,40 65,55 60,80 C70,60 85,45 100,30 Z'/%3E%3C/svg%3E") no-repeat;
             background-size: contain;
         }
         .leaf-bottom-left {
-            bottom: 0;
-            left: 0;
+            bottom: 0; left: 0;
             transform: rotate(180deg);
             background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23d4af37' d='M100,0 C70,10 50,30 40,60 C35,40 20,20 0,10 C30,25 45,45 50,70 C60,40 80,20 100,0 Z'/%3E%3Cpath fill='%23d4af37' d='M100,30 C80,40 65,55 60,80 C70,60 85,45 100,30 Z'/%3E%3C/svg%3E") no-repeat;
             background-size: contain;
@@ -90,7 +85,6 @@
             border-radius: 50%; 
             object-fit: cover; 
             border: 1.5px solid #d4af37; 
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
         }
         .app-header h2 { 
             font-size: 20px; 
@@ -98,7 +92,6 @@
             background: var(--gold-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: 1px;
             text-transform: uppercase;
         }
 
@@ -121,17 +114,12 @@
             white-space: nowrap; 
             cursor: pointer; 
             transition: all 0.25s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
         .nav button:hover, .nav button.active-tab {
             border-color: #d4af37;
             background: rgba(35, 30, 20, 0.9);
             box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
         }
-        .nav button:active { transform: scale(0.96); }
 
         .tab-content { 
             display: none; 
@@ -139,7 +127,6 @@
             padding: 14px; 
             border-radius: 16px; 
             border: var(--gold-border-thin);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
         }
         .active { display: block !important; }
         
@@ -152,9 +139,7 @@
             font-size: 14px; 
             background: #08080a; 
             color: #fff; 
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
         }
-        select:focus, input:focus { border-color: #d4af37; outline: none; }
 
         button.btn-save { 
             background: var(--gold-btn-grad); 
@@ -163,7 +148,6 @@
             font-weight: 800; 
             cursor: pointer; 
             text-transform: uppercase;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
         }
 
         .card { 
@@ -173,15 +157,14 @@
             border-radius: 12px; 
             background: rgba(12, 12, 14, 0.8); 
             color: #f1f5f9; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
 
-        /* YASHIL KUNLIK BUYURTMA CHIZIQLI BLOK STILI */
+        /* OSHXONADAGI YASHIL RAMKALI TARIX BLOKI */
         .daily-green-block {
             border: 2px solid #10b981 !important;
             border-radius: 14px;
             padding: 14px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             background: rgba(16, 185, 129, 0.04);
             box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
         }
@@ -205,11 +188,8 @@
             display: flex; 
             flex-direction: column; 
             justify-content: space-between; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.6), 0 0 10px rgba(212, 175, 55, 0.05); 
             position: relative;
-            transition: transform 0.2s;
         }
-        .pos-card:hover { transform: translateY(-2px); border-color: rgba(212, 175, 55, 0.5); }
         .pos-card img { 
             width: 100%; 
             height: 110px; 
@@ -219,7 +199,6 @@
             margin-bottom: 8px; 
         }
 
-        /* STOP-LIST STYLINGI */
         .pos-card.is-stopped {
             opacity: 0.45;
             filter: grayscale(0.8);
@@ -227,101 +206,53 @@
         .pos-card.is-stopped::after {
             content: "🛑 STOP LIST";
             position: absolute;
-            top: 35%;
-            left: 5%;
-            right: 5%;
+            top: 35%; left: 5%; right: 5%;
             background: rgba(239, 68, 68, 0.95);
             color: #fff;
             font-weight: 900;
             padding: 6px;
             border-radius: 8px;
             font-size: 13px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.8);
-            letter-spacing: 0.5px;
         }
 
-        .pos-card h4 { font-size: 13px; margin-bottom: 4px; color: #ffffff; font-weight: 700; line-height: 1.2; }
-        .pos-card .price { 
-            color: var(--gold-text); 
-            font-weight: 800; 
-            font-size: 14px; 
-            margin-bottom: 8px; 
-        }
+        .pos-card h4 { font-size: 13px; margin-bottom: 4px; color: #ffffff; }
+        .pos-card .price { color: var(--gold-text); font-weight: 800; font-size: 14px; margin-bottom: 8px; }
         
-        .qty-box { 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 10px; 
-            margin-bottom: 8px; 
-        }
+        .qty-box { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; }
         .qty-btn { 
-            width: 28px; 
-            height: 28px; 
+            width: 28px; height: 28px; 
             background: rgba(35, 30, 20, 0.8); 
             color: var(--gold-text); 
             border: var(--gold-border-thin); 
-            border-radius: 8px; 
-            font-size: 14px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            border-radius: 8px; font-weight: bold; cursor: pointer;
         }
         .qty-val { font-weight: bold; font-size: 14px; color: #fff; width: 16px; text-align: center; }
 
         .pos-card button.btn-order { 
             background: var(--gold-btn-grad); 
-            color: #000; 
-            border: none; 
-            padding: 8px 4px; 
-            border-radius: 10px; 
-            font-weight: 800; 
-            font-size: 12px; 
-            cursor: pointer; 
-            width: 100%; 
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-        }
-        .pos-card.is-stopped button.btn-order,
-        .pos-card.is-stopped .qty-btn {
-            pointer-events: none;
-            opacity: 0.5;
+            color: #000; border: none; 
+            padding: 8px 4px; border-radius: 10px; 
+            font-weight: 800; font-size: 12px; cursor: pointer; width: 100%;
         }
 
         .menu-card { display: flex; gap: 12px; align-items: center; }
         .menu-img { width: 65px; height: 65px; border-radius: 10px; object-fit: cover; border: var(--gold-border-thin); flex-shrink: 0; }
         .tag-cost { color: #f59e0b; font-weight: bold; }
         .tag-price { color: var(--gold-text); font-weight: bold; }
-        .status-pending { background: rgba(120, 53, 15, 0.4); color: #fde047; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; border: 1px solid rgba(245, 158, 11, 0.4); }
-        .status-ready { background: rgba(4, 120, 87, 0.4); color: #6ee7b7; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .status-pending { background: rgba(120, 53, 15, 0.4); color: #fde047; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+        .status-ready { background: rgba(4, 120, 87, 0.4); color: #6ee7b7; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
         
         .kitchen-actions { display: flex; gap: 8px; margin-top: 10px; }
         .btn-ready { background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 2; }
         .btn-cancel { background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; }
         .btn-delete { background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
         
-        /* STOP-LIST TUGMALARI */
         .btn-stop { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .btn-activate { background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
         .btn-yandex {
-            display: inline-block;
-            margin-top: 8px;
-            background: #fc3f1d;
-            color: #fff;
-            padding: 6px 12px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 12px;
-            box-shadow: 0 2px 8px rgba(252, 63, 29, 0.3);
+            display: inline-block; margin-top: 8px; background: #fc3f1d; color: #fff;
+            padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 12px;
         }
     </style>
 </head>
@@ -342,16 +273,16 @@
             <button id="tab-kitchen" onclick="switchTab('kitchen')">👨‍🍳 Oshxona</button>
             <button id="tab-recipes" onclick="switchTab('recipes')">📖 Menyu va Stop-List</button>
             <button id="tab-stock" onclick="switchTab('stock')">📦 Ombor</button>
-            <button id="tab-reports" onclick="switchTab('reports')">📊 Kassa va Tarix</button>
+            <button id="tab-reports" onclick="switchTab('reports')">📊 Kassa</button>
         </div>
 
         <!-- 1. OFITSIANT -->
         <div id="pos" class="tab-content active">
-            <div style="background: rgba(15, 15, 18, 0.9); border: var(--gold-border-thin); padding: 12px; border-radius: 14px; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                <label style="font-size: 13px; font-weight: bold; color: var(--gold-text); display: flex; align-items: center; gap: 6px;">
+            <div style="background: rgba(15, 15, 18, 0.9); border: var(--gold-border-thin); padding: 12px; border-radius: 14px; margin-bottom: 14px;">
+                <label style="font-size: 13px; font-weight: bold; color: var(--gold-text);">
                     🪑 Stol raqamini tanlang:
                 </label>
-                <select id="table-select" style="margin: 8px 0 0 0; padding: 10px; font-weight: bold; border-color: rgba(212, 175, 55, 0.3);">
+                <select id="table-select" style="margin: 8px 0 0 0; padding: 10px; font-weight: bold;">
                     <option value="1">1-Stol</option>
                     <option value="2">2-Stol</option>
                     <option value="3">3-Stol</option>
@@ -365,20 +296,23 @@
                 </select>
             </div>
 
-            <h3 style="color: var(--gold-text); font-size: 17px; margin-bottom: 2px; display: flex; align-items: center; gap: 6px;">
-                🍽 Taomlar Katalogi
-            </h3>
+            <h3 style="color: var(--gold-text); font-size: 17px; margin-bottom: 2px;">🍽 Taomlar Katalogi</h3>
             <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 12px;">Miqdorni tanlang va buyurtma bering:</p>
             <div id="pos-menu-grid" class="pos-grid">Yuklanmoqda...</div>
         </div>
 
         <!-- 2. OSHXONA -->
         <div id="kitchen" class="tab-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 style="color:var(--gold-text);">👨‍🍳 Oshxona Ekrani</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="color:var(--gold-text);">👨‍🍳 Faol Buyurtmalar</h3>
                 <button onclick="oshxonaniYuklash()" style="padding:6px 12px; background:var(--gold-btn-grad); color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">🔄 Yangilash</button>
             </div>
             <div id="kitchen-orders-list">Yuklanmoqda...</div>
+
+            <hr style="margin: 20px 0; border-color:rgba(212, 175, 55, 0.2);">
+
+            <h3 style="color:var(--gold-text); margin-bottom:12px;">📅 Sanalar bo'yicha Kunlik Buyurtmalar Tarixi</h3>
+            <div id="daily-history-list">Yuklanmoqda...</div>
         </div>
 
         <!-- 3. MENYU VA STOP-LIST -->
@@ -410,17 +344,12 @@
             <div id="stock-list" style="margin-top:10px;"></div>
         </div>
 
-        <!-- 5. KASSA VA TARIX -->
+        <!-- 5. KASSA -->
         <div id="reports" class="tab-content">
             <h3 style="color:var(--gold-text);">📊 Bugungi Kassa (<span id="today-date-str"></span>)</h3>
             <div class="card" style="margin-top:10px;">Bugungi Tushum: <b id="rep-rev" class="tag-price">0</b> so'm</div>
             <div class="card">Bugungi Tan Narx: <b id="rep-cost" class="tag-cost">0</b> so'm</div>
             <div class="card">Bugungi Saf Foyda: <b id="rep-profit" style="color:#34d399; font-size:18px;">0</b> so'm</div>
-
-            <hr style="margin: 20px 0; border-color:rgba(212, 175, 55, 0.2);">
-
-            <h3 style="color:var(--gold-text); margin-bottom:12px;">📅 Sanalar bo'yicha Kunlik Buyurtmalar Tarixi</h3>
-            <div id="daily-history-list">Yuklanmoqda...</div>
 
             <!-- 🛵 DOSTAVKA ZONALARINI SOZLASH -->
             <div style="background:#121218; border:1px solid rgba(212,175,55,0.4); padding:16px; border-radius:16px; margin-top:25px;">
@@ -475,8 +404,18 @@
             if(id === 'reports') hisobotniYuklash();
         }
 
-        function getTodayString() {
-            return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tashkent' });
+        // TASHKENT SANA VA VAQTI UCHUN UTILS
+        function getTashkentDateString(dateObj = new Date()) {
+            return new Date(dateObj).toLocaleDateString('sv-SE', { timeZone: 'Asia/Tashkent' });
+        }
+
+        function getTashkentTimeString(dateObj = new Date()) {
+            return new Date(dateObj).toLocaleTimeString('uz-UZ', {
+                timeZone: 'Asia/Tashkent',
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false
+            });
         }
 
         async function loadAdminDeliverySettings() {
@@ -643,7 +582,7 @@
 
         async function buyurtmaBeringDirect(menu_id) {
             if (stopList.includes(menu_id)) {
-                return alert("Ushbu taom STOP-LISTda! Tayyorlab bo'lmaydi.");
+                return alert("Ushbu taom STOP-LISTda!");
             }
 
             const tableNum = document.getElementById('table-select').value;
@@ -699,41 +638,91 @@
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
+        // OSHXONA EKRAINI VA TARIXI
         async function oshxonaniYuklash() {
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
-            let html = '';
+            
+            let activeHtml = '';
+            let dailyGroups = {};
 
-            (sales || []).slice(0, 30).forEach((s, idx) => {
+            (sales || []).forEach((s, idx) => {
                 const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
-                const timeStr = new Date(s.created_at).toLocaleTimeString('uz-UZ', {
-                    timeZone: 'Asia/Tashkent',
-                    hour: '2-digit', 
-                    minute:'2-digit'
+                const timeStr = getTashkentTimeString(s.created_at);
+                const dateStr = getTashkentDateString(s.created_at);
+
+                // FAOL BUYURTMALAR RO'YXATI UCHUN
+                if (!isReady) {
+                    let yandexBtn = '';
+                    if (s.lat && s.lng) {
+                        yandexBtn = `<br><a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${s.lat},${s.lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
+                    }
+
+                    activeHtml += `<div class="card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <b>⏰ ${timeStr}</b>
+                            <span class="status-pending">⏱ TAYYORLANMOQDA</span>
+                        </div>
+                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${s.status || 'Buyurtma'}</p>
+                        <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
+                        ${yandexBtn}
+
+                        <div class="kitchen-actions">
+                            <button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${s.status}')">✅ TAYYOR BO'LDI</button>
+                            <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
+                        </div>
+                    </div>`;
+                } else {
+                    // TAYYOR BO'LGAN BUYURTMALARNI GURUHLASH
+                    if (!dailyGroups[dateStr]) {
+                        dailyGroups[dateStr] = { rev: 0, count: 0, orders: [] };
+                    }
+                    dailyGroups[dateStr].rev += parseFloat(s.total_amount || 0);
+                    dailyGroups[dateStr].count += 1;
+                    dailyGroups[dateStr].orders.push(s);
+                }
+            });
+
+            document.getElementById('kitchen-orders-list').innerHTML = activeHtml || '<p style="color:#a1a1aa; padding:10px 0;">Hozircha tayyorlanayotgan faol buyurtmalar yo\'q.</p>';
+
+            // OSHXONADAGI YASHIL RAMKALI KUNLIK TARIX BLOKI
+            let historyHtml = '';
+            const sortedDates = Object.keys(dailyGroups).sort().reverse();
+
+            sortedDates.forEach(date => {
+                const item = dailyGroups[date];
+                let ordersInsideHtml = '';
+
+                item.orders.forEach(ord => {
+                    const timeStr = getTashkentTimeString(ord.created_at);
+
+                    let yandexBtn = '';
+                    if (ord.lat && ord.lng) {
+                        yandexBtn = `<a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${ord.lat},${ord.lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
+                    }
+
+                    ordersInsideHtml += `
+                        <div style="padding: 8px 0; border-bottom: 1px dashed rgba(212, 175, 55, 0.2);">
+                            <div style="display:flex; justify-content:space-between; font-size:13px;">
+                                <span><b>⏰ ${timeStr}</b> - ${ord.status}</span>
+                                <b style="color:var(--gold-text);">${Number(ord.total_amount || 0).toLocaleString()} so'm</b>
+                            </div>
+                            ${yandexBtn}
+                        </div>
+                    `;
                 });
 
-                let yandexBtn = '';
-                if (s.lat && s.lng) {
-                    yandexBtn = `<br><a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${s.lat},${s.lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
-                }
-
-                html += `<div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b>#${sales.length - idx} (${timeStr})</b>
-                        <span class="${isReady ? 'status-ready' : 'status-pending'}">
-                            ${isReady ? '✅ TAYYOR' : '⏱ TAYYORLANMOQDA'}
-                        </span>
+                historyHtml += `
+                    <div class="daily-green-block">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #10b981; padding-bottom:8px; margin-bottom:10px;">
+                            <h4 style="color:#10b981; margin:0; font-size:15px;">📅 Sana: ${date}</h4>
+                            <span style="color:var(--gold-text); font-weight:bold; font-size:13px;">Savdo: ${item.rev.toLocaleString()} so'm (${item.count} ta)</span>
+                        </div>
+                        ${ordersInsideHtml}
                     </div>
-                    <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${s.status || 'Buyurtma'}</p>
-                    <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
-                    ${yandexBtn}
-
-                    <div class="kitchen-actions">
-                        ${!isReady ? `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${s.status}')">✅ TAYYOR BO'LDI</button>` : ''}
-                        <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
-                    </div>
-                </div>`;
+                `;
             });
-            document.getElementById('kitchen-orders-list').innerHTML = html || 'Buyurtmalar yo\'q';
+
+            document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali tayyor bo\'lgan buyurtmalar yo\'q.</i>';
         }
 
         async function buyurtmaniTayyorLash(id, currentStatus) {
@@ -749,7 +738,7 @@
         }
 
         async function buyurtmaniBekorQilish(id) {
-            if(confirm("Ushbu buyurtmani bekor qilmoqchimisiz? (Baza va kassadan o'chiriladi)")) {
+            if(confirm("Ushbu buyurtmani bekor qilmoqchimisiz?")) {
                 const { error } = await db.from('sales').delete().eq('id', id);
                 if(error) alert("Xatolik: " + error.message);
                 else {
@@ -761,90 +750,31 @@
             }
         }
 
+        // KASSA EKRAINI
         async function hisobotniYuklash() {
-            const todayStr = getTodayString();
+            const todayStr = getTashkentDateString();
             document.getElementById('today-date-str').innerText = todayStr;
 
-            const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
+            const { data: sales } = await db.from('sales').select('*');
 
             let todayRev = 0, todayCost = 0, todayProfit = 0;
-            let dailyGroups = {};
 
             (sales || []).forEach(s => {
-                // FAQAT OSHPAZ TAYYOR QILGAN BUYURTMALAR KASSAGA HISOBLANADI
                 const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
                 if (!isReady) return;
 
-                const dateStr = new Date(s.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Tashkent' });
-
-                if (!dailyGroups[dateStr]) {
-                    dailyGroups[dateStr] = { rev: 0, cost: 0, profit: 0, count: 0, orders: [] };
-                }
-
-                const rev = parseFloat(s.total_amount || 0);
-                const cost = parseFloat(s.total_cost || 0);
-                const profit = parseFloat(s.profit || 0);
-
-                dailyGroups[dateStr].rev += rev;
-                dailyGroups[dateStr].cost += cost;
-                dailyGroups[dateStr].profit += profit;
-                dailyGroups[dateStr].count += 1;
-                dailyGroups[dateStr].orders.push(s);
+                const dateStr = getTashkentDateString(s.created_at);
 
                 if (dateStr === todayStr) {
-                    todayRev += rev;
-                    todayCost += cost;
-                    todayProfit += profit;
+                    todayRev += parseFloat(s.total_amount || 0);
+                    todayCost += parseFloat(s.total_cost || 0);
+                    todayProfit += parseFloat(s.profit || 0);
                 }
             });
 
             document.getElementById('rep-rev').innerText = todayRev.toLocaleString();
             document.getElementById('rep-cost').innerText = todayCost.toLocaleString();
             document.getElementById('rep-profit').innerText = todayProfit.toLocaleString();
-
-            let historyHtml = '';
-            const sortedDates = Object.keys(dailyGroups).sort().reverse();
-
-            sortedDates.forEach(date => {
-                const item = dailyGroups[date];
-                
-                let ordersInsideHtml = '';
-                item.orders.forEach(ord => {
-                    const timeStr = new Date(ord.created_at).toLocaleTimeString('uz-UZ', {
-                        timeZone: 'Asia/Tashkent',
-                        hour: '2-digit', 
-                        minute:'2-digit'
-                    });
-
-                    let yandexBtn = '';
-                    if (ord.lat && ord.lng) {
-                        yandexBtn = `<a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${ord.lat},${ord.lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
-                    }
-
-                    ordersInsideHtml += `
-                        <div style="padding: 8px 0; border-bottom: 1px dashed rgba(212, 175, 55, 0.2);">
-                            <div style="display:flex; justify-content:space-between;">
-                                <span><b>⏰ ${timeStr}</b> - ${ord.status}</span>
-                                <b style="color:var(--gold-text);">${Number(ord.total_amount || 0).toLocaleString()} so'm</b>
-                            </div>
-                            ${yandexBtn}
-                        </div>
-                    `;
-                });
-
-                // XAR BIR KUN UCHUN ALOHIDA YASHIL CHIZIQLI CONTAINER
-                historyHtml += `
-                    <div class="daily-green-block">
-                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #10b981; padding-bottom:8px; margin-bottom:10px;">
-                            <h4 style="color:#10b981; margin:0; font-size:16px;">📅 Sana: ${date}</h4>
-                            <span style="color:var(--gold-text); font-weight:bold; font-size:14px;">Savdo: ${item.rev.toLocaleString()} so'm (${item.count} ta)</span>
-                        </div>
-                        ${ordersInsideHtml}
-                    </div>
-                `;
-            });
-
-            document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali tayyor bo\'lgan buyurtmalar tarixi yo\'q.</i>';
         }
 
         window.addEventListener('DOMContentLoaded', () => {
