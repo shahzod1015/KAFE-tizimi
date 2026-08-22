@@ -428,15 +428,17 @@
             if(id === 'reports') hisobotniYuklash();
         }
 
-        // Serverdan kelgan vaqtni har doim Toshkent vaqtiga (+5) o'girib ko'rsatish
+        // Toshkent vaqtini aniq ko'rsatuvchi tuzatilgan funksiya (HH:mm)
         function getTashkentTimeString(dateInput) {
             if (!dateInput) return "00:00";
-            let str = dateInput.toString();
-            if (!str.endsWith('Z') && !str.includes('+')) {
-                str += 'Z';
-            }
             
-            const d = new Date(str);
+            let d = new Date(dateInput);
+            
+            // Supabase UTC yuborganda 'Z' belgisi bo'lmasa, uni to'g'ri UTC ekanligini bildiruvchi mantiq
+            if (typeof dateInput === 'string' && !dateInput.endsWith('Z') && !dateInput.includes('+')) {
+                d = new Date(dateInput + 'Z');
+            }
+
             if (isNaN(d.getTime())) return "00:00";
 
             return d.toLocaleTimeString('uz-UZ', {
@@ -447,15 +449,15 @@
             });
         }
 
-        // Serverdan kelgan vaqtni Toshkent sanasiga (YYYY-MM-DD) o'girish
+        // Toshkent sanasini aniq ko'rsatuvchi tuzatilgan funksiya (YYYY-MM-DD)
         function getTashkentDateString(dateInput) {
-            let str = dateInput ? dateInput.toString() : new Date().toISOString();
-            if (!str.endsWith('Z') && !str.includes('+')) {
-                str += 'Z';
+            let d = dateInput ? new Date(dateInput) : new Date();
+
+            if (typeof dateInput === 'string' && !dateInput.endsWith('Z') && !dateInput.includes('+')) {
+                d = new Date(dateInput + 'Z');
             }
-            
-            const d = new Date(str);
-            if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0];
+
+            if (isNaN(d.getTime())) d = new Date();
 
             return d.toLocaleDateString('sv-SE', {
                 timeZone: 'Asia/Tashkent'
