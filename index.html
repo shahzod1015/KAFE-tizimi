@@ -22,6 +22,7 @@
             --gold-text: #f5d061;
             --card-bg: rgba(18, 18, 18, 0.85);
             --dark-bg: #0a0a0d;
+            --qty-purple: #c084fc; /* Och binafsha rang */
         }
 
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
@@ -176,6 +177,18 @@
             background: rgba(20, 20, 25, 0.7);
         }
         
+        /* Miqdor (x1, x2...) uchun och binafsha rang stil */
+        .qty-highlight {
+            color: var(--qty-purple) !important;
+            font-weight: 800;
+            background: rgba(192, 132, 252, 0.12);
+            padding: 1px 6px;
+            border-radius: 6px;
+            border: 1px solid rgba(192, 132, 252, 0.3);
+            display: inline-block;
+            margin: 0 2px;
+        }
+
         .pos-grid { 
             display: grid; 
             grid-template-columns: repeat(2, 1fr); 
@@ -357,13 +370,13 @@
             <div class="card">Bugungi Tan Narx: <b id="rep-cost" class="tag-cost">0</b> so'm</div>
             <div class="card">Bugungi Saf Foyda: <b id="rep-profit" style="color:#34d399; font-size:18px;">0</b> so'm</div>
 
-            <!-- KASSA TARIXI BO'LIMI -->
+            <!-- KASSA TARIXI -->
             <div style="margin-top:25px;">
                 <h3 style="color:var(--gold-text); margin-bottom:12px;">📜 Kassa Tarixi (O'tgan kunlar hisoboti)</h3>
                 <div id="cash-history-list">Yuklanmoqda...</div>
             </div>
 
-            <!-- 🛵 DOSTAVKA ZONALARINI SOZLASH -->
+            <!-- DOSTAVKA ZONALARINI SOZLASH -->
             <div style="background:#121218; border:1px solid rgba(212,175,55,0.4); padding:16px; border-radius:16px; margin-top:25px;">
                 <h3 style="color:#f5d061; margin-bottom:12px; font-size:16px;">🛵 Yetkazib Berish Hududini Sozlash</h3>
                 
@@ -427,6 +440,12 @@
                 minute: '2-digit',
                 hour12: false
             });
+        }
+
+        // Miqdor (x1, x2...) yozuvlarini och binafsha fonga va rangga aylantirish funksiyasi
+        function formatOrderTextWithPurpleQty(text) {
+            if (!text) return '';
+            return text.replace(/\(x(\d+)\)/g, '<span class="qty-highlight">(x$1)</span>');
         }
 
         async function loadAdminDeliverySettings() {
@@ -671,7 +690,7 @@
                             <b>⏰ ${timeStr}</b>
                             <span class="status-pending">⏱ TAYYORLANMOQDA</span>
                         </div>
-                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${s.status || 'Buyurtma'}</p>
+                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${formatOrderTextWithPurpleQty(s.status || 'Buyurtma')}</p>
                         <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
                         ${yandexBtn}
 
@@ -710,7 +729,7 @@
                     ordersInsideHtml += `
                         <div style="padding: 8px 0; border-bottom: 1px dashed rgba(212, 175, 55, 0.2);">
                             <div style="display:flex; justify-content:space-between; font-size:13px;">
-                                <span><b>⏰ ${timeStr}</b> - ${ord.status}</span>
+                                <span><b>⏰ ${timeStr}</b> - ${formatOrderTextWithPurpleQty(ord.status)}</span>
                                 <b style="color:var(--gold-text);">${Number(ord.total_amount || 0).toLocaleString()} so'm</b>
                             </div>
                             ${yandexBtn}
@@ -757,7 +776,6 @@
             }
         }
 
-        // KASSA EKRAINI VA KASSA TARIXI
         async function hisobotniYuklash() {
             const todayStr = getTashkentDateString();
             document.getElementById('today-date-str').innerText = todayStr;
@@ -783,7 +801,6 @@
                     todayProfit += profit;
                 }
 
-                // KASSA TARIXI GURUHLASHI
                 if (!dailyFinancials[dateStr]) {
                     dailyFinancials[dateStr] = { rev: 0, cost: 0, profit: 0, count: 0 };
                 }
@@ -797,7 +814,6 @@
             document.getElementById('rep-cost').innerText = todayCost.toLocaleString();
             document.getElementById('rep-profit').innerText = todayProfit.toLocaleString();
 
-            // KASSA TARIXINI YUKLASH
             let cashHistoryHtml = '';
             const sortedDates = Object.keys(dailyFinancials).sort().reverse();
 
