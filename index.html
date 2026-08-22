@@ -3,278 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHEF Hotdog POS & Delivery Admin</title>
-
-    <link rel="apple-touch-icon" sizes="180x180" href="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png">
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>CHEF HOTDOG - Kassa va Savdo Tarixi</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
-            --gold-gradient: linear-gradient(135deg, #d4af37 0%, #fff3a8 30%, #aa771c 70%, #fcf6ba 100%);
-            --gold-btn-grad: linear-gradient(180deg, #f7e089 0%, #c8962c 100%);
-            --gold-border: 1px solid rgba(212, 175, 55, 0.4);
-            --gold-border-thin: 1px solid rgba(212, 175, 55, 0.25);
+            --gold-gradient: linear-gradient(135deg, #f5d061 0%, #e3a833 100%);
             --gold-text: #f5d061;
-            --card-bg: rgba(18, 18, 18, 0.9);
-            --dark-bg: #0a0a0d;
-            --green-border: 2px solid #10b981;
+            --bg-card: #18181a;
+            --border-color: rgba(245, 208, 97, 0.25);
         }
 
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
-        body { background-color: var(--dark-bg); padding: 12px; color: #f1f5f9; min-height: 100vh; }
-        .screen-frame { border: var(--gold-border-thin); border-radius: 20px; padding: 10px; background: rgba(10, 10, 13, 0.6); }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
 
-        .sticky-top-container { position: sticky; top: 0; z-index: 1000; background: rgba(10, 10, 13, 0.95); padding: 6px 0; border-bottom: 1px solid rgba(212, 175, 55, 0.15); margin-bottom: 12px; }
-        .app-header { display: flex; align-items: center; gap: 14px; background: var(--card-bg); padding: 10px 16px; border-radius: 16px; border: var(--gold-border); }
-        .app-header img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid #d4af37; }
-        .app-header h2 { font-size: 18px; font-weight: 800; background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        body {
+            background-color: #0d0d0f;
+            color: #ffffff;
+            padding: 20px;
+        }
 
-        .nav { display: flex; gap: 8px; overflow-x: auto; padding: 2px; }
-        .nav button { padding: 9px 14px; background: rgba(20, 20, 22, 0.9); color: var(--gold-text); border: var(--gold-border-thin); border-radius: 12px; font-weight: 600; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
-        .nav button.active-tab { border-color: #d4af37; background: rgba(35, 30, 20, 0.9); }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
 
-        .tab-content { display: none; background: var(--card-bg); padding: 14px; border-radius: 16px; border: var(--gold-border-thin); }
-        .active { display: block !important; }
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
 
-        input, select, button.btn-save { width: 100%; padding: 12px; margin: 6px 0 12px 0; border: var(--gold-border-thin); border-radius: 10px; font-size: 14px; background: #08080a; color: #fff; }
-        button.btn-save { background: var(--gold-btn-grad); color: #000; border: none; font-weight: 800; cursor: pointer; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
 
-        .card { border: var(--gold-border-thin); padding: 12px; margin-bottom: 10px; border-radius: 12px; background: rgba(12, 12, 14, 0.8); color: #f1f5f9; }
-        .daily-orders-block { border: var(--green-border); border-radius: 14px; padding: 12px; margin-bottom: 16px; background: rgba(6, 78, 59, 0.12); }
-        .daily-title { color: #34d399; font-weight: 800; font-size: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
 
-        .pos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px; }
-        .pos-card { border: var(--gold-border-thin); border-radius: 16px; padding: 10px; text-align: center; background: rgba(12, 12, 14, 0.95); display: flex; flex-direction: column; justify-content: space-between; }
-        .pos-card img { width: 100%; height: 110px; object-fit: cover; border-radius: 12px; }
-        
-        .status-pending { background: rgba(120, 53, 15, 0.4); color: #fde047; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
-        .status-ready { background: rgba(4, 120, 87, 0.4); color: #6ee7b7; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
-        .delivery-badge { background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-        
-        .map-btn { display: inline-block; background: #2563eb; color: #fff; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; margin-top: 6px; }
+        .stat-card h3 {
+            font-size: 13px;
+            color: #8e8e93;
+            margin-bottom: 8px;
+        }
 
-        .kitchen-actions { display: flex; gap: 8px; margin-top: 10px; }
-        .btn-ready { background: #10b981; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 2; }
-        .btn-cancel { background: #ef4444; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; }
+        .stat-card .val {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--gold-text);
+        }
+
+        .history-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .history-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gold-text);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clear-btn {
+            background: #ff3b30;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #2c2c2e;
+            font-size: 14px;
+        }
+
+        th {
+            color: #8e8e93;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: rgba(52, 199, 89, 0.2);
+            color: #34c759;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
-    <div class="screen-frame">
-        <div class="sticky-top-container">
-            <div class="app-header">
-                <img src="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png" alt="Logo">
-                <h2>CHEF HOTDOG (ADMIN)</h2>
-            </div>
-            <div class="nav">
-                <button id="tab-pos" class="active-tab" onclick="switchTab('pos')">📱 Ofitsiant</button>
-                <button id="tab-kitchen" onclick="switchTab('kitchen')">👨‍🍳 Oshxona</button>
-                <button id="tab-recipes" onclick="switchTab('recipes')">📖 Menyu</button>
-                <button id="tab-reports" onclick="switchTab('reports')">📊 Kassa</button>
-            </div>
-        </div>
+    <header>
+        <div class="logo">CHEF HOTDOG — KASSA</div>
+        <div id="clock" style="color: #8e8e93; font-weight: 600;"></div>
+    </header>
 
-        <!-- POS -->
-        <div id="pos" class="tab-content active">
-            <select id="table-select">
-                <option value="1">1-Stol</option>
-                <option value="2">2-Stol</option>
-                <option value="3">3-Stol</option>
-                <option value="VIP">VIP Xona</option>
-            </select>
-            <div id="pos-menu-grid" class="pos-grid"></div>
+    <!-- Umumiy Savdo Statistiakasi -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>JAMI SAVDO (BARCHA)</h3>
+            <div class="val" id="total-all">0 so'm</div>
         </div>
-
-        <!-- OSHXONA -->
-        <div id="kitchen" class="tab-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h3 style="color:var(--gold-text);">👨‍🍳 Oshxona Buyurtmalari</h3>
-                <button onclick="oshxonaniYuklash()" style="padding:6px 12px; background:var(--gold-btn-grad); border:none; border-radius:8px; font-weight:bold; cursor:pointer;">🔄 Yangilash</button>
-            </div>
-            <div id="kitchen-orders-list"></div>
-        </div>
-
-        <!-- MENYU -->
-        <div id="recipes" class="tab-content">
-            <input type="text" id="menu-title" placeholder="Taom nomi">
-            <input type="number" id="menu-price" placeholder="Sotuv narxi">
-            <input type="number" id="menu-cost" placeholder="Tan narxi">
-            <input type="file" id="menu-file" accept="image/*">
-            <button class="btn-save" id="btn-save-menu" onclick="taomQoshish()">Saqlash</button>
-            <div id="menu-with-cost-list" style="margin-top:10px;"></div>
-        </div>
-
-        <!-- KASSA -->
-        <div id="reports" class="tab-content">
-            <h3 style="color:var(--gold-text);">📊 Kassa (<span id="today-date-str"></span>)</h3>
-            <div class="card">Jami Tushum: <b id="rep-rev" style="color:var(--gold-text)">0</b> so'm</div>
-            <div class="card">Saf Foyda: <b id="rep-profit" style="color:#34d399">0</b> so'm</div>
+        <div class="stat-card">
+            <h3>JAMI BUYURTMALAR</h3>
+            <div class="val" id="total-count">0 ta</div>
         </div>
     </div>
 
+    <!-- Savdo Tarixi Jadvali -->
+    <div class="history-section">
+        <div class="history-title">
+            <span>📜 Sotuvlar va Cheklar Tarixi</span>
+            <button class="clear-btn" onclick="clearHistory()">Tarixni tozalash</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th># Chek ID</th>
+                    <th>Vaqt</th>
+                    <th>Buyurtma tarkibi</th>
+                    <th>Summa</th>
+                    <th>Holati</th>
+                </tr>
+            </thead>
+            <tbody id="history-rows">
+                <!-- Tarix shu yerga chiqadi -->
+            </tbody>
+        </table>
+    </div>
+
     <script>
-        const SUPABASE_URL = "https://wrrsvrgdinfmnuwewtoa.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
-        const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        function switchTab(id) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav button').forEach(btn => btn.classList.remove('active-tab'));
-            document.getElementById(id).classList.add('active');
-            document.getElementById(`tab-${id}`).classList.add('active-tab');
-
-            if(id === 'pos' || id === 'recipes') tanlovlarniYuklash();
-            if(id === 'kitchen') oshxonaniYuklash();
-            if(id === 'reports') hisobotniYuklash();
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleString('uz-UZ');
         }
+        setInterval(updateClock, 1000);
 
-        function formatLocalDateTime(dateString) {
-            let date = dateString ? new Date(dateString) : new Date();
-            if (dateString && typeof dateString === 'string' && !dateString.includes('Z') && !dateString.includes('+')) {
-                date = new Date(dateString + 'Z');
-            }
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const seconds = String(date.getSeconds()).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('kassa_history')) || [];
+            const tbody = document.getElementById('history-rows');
+            
+            let totalSum = 0;
+            tbody.innerHTML = '';
 
-            return {
-                timeStr: `${hours}:${minutes}:${seconds}`,
-                dateStr: `${day}.${month}.${year}`,
-                fullStr: `${hours}:${minutes}:${seconds}, ${day}.${month}.${year}`
-            };
-        }
-
-        async function oshxonaniYuklash() {
-            const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
-            if(!sales || sales.length === 0) {
-                document.getElementById('kitchen-orders-list').innerHTML = '<p style="text-align:center;">Buyurtmalar yo\'q</p>';
-                return;
-            }
-
-            let groupedSales = {};
-            sales.forEach((s) => {
-                const dt = formatLocalDateTime(s.created_at);
-                if (!groupedSales[dt.dateStr]) groupedSales[dt.dateStr] = [];
-                groupedSales[dt.dateStr].push({ ...s, formattedTime: dt.fullStr });
-            });
-
-            let finalHtml = '';
-            Object.keys(groupedSales).forEach(dateKey => {
-                const items = groupedSales[dateKey];
-                finalHtml += `<div class="daily-orders-block"><div class="daily-title"><span>📅 ${dateKey}</span><span>Jami: ${items.length} ta</span></div>`;
-
-                items.forEach((s, idx) => {
-                    const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
-                    const isDelivery = s.status && s.status.includes('🛵 DOSTAVKA');
-                    
-                    let cleanStatus = s.status || '';
-                    let mapUrl = '';
-
-                    if(cleanStatus.includes('MAP_LINK:')) {
-                        const parts = cleanStatus.split(' | MAP_LINK:');
-                        cleanStatus = parts[0];
-                        mapUrl = parts[1];
-                    }
-
-                    finalHtml += `
-                    <div class="card">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <b>#${items.length - idx} (⏰ ${s.formattedTime})</b>
-                            ${isDelivery ? '<span class="delivery-badge">🛵 DOSTAVKA</span>' : ''}
-                            <span class="${isReady ? 'status-ready' : 'status-pending'}">${isReady ? '✅ TAYYOR' : '⏱ TAYYORLANMOQDA'}</span>
-                        </div>
-                        <p style="margin-top:6px; font-weight:bold; font-size:14px; color:#fff;">${cleanStatus}</p>
-                        ${mapUrl ? `<a href="${mapUrl}" target="_blank" class="map-btn">📍 Xaritada ko'rish (Google Maps)</a>` : ''}
-                        <p style="font-size:13px; color:#d4d4d8; margin-top:6px;">Summa: <b style="color:var(--gold-text);">${(s.total_amount || 0).toLocaleString()}</b> so'm</p>
-                        <div class="kitchen-actions">
-                            ${!isReady ? `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${s.status.replace(/'/g, "\\'")}')">✅ TAYYOR BO'LDI</button>` : ''}
-                            <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
-                        </div>
-                    </div>`;
+            if (history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#8e8e93; padding: 20px;">Hozircha hech qanday savdo tarixi mavjud emas.</td></tr>`;
+            } else {
+                history.forEach((item, index) => {
+                    totalSum += item.amount;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b>#${item.id || (1000 + index)}</b></td>
+                            <td>${item.time}</td>
+                            <td>${item.items || 'Taomlar'}</td>
+                            <td style="color: var(--gold-text); font-weight: bold;">${item.amount.toLocaleString()} so'm</td>
+                            <td><span class="badge-success">To'langan</span></td>
+                        </tr>
+                    `;
                 });
-                finalHtml += `</div>`;
-            });
-            document.getElementById('kitchen-orders-list').innerHTML = finalHtml;
-        }
-
-        async function buyurtmaniTayyorLash(id, currentStatus) {
-            await db.from('sales').update({ status: currentStatus + " [TAYYOR BO'LDI]" }).eq('id', id);
-            oshxonaniYuklash();
-        }
-
-        async function buyurtmaniBekorQilish(id) {
-            if(confirm("O'chirilsinmi?")) {
-                await db.from('sales').delete().eq('id', id);
-                oshxonaniYuklash();
-            }
-        }
-
-        async function tanlovlarniYuklash() {
-            const { data: menu } = await db.from('menu').select('*');
-            let posHtml = '';
-            (menu || []).forEach(m => {
-                posHtml += `
-                <div class="pos-card">
-                    <img src="${m.image_url || 'https://via.placeholder.com/150'}">
-                    <h4>${m.title}</h4>
-                    <div style="color:var(--gold-text); font-weight:bold;">${m.price.toLocaleString()} so'm</div>
-                    <button onclick="buyurtmaBeringDirect(${m.id})" style="background:var(--gold-btn-grad); border:none; padding:8px; border-radius:8px; font-weight:bold; margin-top:6px; cursor:pointer;">🛒 Buyurtma</button>
-                </div>`;
-            });
-            document.getElementById('pos-menu-grid').innerHTML = posHtml;
-        }
-
-        async function buyurtmaBeringDirect(menu_id) {
-            const tableNum = document.getElementById('table-select').value;
-            const { data: menuItem } = await db.from('menu').select('*').eq('id', menu_id).single();
-            await db.from('sales').insert([{ total_amount: menuItem.price, total_cost: menuItem.cost, profit: (menuItem.price - menuItem.cost), status: `Stol #${tableNum} - ${menuItem.title} (x1)` }]);
-            alert("Buyurtma oshxonaga ketdi!");
-        }
-
-        async function taomQoshish() {
-            const title = document.getElementById('menu-title').value;
-            const price = parseFloat(document.getElementById('menu-price').value);
-            const cost = parseFloat(document.getElementById('menu-cost').value) || 0;
-            const fileInput = document.getElementById('menu-file');
-            let image_url = '';
-
-            if(fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                const fileName = `${Date.now()}.${file.name.split('.').pop()}`;
-                await db.storage.from('menu-images').upload(fileName, file);
-                const { data } = db.storage.from('menu-images').getPublicUrl(fileName);
-                image_url = data.publicUrl;
             }
 
-            await db.from('menu').insert([{ title, price, cost, image_url }]);
-            alert("Taom saqlandi!");
-            tanlovlarniYuklash();
+            document.getElementById('total-all').innerText = `${totalSum.toLocaleString()} so'm`;
+            document.getElementById('total-count').innerText = `${history.length} ta`;
         }
 
-        async function hisobotniYuklash() {
-            const todayDt = formatLocalDateTime();
-            document.getElementById('today-date-str').innerText = todayDt.dateStr;
-            const { data: sales } = await db.from('sales').select('*');
-            let todayRev = 0, todayProfit = 0;
-            (sales || []).forEach(s => {
-                const dt = formatLocalDateTime(s.created_at);
-                if (dt.dateStr === todayDt.dateStr) {
-                    todayRev += parseFloat(s.total_amount || 0);
-                    todayProfit += parseFloat(s.profit || 0);
+        function clearHistory() {
+            Swal.fire({
+                title: 'Tarixni o\'chirmoqchimisiz?',
+                text: "Barcha saqlangan savdo tarixi o'chib ketadi!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff3b30',
+                cancelButtonColor: '#3a3a3c',
+                confirmButtonText: 'Ha, o\'chirish',
+                cancelButtonText: 'Bekor qilish'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('kassa_history');
+                    loadHistory();
+                    Swal.fire('O\'chirildi!', 'Kassa tarixi tozalandi.', 'success');
                 }
             });
-            document.getElementById('rep-rev').innerText = todayRev.toLocaleString();
-            document.getElementById('rep-profit').innerText = todayProfit.toLocaleString();
         }
 
-        tanlovlarniYuklash();
-        setInterval(() => {
-            if(document.getElementById('kitchen').classList.contains('active')) oshxonaniYuklash();
-        }, 5000);
+        window.onload = function() {
+            updateClock();
+            loadHistory();
+        };
     </script>
 </body>
 </html>
