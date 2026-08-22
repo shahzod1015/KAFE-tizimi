@@ -428,44 +428,44 @@
             if(id === 'reports') hisobotniYuklash();
         }
 
-        // Tashkent vaqtini aniq ko'rsatuvchi tuzatilgan funksiya (HH:mm)
+        // Toshkent vaqtini aniq -5 soat offset bilan to'g'irlash funksiyasi (HH:mm)
         function getTashkentTimeString(dateInput) {
             if (!dateInput) return "00:00";
             
-            let dateStr = dateInput;
-            if (typeof dateStr === 'string' && !dateStr.endsWith('Z') && !dateStr.includes('+')) {
-                dateStr += 'Z';
-            }
+            let rawStr = String(dateInput).replace(' ', 'T');
+            let d = new Date(rawStr);
             
-            const d = new Date(dateStr);
             if (isNaN(d.getTime())) return "00:00";
 
-            return new Intl.DateTimeFormat('uz-UZ', {
-                timeZone: 'Asia/Tashkent',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-            }).format(d);
+            // Supabase vaqtidan majburiy -5 soat ayiramiz
+            const correctedDate = new Date(d.getTime() - (5 * 60 * 60 * 1000));
+
+            const hours = String(correctedDate.getHours()).padStart(2, '0');
+            const minutes = String(correctedDate.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
         }
 
-        // Tashkent sanasini aniq ko'rsatuvchi tuzatilgan funksiya (YYYY-MM-DD)
+        // Toshkent sanasini aniq -5 soat offset bilan to'g'irlash funksiyasi (YYYY-MM-DD)
         function getTashkentDateString(dateInput) {
-            let dateStr = dateInput || new Date();
-            if (typeof dateStr === 'string' && !dateStr.endsWith('Z') && !dateStr.includes('+')) {
-                dateStr += 'Z';
+            let d;
+            if (!dateInput) {
+                d = new Date();
+            } else {
+                let rawStr = String(dateInput).replace(' ', 'T');
+                d = new Date(rawStr);
             }
 
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0];
+            if (isNaN(d.getTime())) {
+                d = new Date();
+            }
 
-            const formatter = new Intl.DateTimeFormat('en-CA', {
-                timeZone: 'Asia/Tashkent',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            });
-            
-            return formatter.format(d);
+            const correctedDate = dateInput ? new Date(d.getTime() - (5 * 60 * 60 * 1000)) : d;
+
+            const year = correctedDate.getFullYear();
+            const month = String(correctedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(correctedDate.getDate()).padStart(2, '0');
+
+            return `${year}-${month}-${day}`;
         }
 
         function formatOrderTextWithPurpleQty(text) {
