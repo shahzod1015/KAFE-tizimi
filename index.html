@@ -159,7 +159,6 @@
             color: #f1f5f9; 
         }
 
-        /* OSHXONADAGI YASHIL RAMKALI TARIX BLOKI */
         .daily-green-block {
             border: 2px solid #10b981 !important;
             border-radius: 14px;
@@ -167,6 +166,14 @@
             margin-bottom: 16px;
             background: rgba(16, 185, 129, 0.04);
             box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+        }
+
+        .cash-history-card {
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(20, 20, 25, 0.7);
         }
         
         .pos-grid { 
@@ -240,7 +247,6 @@
         .tag-cost { color: #f59e0b; font-weight: bold; }
         .tag-price { color: var(--gold-text); font-weight: bold; }
         .status-pending { background: rgba(120, 53, 15, 0.4); color: #fde047; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
-        .status-ready { background: rgba(4, 120, 87, 0.4); color: #6ee7b7; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
         
         .kitchen-actions { display: flex; gap: 8px; margin-top: 10px; }
         .btn-ready { background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 2; }
@@ -351,6 +357,12 @@
             <div class="card">Bugungi Tan Narx: <b id="rep-cost" class="tag-cost">0</b> so'm</div>
             <div class="card">Bugungi Saf Foyda: <b id="rep-profit" style="color:#34d399; font-size:18px;">0</b> so'm</div>
 
+            <!-- KASSA TARIXI BO'LIMI -->
+            <div style="margin-top:25px;">
+                <h3 style="color:var(--gold-text); margin-bottom:12px;">📜 Kassa Tarixi (O'tgan kunlar hisoboti)</h3>
+                <div id="cash-history-list">Yuklanmoqda...</div>
+            </div>
+
             <!-- 🛵 DOSTAVKA ZONALARINI SOZLASH -->
             <div style="background:#121218; border:1px solid rgba(212,175,55,0.4); padding:16px; border-radius:16px; margin-top:25px;">
                 <h3 style="color:#f5d061; margin-bottom:12px; font-size:16px;">🛵 Yetkazib Berish Hududini Sozlash</h3>
@@ -404,7 +416,6 @@
             if(id === 'reports') hisobotniYuklash();
         }
 
-        // TASHKENT SANA VA VAQTI UCHUN UTILS
         function getTashkentDateString(dateObj = new Date()) {
             return new Date(dateObj).toLocaleDateString('sv-SE', { timeZone: 'Asia/Tashkent' });
         }
@@ -638,19 +649,17 @@
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
-        // OSHXONA EKRAINI VA TARIXI
         async function oshxonaniYuklash() {
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
             
             let activeHtml = '';
             let dailyGroups = {};
 
-            (sales || []).forEach((s, idx) => {
+            (sales || []).forEach((s) => {
                 const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
                 const timeStr = getTashkentTimeString(s.created_at);
                 const dateStr = getTashkentDateString(s.created_at);
 
-                // FAOL BUYURTMALAR RO'YXATI UCHUN
                 if (!isReady) {
                     let yandexBtn = '';
                     if (s.lat && s.lng) {
@@ -672,7 +681,6 @@
                         </div>
                     </div>`;
                 } else {
-                    // TAYYOR BO'LGAN BUYURTMALARNI GURUHLASH
                     if (!dailyGroups[dateStr]) {
                         dailyGroups[dateStr] = { rev: 0, count: 0, orders: [] };
                     }
@@ -684,7 +692,6 @@
 
             document.getElementById('kitchen-orders-list').innerHTML = activeHtml || '<p style="color:#a1a1aa; padding:10px 0;">Hozircha tayyorlanayotgan faol buyurtmalar yo\'q.</p>';
 
-            // OSHXONADAGI YASHIL RAMKALI KUNLIK TARIX BLOKI
             let historyHtml = '';
             const sortedDates = Object.keys(dailyGroups).sort().reverse();
 
@@ -750,7 +757,7 @@
             }
         }
 
-        // KASSA EKRAINI
+        // KASSA EKRAINI VA KASSA TARIXI
         async function hisobotniYuklash() {
             const todayStr = getTashkentDateString();
             document.getElementById('today-date-str').innerText = todayStr;
@@ -758,6 +765,7 @@
             const { data: sales } = await db.from('sales').select('*');
 
             let todayRev = 0, todayCost = 0, todayProfit = 0;
+            let dailyFinancials = {};
 
             (sales || []).forEach(s => {
                 const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
@@ -765,16 +773,52 @@
 
                 const dateStr = getTashkentDateString(s.created_at);
 
+                const rev = parseFloat(s.total_amount || 0);
+                const cost = parseFloat(s.total_cost || 0);
+                const profit = parseFloat(s.profit || (rev - cost));
+
                 if (dateStr === todayStr) {
-                    todayRev += parseFloat(s.total_amount || 0);
-                    todayCost += parseFloat(s.total_cost || 0);
-                    todayProfit += parseFloat(s.profit || 0);
+                    todayRev += rev;
+                    todayCost += cost;
+                    todayProfit += profit;
                 }
+
+                // KASSA TARIXI GURUHLASHI
+                if (!dailyFinancials[dateStr]) {
+                    dailyFinancials[dateStr] = { rev: 0, cost: 0, profit: 0, count: 0 };
+                }
+                dailyFinancials[dateStr].rev += rev;
+                dailyFinancials[dateStr].cost += cost;
+                dailyFinancials[dateStr].profit += profit;
+                dailyFinancials[dateStr].count += 1;
             });
 
             document.getElementById('rep-rev').innerText = todayRev.toLocaleString();
             document.getElementById('rep-cost').innerText = todayCost.toLocaleString();
             document.getElementById('rep-profit').innerText = todayProfit.toLocaleString();
+
+            // KASSA TARIXINI YUKLASH
+            let cashHistoryHtml = '';
+            const sortedDates = Object.keys(dailyFinancials).sort().reverse();
+
+            sortedDates.forEach(date => {
+                const item = dailyFinancials[date];
+                cashHistoryHtml += `
+                    <div class="cash-history-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <b style="color:var(--gold-text); font-size:15px;">📅 ${date}</b>
+                            <span style="font-size:12px; color:#aaa;">${item.count} ta buyurtma</span>
+                        </div>
+                        <div style="font-size:13px; color:#d4d4d8; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:6px;">
+                            <div>Savdo:<br><b class="tag-price">${item.rev.toLocaleString()}</b></div>
+                            <div>Tan narx:<br><b class="tag-cost">${item.cost.toLocaleString()}</b></div>
+                            <div>Saf foyda:<br><b style="color:#34d399;">${item.profit.toLocaleString()}</b></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('cash-history-list').innerHTML = cashHistoryHtml || '<i>Kassa tarixi topilmadi.</i>';
         }
 
         window.addEventListener('DOMContentLoaded', () => {
