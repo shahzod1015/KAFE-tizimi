@@ -37,7 +37,7 @@
         body {
             background-color: #0d0d0f;
             color: #ffffff;
-            padding-bottom: 110px;
+            padding-bottom: 40px;
         }
 
         header {
@@ -119,7 +119,7 @@
             margin-bottom: 8px;
         }
 
-        /* Qushish / Kamaytirish Tugmalari */
+        /* Qo'shish / Kamaytirish Tugmalari */
         .counter-btn-group {
             display: flex;
             align-items: center;
@@ -150,11 +150,11 @@
 
         /* Formalar va Kiritish Maydonlari */
         .form-group {
-            margin-top: 15px;
+            margin-top: 20px;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 16px;
-            padding: 14px;
+            padding: 16px;
         }
 
         .form-label {
@@ -173,7 +173,7 @@
             border-radius: 10px;
             font-size: 14px;
             outline: none;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .input-field:focus {
@@ -185,7 +185,7 @@
             background: #2563eb;
             color: #fff;
             border: none;
-            padding: 10px;
+            padding: 11px;
             border-radius: 10px;
             font-weight: 600;
             font-size: 13px;
@@ -198,7 +198,7 @@
             width: 100%;
             border-radius: 12px;
             border: 1px solid var(--border-color);
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         /* Asosiy Buyurtma Tugmasi */
@@ -280,14 +280,12 @@
             document.getElementById('order-type').value = 'table';
         }
 
-        // Taomlar ro'yxati va rasmlari
+        // Taomlar va ularning asl rasmlari
         const menuData = [
             { id: 1, name: "Tuxum & Sasiska", price: 15000, img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=300" },
             { id: 2, name: "Chicken hotdog", price: 15000, img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=300" },
             { id: 3, name: "Classic lavash", price: 28000, img: "https://images.unsplash.com/photo-1561651823-34feb02250e4?w=300" },
-            { id: 4, name: "Chicken lavash", price: 22000, img: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=300" },
-            { id: 5, name: "Sasiska lavash", price: 20000, img: "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=300" },
-            { id: 6, name: "DIL-DIL lagmon", price: 30000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300" }
+            { id: 4, name: "Chicken lavash", price: 22000, img: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=300" }
         ];
 
         let cart = {};
@@ -366,7 +364,6 @@
         function sendOrder() {
             const name = document.getElementById('cust-name').value;
             const phone = document.getElementById('cust-phone').value;
-            const type = document.getElementById('order-type').value;
 
             if (Object.keys(cart).length === 0) {
                 Swal.fire({ icon: 'warning', title: 'Savat bo\'sh', text: 'Iltimos, taom tanlang!', background: '#1c1c1e', color: '#fff' });
