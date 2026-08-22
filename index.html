@@ -175,6 +175,16 @@
             color: #f1f5f9; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
+
+        /* YASHIL KUNLIK BUYURTMA CHIZIQLI BLOK STILI */
+        .daily-green-block {
+            border: 2px solid #10b981 !important;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 20px;
+            background: rgba(16, 185, 129, 0.04);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+        }
         
         .pos-grid { 
             display: grid; 
@@ -301,7 +311,18 @@
         .btn-stop { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .btn-activate { background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
-        .history-card { border-left: 3px solid #d4af37; background: rgba(12, 12, 14, 0.8); padding: 10px; margin-bottom: 8px; border-radius: 6px; border-top: var(--gold-border-thin); border-right: var(--gold-border-thin); border-bottom: var(--gold-border-thin); }
+        .btn-yandex {
+            display: inline-block;
+            margin-top: 8px;
+            background: #fc3f1d;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 12px;
+            box-shadow: 0 2px 8px rgba(252, 63, 29, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -398,46 +419,42 @@
 
             <hr style="margin: 20px 0; border-color:rgba(212, 175, 55, 0.2);">
 
-            <h3 style="color:var(--gold-text);">📅 O'tgan Kunlar Tarixi</h3>
-            <div id="daily-history-list" style="margin-top:10px;">Yuklanmoqda...</div>
+            <h3 style="color:var(--gold-text); margin-bottom:12px;">📅 Sanalar bo'yicha Kunlik Buyurtmalar Tarixi</h3>
+            <div id="daily-history-list">Yuklanmoqda...</div>
+
+            <!-- 🛵 DOSTAVKA ZONALARINI SOZLASH -->
+            <div style="background:#121218; border:1px solid rgba(212,175,55,0.4); padding:16px; border-radius:16px; margin-top:25px;">
+                <h3 style="color:#f5d061; margin-bottom:12px; font-size:16px;">🛵 Yetkazib Berish Hududini Sozlash</h3>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+                    <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:10px;">
+                        <strong style="color:#f5d061; display:block; margin-bottom:8px;">🟢 1-Zona (Yaqin)</strong>
+                        <label style="color:#aaa; font-size:11px;">Maksimal masofa (km):</label>
+                        <input type="number" id="adm-zone1-km" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                        
+                        <label style="color:#aaa; font-size:11px;">Narxi (so'm):</label>
+                        <input type="number" id="adm-zone1-price" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                    </div>
+                    
+                    <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:10px;">
+                        <strong style="color:#f5d061; display:block; margin-bottom:8px;">🟡 2-Zona (Uzoq)</strong>
+                        <label style="color:#aaa; font-size:11px;">Maksimal masofa (km):</label>
+                        <input type="number" id="adm-zone2-km" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                        
+                        <label style="color:#aaa; font-size:11px;">Narxi (so'm):</label>
+                        <input type="number" id="adm-zone2-price" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                    </div>
+                </div>
+                
+                <button onclick="saveDeliverySettings()" style="width:100%; padding:12px; background:linear-gradient(180deg, #f7e089 0%, #c8962c 100%); color:#000; font-weight:bold; border:none; border-radius:10px; cursor:pointer;">
+                    💾 Zonalar Narxini Saqlash
+                </button>
+            </div>
         </div>
 
     </div>
 
     <script> 
-        // Supabase'dan zonalarni yuklash
-async function loadAdminDeliverySettings() {
-    const { data } = await db.from('delivery_settings').select('*').single();
-    if(data) {
-        document.getElementById('adm-zone1-km').value = data.zone1_km;
-        document.getElementById('adm-zone1-price').value = data.zone1_price;
-        document.getElementById('adm-zone2-km').value = data.zone2_km;
-        document.getElementById('adm-zone2-price').value = data.zone2_price;
-    }
-}
-
-// Zonalarni saqlash
-async function saveDeliverySettings() {
-    const z1_km = parseFloat(document.getElementById('adm-zone1-km').value);
-    const z1_pr = parseFloat(document.getElementById('adm-zone1-price').value);
-    const z2_km = parseFloat(document.getElementById('adm-zone2-km').value);
-    const z2_pr = parseFloat(document.getElementById('adm-zone2-price').value);
-
-    const { error } = await db.from('delivery_settings').upsert({
-        id: 1,
-        zone1_km: z1_km,
-        zone1_price: z1_pr,
-        zone2_km: z2_km,
-        zone2_price: z2_pr,
-        updated_at: new Date()
-    });
-
-    if(error) alert("Xatolik: " + error.message);
-    else alert("✅ Dostavka zonalari saqlandi!");
-}
-
-// Oyna ochilganda ma'lumotlarni chiqarish
-window.addEventListener('DOMContentLoaded', loadAdminDeliverySettings);
         const SUPABASE_URL = "https://wrrsvrgdinfmnuwewtoa.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -459,7 +476,36 @@ window.addEventListener('DOMContentLoaded', loadAdminDeliverySettings);
         }
 
         function getTodayString() {
-            return new Date().toISOString().split('T')[0];
+            return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tashkent' });
+        }
+
+        async function loadAdminDeliverySettings() {
+            const { data } = await db.from('delivery_settings').select('*').maybeSingle();
+            if(data) {
+                if(document.getElementById('adm-zone1-km')) document.getElementById('adm-zone1-km').value = data.zone1_km || 0;
+                if(document.getElementById('adm-zone1-price')) document.getElementById('adm-zone1-price').value = data.zone1_price || 0;
+                if(document.getElementById('adm-zone2-km')) document.getElementById('adm-zone2-km').value = data.zone2_km || 0;
+                if(document.getElementById('adm-zone2-price')) document.getElementById('adm-zone2-price').value = data.zone2_price || 0;
+            }
+        }
+
+        async function saveDeliverySettings() {
+            const z1_km = parseFloat(document.getElementById('adm-zone1-km').value) || 0;
+            const z1_pr = parseFloat(document.getElementById('adm-zone1-price').value) || 0;
+            const z2_km = parseFloat(document.getElementById('adm-zone2-km').value) || 0;
+            const z2_pr = parseFloat(document.getElementById('adm-zone2-price').value) || 0;
+
+            const { error } = await db.from('delivery_settings').upsert({
+                id: 1,
+                zone1_km: z1_km,
+                zone1_price: z1_pr,
+                zone2_km: z2_km,
+                zone2_price: z2_pr,
+                updated_at: new Date()
+            });
+
+            if(error) alert("Xatolik: " + error.message);
+            else alert("✅ Dostavka zonalari saqlandi!");
         }
 
         async function taomQoshish() {
@@ -521,7 +567,6 @@ window.addEventListener('DOMContentLoaded', loadAdminDeliverySettings);
             }
         }
 
-        // STOP-LISTGA QO'SHISH VA OLISH FUNKSIYASI
         function toggleStopList(id) {
             if (stopList.includes(id)) {
                 stopList = stopList.filter(stopId => stopId !== id);
@@ -660,7 +705,16 @@ window.addEventListener('DOMContentLoaded', loadAdminDeliverySettings);
 
             (sales || []).slice(0, 30).forEach((s, idx) => {
                 const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
-                const timeStr = new Date(s.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const timeStr = new Date(s.created_at).toLocaleTimeString('uz-UZ', {
+                    timeZone: 'Asia/Tashkent',
+                    hour: '2-digit', 
+                    minute:'2-digit'
+                });
+
+                let yandexBtn = '';
+                if (s.lat && s.lng) {
+                    yandexBtn = `<br><a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${s.lat},${s.lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
+                }
 
                 html += `<div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -670,8 +724,9 @@ window.addEventListener('DOMContentLoaded', loadAdminDeliverySettings);
                         </span>
                     </div>
                     <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${s.status || 'Buyurtma'}</p>
-                    <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${s.total_amount.toLocaleString()}</b> so'm</p>
-                    
+                    <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
+                    ${yandexBtn}
+
                     <div class="kitchen-actions">
                         ${!isReady ? `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${s.status}')">✅ TAYYOR BO'LDI</button>` : ''}
                         <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
@@ -685,14 +740,24 @@ window.addEventListener('DOMContentLoaded', loadAdminDeliverySettings);
             const updatedStatus = currentStatus + " [TAYYOR BO'LDI]";
             const { error } = await db.from('sales').update({ status: updatedStatus }).eq('id', id);
             if(error) alert("Xatolik: " + error.message);
-            else oshxonaniYuklash();
+            else {
+                oshxonaniYuklash();
+                if (document.getElementById('reports').classList.contains('active')) {
+                    hisobotniYuklash();
+                }
+            }
         }
 
         async function buyurtmaniBekorQilish(id) {
             if(confirm("Ushbu buyurtmani bekor qilmoqchimisiz? (Baza va kassadan o'chiriladi)")) {
                 const { error } = await db.from('sales').delete().eq('id', id);
                 if(error) alert("Xatolik: " + error.message);
-                else oshxonaniYuklash();
+                else {
+                    oshxonaniYuklash();
+                    if (document.getElementById('reports').classList.contains('active')) {
+                        hisobotniYuklash();
+                    }
+                }
             }
         }
 
@@ -706,10 +771,14 @@ window.addEventListener('DOMContentLoaded', loadAdminDeliverySettings);
             let dailyGroups = {};
 
             (sales || []).forEach(s => {
-                const dateStr = s.created_at.split('T')[0];
+                // FAQAT OSHPAZ TAYYOR QILGAN BUYURTMALAR KASSAGA HISOBLANADI
+                const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
+                if (!isReady) return;
+
+                const dateStr = new Date(s.created_at).toLocaleDateString('sv-SE', { timeZone: 'Asia/Tashkent' });
 
                 if (!dailyGroups[dateStr]) {
-                    dailyGroups[dateStr] = { rev: 0, cost: 0, profit: 0, count: 0 };
+                    dailyGroups[dateStr] = { rev: 0, cost: 0, profit: 0, count: 0, orders: [] };
                 }
 
                 const rev = parseFloat(s.total_amount || 0);
@@ -720,6 +789,7 @@ window.addEventListener('DOMContentLoaded', loadAdminDeliverySettings);
                 dailyGroups[dateStr].cost += cost;
                 dailyGroups[dateStr].profit += profit;
                 dailyGroups[dateStr].count += 1;
+                dailyGroups[dateStr].orders.push(s);
 
                 if (dateStr === todayStr) {
                     todayRev += rev;
@@ -733,52 +803,58 @@ window.addEventListener('DOMContentLoaded', loadAdminDeliverySettings);
             document.getElementById('rep-profit').innerText = todayProfit.toLocaleString();
 
             let historyHtml = '';
-            Object.keys(dailyGroups).sort().reverse().forEach(date => {
-                if (date !== todayStr) {
-                    const item = dailyGroups[date];
-                    historyHtml += `<div class="history-card">
-                        <b>📅 ${date} Sanadagi Savdo:</b><br>
-                        Jami savdo: <b style="color:var(--gold-text);">${item.rev.toLocaleString()}</b> so'm (${item.count} ta buyurtma)<br>
-                        Saf Foyda: <b style="color:#34d399;">+${item.profit.toLocaleString()} so'm</b>
-                    </div>`;
-                }
+            const sortedDates = Object.keys(dailyGroups).sort().reverse();
+
+            sortedDates.forEach(date => {
+                const item = dailyGroups[date];
+                
+                let ordersInsideHtml = '';
+                item.orders.forEach(ord => {
+                    const timeStr = new Date(ord.created_at).toLocaleTimeString('uz-UZ', {
+                        timeZone: 'Asia/Tashkent',
+                        hour: '2-digit', 
+                        minute:'2-digit'
+                    });
+
+                    let yandexBtn = '';
+                    if (ord.lat && ord.lng) {
+                        yandexBtn = `<a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${ord.lat},${ord.lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
+                    }
+
+                    ordersInsideHtml += `
+                        <div style="padding: 8px 0; border-bottom: 1px dashed rgba(212, 175, 55, 0.2);">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span><b>⏰ ${timeStr}</b> - ${ord.status}</span>
+                                <b style="color:var(--gold-text);">${Number(ord.total_amount || 0).toLocaleString()} so'm</b>
+                            </div>
+                            ${yandexBtn}
+                        </div>
+                    `;
+                });
+
+                // XAR BIR KUN UCHUN ALOHIDA YASHIL CHIZIQLI CONTAINER
+                historyHtml += `
+                    <div class="daily-green-block">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #10b981; padding-bottom:8px; margin-bottom:10px;">
+                            <h4 style="color:#10b981; margin:0; font-size:16px;">📅 Sana: ${date}</h4>
+                            <span style="color:var(--gold-text); font-weight:bold; font-size:14px;">Savdo: ${item.rev.toLocaleString()} so'm (${item.count} ta)</span>
+                        </div>
+                        ${ordersInsideHtml}
+                    </div>
+                `;
             });
 
-            document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali o\'tgan kunlar tarixi yo\'q.</i>';
+            document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali tayyor bo\'lgan buyurtmalar tarixi yo\'q.</i>';
         }
 
-        tanlovlarniYuklash();
+        window.addEventListener('DOMContentLoaded', () => {
+            loadAdminDeliverySettings();
+            tanlovlarniYuklash();
+        });
+
         setInterval(() => {
             if(document.getElementById('kitchen').classList.contains('active')) oshxonaniYuklash();
         }, 10000);
     </script>
-<!-- 🛵 DOSTAVKA ZONALARINI SOZLASH -->
-<div style="background:#121218; border:1px solid rgba(212,175,55,0.4); padding:16px; border-radius:16px; margin:15px 0;">
-    <h3 style="color:#f5d061; margin-bottom:12px; font-size:16px;">🛵 Yetkazib Berish Hududini Sozlash</h3>
-    
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
-        <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:10px;">
-            <strong style="color:#f5d061; display:block; margin-bottom:8px;">🟢 1-Zona (Yaqin)</strong>
-            <label style="color:#aaa; font-size:11px;">Maksimal masofa (km):</label>
-            <input type="number" id="adm-zone1-km" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
-            
-            <label style="color:#aaa; font-size:11px;">Narxi (so'm):</label>
-            <input type="number" id="adm-zone1-price" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
-        </div>
-        
-        <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:10px;">
-            <strong style="color:#f5d061; display:block; margin-bottom:8px;">🟡 2-Zona (Uzoq)</strong>
-            <label style="color:#aaa; font-size:11px;">Maksimal masofa (km):</label>
-            <input type="number" id="adm-zone2-km" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
-            
-            <label style="color:#aaa; font-size:11px;">Narxi (so'm):</label>
-            <input type="number" id="adm-zone2-price" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
-        </div>
-    </div>
-    
-    <button onclick="saveDeliverySettings()" style="width:100%; padding:12px; background:linear-gradient(180deg, #f7e089 0%, #c8962c 100%); color:#000; font-weight:bold; border:none; border-radius:10px; cursor:pointer;">
-        💾 Zonalar Narxini Saqlash
-    </button>
-</div>
 </body>
 </html>
