@@ -1,217 +1,474 @@
 <!DOCTYPE html>
 <html lang="uz">
-<head><link rel="apple-touch-icon" href="icon-192.png">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHEF HOTDOG - Buyurtma berish</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- iPhone va iOS qurilmalari uchun logotip -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+    
+    <!-- PWA Manifest ulash -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-title" content="Chef Hotdog">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ffc107">
+
+    <!-- CSS va kutubxonalar -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         :root {
-            --gold-gradient: linear-gradient(135deg, #d4af37 0%, #fff3a8 30%, #aa771c 70%, #fcf6ba 100%);
-            --gold-btn: linear-gradient(180deg, #f7e089 0%, #c8962c 100%);
+            --gold-gradient: linear-gradient(135deg, #f5d061 0%, #e6a100 100%);
+            --gold-btn: linear-gradient(135deg, #ffc107, #ff9800);
             --gold-text: #f5d061;
-            --card-bg: rgba(18, 18, 18, 0.95);
+            --card-bg: rgba(18, 18, 18, 0.75);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
-        body { background: #0a0a0d; color: #fff; padding: 12px; }
-        
-        .header { text-align: center; padding: 15px; border-bottom: 1px solid rgba(212, 175, 55, 0.3); margin-bottom: 15px; }
-        .header h1 { background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 22px; }
-        
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
-        .card { background: var(--card-bg); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
-        .card img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; }
-        .price { color: var(--gold-text); font-weight: bold; margin: 5px 0; }
-        
-        .qty-control { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 5px; }
-        .qty-btn { background: #222; border: 1px solid #d4af37; color: #fff; width: 26px; height: 26px; border-radius: 6px; font-weight: bold; }
 
-        .order-form { background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.3); }
-        .order-form input, .order-form textarea { width: 100%; padding: 10px; margin: 6px 0 12px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 8px; }
-        
-        #map { height: 200px; width: 100%; border-radius: 10px; margin-bottom: 12px; border: 1px solid #d4af37; }
-        .btn-gps { background: #2563eb; color: #fff; border: none; padding: 8px; width: 100%; border-radius: 8px; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
-        .btn-submit { background: var(--gold-btn); border: none; padding: 14px; width: 100%; font-weight: bold; font-size: 16px; border-radius: 10px; cursor: pointer; color: #000; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #0d0d0d;
+            color: #ffffff;
+            padding-bottom: 90px;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 193, 7, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 152, 0, 0.05) 0%, transparent 20%);
+            background-attachment: fixed;
+        }
+
+        header {
+            background: rgba(13, 13, 13, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(245, 208, 97, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 900;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .table-badge {
+            background: rgba(255, 193, 7, 0.15);
+            border: 1px solid var(--gold-text);
+            color: var(--gold-text);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        .categories {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 5px 0 15px 0;
+            scrollbar-width: none;
+        }
+        .categories::-webkit-scrollbar { display: none; }
+
+        .cat-btn {
+            background: #1a1a1a;
+            color: #aaa;
+            border: 1px solid #333;
+            padding: 8px 16px;
+            border-radius: 25px;
+            white-space: nowrap;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .cat-btn.active {
+            background: var(--gold-btn);
+            color: #000;
+            border-color: #ffc107;
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .food-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            position: relative;
+            backdrop-filter: blur(5px);
+        }
+
+        .food-img {
+            width: 110px;
+            height: 110px;
+            object-fit: cover;
+        }
+
+        .food-info {
+            padding: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .food-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .food-desc {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .food-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .food-price {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--gold-text);
+        }
+
+        .add-btn {
+            background: var(--gold-btn);
+            color: #000;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .cart-bar {
+            position: fixed;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 30px);
+            max-width: 570px;
+            background: var(--gold-btn);
+            color: #000;
+            padding: 14px 20px;
+            border-radius: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 800;
+            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
+            z-index: 99;
+            cursor: pointer;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .modal-content {
+            background: #141414;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 24px 24px 0 0;
+            padding: 20px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border-top: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .qty-btn {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            background: var(--gold-btn);
+            color: #000;
+            border: none;
+            padding: 15px;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+
+        #map {
+            height: 180px;
+            width: 100%;
+            border-radius: 12px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>CHEF HOTDOG</h1>
-        <p style="font-size:12px; color:#aaa;">Yetkazib berish xizmati (Dostavka)</p>
-    </div>
+    <header>
+        <div class="logo">Chef Hotdog</div>
+        <div class="table-badge" id="table-display">Stol: --</div>
+    </header>
 
-    <h3 style="color:var(--gold-text); margin-bottom:10px;">🍽 Taomni tanlang:</h3>
-    <div id="menu-grid" class="grid">Yuklanmoqda...</div>
-
-    <div class="order-form">
-        <h3 style="color:var(--gold-text); margin-bottom:10px;">🛵 Yetkazib berish ma'lumotlari:</h3>
-        <label>Ismingiz:</label>
-        <input type="text" id="cust-name" placeholder="Masalan: Ali">
-        
-        <label>Telefon raqamingiz:</label>
-        <input type="tel" id="cust-phone" placeholder="+998 90 123 45 67">
-
-        <label>Kartadan joylashuvni tanlang:</label>
-        <button class="btn-gps" onclick="getCurrentLocation()">📍 Mening joylashuvimni aniqlash</button>
-        <div id="map"></div>
-
-        <label>Qo'shimcha manzil va mo'ljal:</label>
-        <textarea id="cust-address" rows="2" placeholder="Uy/Xonadon raqami, mo'ljal..."></textarea>
-
-        <div style="margin-bottom: 12px; font-size: 16px;">
-            Jami: <b id="total-price-sum" style="color:var(--gold-text);">0</b> so'm
+    <div class="container">
+        <div class="categories">
+            <button class="cat-btn active" onclick="filterCat('all', this)">Barchasi</button>
+            <button class="cat-btn" onclick="filterCat('hotdog', this)">Hot-doglar</button>
+            <button class="cat-btn" onclick="filterCat('burger', this)">Burgerlar</button>
+            <button class="cat-btn" onclick="filterCat('drink', this)">Ichimliklar</button>
         </div>
 
-        <button class="btn-submit" onclick="dostavkaBuyurtmaYuborish()">BUYURTMA BERISH</button>
+        <div class="menu-grid" id="menu-container"></div>
+    </div>
+
+    <div class="cart-bar" id="cart-bar" style="display:none;" onclick="openCart()">
+        <span id="cart-count">0 ta mahsulot</span>
+        <span>Savatni ko'rish &rarr;</span>
+    </div>
+
+    <!-- Savat Modali -->
+    <div class="modal" id="cart-modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 15px; color: var(--gold-text);">Buyurtmangiz</h2>
+            <div id="cart-items"></div>
+            
+            <div style="margin-top: 20px;">
+                <label style="font-size: 14px; color: #aaa;">Xizmat turi:</label>
+                <select id="order-type" onchange="toggleOrderType()" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #444; border-radius:8px; margin-top:5px;">
+                    <option value="table">Stolda tanavvul qilish</option>
+                    <option value="delivery">Yetkazib berish (Dostavka)</option>
+                </select>
+            </div>
+
+            <div id="delivery-section" style="display:none; margin-top: 15px;">
+                <input type="text" id="cust-phone" placeholder="Telefon raqamingiz" style="width:100%; padding:10px; background:#222; color:#fff; border:1px solid #444; border-radius:8px; margin-bottom:10px;">
+                <label style="font-size: 13px; color: #aaa;">Xaritadan manzilingizni belgilang:</label>
+                <div id="map"></div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top: 20px; font-size:18px; font-weight:bold;">
+                <span>Jami:</span>
+                <span id="cart-total" style="color: var(--gold-text);">0 so'm</span>
+            </div>
+
+            <button class="checkout-btn" onclick="submitOrder()">BUYURTMANI TASDIQLASH</button>
+            <button onclick="closeCart()" style="width:100%; background:transparent; color:#888; border:none; padding:10px; margin-top:5px;">Yopish</button>
+        </div>
     </div>
 
     <script>
-        const SUPABASE_URL = "https://wrrsvrgdinfmnuwewtoa.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
-        const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // URL'dan stol raqamini olish (?stol=3)
+        const urlParams = new URLSearchParams(window.location.search);
+        const tableNum = urlParams.get('stol') || '1';
+        document.getElementById('table-display').innerText = `Stol: #${tableNum}`;
+
+        const menuData = [
+            { id: 1, name: "Qirollik Hot-Dog", price: 25000, cat: "hotdog", desc: "Maxsus sosiska, pishloq, sous, svejiy ko'katlar", img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=300" },
+            { id: 2, name: "Dabl Cheeseburger", price: 38000, cat: "burger", desc: "Ikkita shershli kotlet, dabl pishloq, marinadlangan bodring", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" },
+            { id: 3, name: "Klassik Hot-Dog", price: 18000, cat: "hotdog", desc: "An'anaviy retsept bo'yicha tayyorlangan ajoyib hot-dog", img: "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?w=300" },
+            { id: 4, name: "Coca-Cola 0.5L", price: 8000, cat: "drink", desc: "Muzdek salqinlantiruvchi ichimlik", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=300" }
+        ];
 
         let cart = {};
-        let menuItems = [];
-        let selectedLat = 40.1006;
-        let selectedLng = 65.3725;
-        let map, marker;
+        let map, marker, userLat = 41.311081, userLng = 69.240562;
 
-        function initMap() {
-            map = L.map('map').setView([selectedLat, selectedLng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
-            }).addTo(map);
-
-            marker = L.marker([selectedLat, selectedLng], {draggable: true}).addTo(map);
-
-            marker.on('dragend', function(e) {
-                const position = marker.getLatLng();
-                selectedLat = position.lat;
-                selectedLng = position.lng;
-            });
-
-            map.on('click', function(e) {
-                selectedLat = e.latlng.lat;
-                selectedLng = e.latlng.lng;
-                marker.setLatLng(e.latlng);
-            });
+        function renderMenu(items) {
+            const container = document.getElementById('menu-container');
+            container.innerHTML = items.map(item => `
+                <div class="food-card">
+                    <img src="${item.img}" class="food-img" alt="${item.name}">
+                    <div class="food-info">
+                        <div>
+                            <div class="food-title">${item.name}</div>
+                            <div class="food-desc">${item.desc}</div>
+                        </div>
+                        <div class="food-bottom">
+                            <div class="food-price">${item.price.toLocaleString()} so'm</div>
+                            <button class="add-btn" onclick="addToCart(${item.id})">+ Qo'shish</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        function getCurrentLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    selectedLat = position.coords.latitude;
-                    selectedLng = position.coords.longitude;
-                    map.setView([selectedLat, selectedLng], 16);
-                    marker.setLatLng([selectedLat, selectedLng]);
-                }, function() {
-                    alert("GPS joylashuvingizni aniqlab bo'lmadi. Iltimos kartadan tanlang.");
-                });
+        function filterCat(cat, btn) {
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if(cat === 'all') renderMenu(menuData);
+            else renderMenu(menuData.filter(i => i.cat === cat));
+        }
+
+        function addToCart(id) {
+            cart[id] = (cart[id] || 0) + 1;
+            updateCartBar();
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Savatga qo\'shildi', showConfirmButton: false, timer: 1000, background: '#222', color: '#fff' });
+        }
+
+        function updateCartBar() {
+            const count = Object.values(cart).reduce((a, b) => a + b, 0);
+            const bar = document.getElementById('cart-bar');
+            if (count > 0) {
+                bar.style.display = 'flex';
+                document.getElementById('cart-count').innerText = `${count} ta mahsulot savatda`;
+            } else {
+                bar.style.display = 'none';
             }
         }
 
-        async function menyuniYuklash() {
-            const { data } = await db.from('menu').select('*');
-            menuItems = data || [];
+        function openCart() {
+            document.getElementById('cart-modal').style.display = 'flex';
+            renderCartItems();
+        }
+
+        function closeCart() {
+            document.getElementById('cart-modal').style.display = 'none';
+        }
+
+        function renderCartItems() {
+            const container = document.getElementById('cart-items');
+            let total = 0;
             let html = '';
-            
-            menuItems.forEach(m => {
-                cart[m.id] = 0;
+
+            for (let id in cart) {
+                const item = menuData.find(m => m.id == id);
+                const qty = cart[id];
+                const sum = item.price * qty;
+                total += sum;
+
                 html += `
-                <div class="card">
-                    <img src="${m.image_url || 'https://via.placeholder.com/150'}">
-                    <b>${m.title}</b>
-                    <div class="price">${m.price.toLocaleString()} so'm</div>
-                    <div class="qty-control">
-                        <button class="qty-btn" onclick="changeQty(${m.id}, -1)">-</button>
-                        <span id="qty-${m.id}">0</span>
-                        <button class="qty-btn" onclick="changeQty(${m.id}, 1)">+</button>
+                    <div class="cart-item">
+                        <div>
+                            <div style="font-weight:bold;">${item.name}</div>
+                            <div style="font-size:12px; color:#aaa;">${item.price.toLocaleString()} x ${qty}</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <button class="qty-btn" onclick="changeQty(${id}, -1)">-</button>
+                            <span>${qty}</span>
+                            <button class="qty-btn" onclick="changeQty(${id}, 1)">+</button>
+                        </div>
                     </div>
-                </div>`;
-            });
-            document.getElementById('menu-grid').innerHTML = html;
+                `;
+            }
+
+            container.innerHTML = html || '<p style="color:#aaa; text-align:center;">Savat bo\'sh</p>';
+            document.getElementById('cart-total').innerText = `${total.toLocaleString()} so'm`;
         }
 
         function changeQty(id, delta) {
-            if(cart[id] + delta >= 0) {
-                cart[id] += delta;
-                document.getElementById(`qty-${id}`).innerText = cart[id];
-                hisoblaSumma();
+            cart[id] += delta;
+            if (cart[id] <= 0) delete cart[id];
+            updateCartBar();
+            renderCartItems();
+            if (Object.keys(cart).length === 0) closeCart();
+        }
+
+        function toggleOrderType() {
+            const type = document.getElementById('order-type').value;
+            const sec = document.getElementById('delivery-section');
+            if (type === 'delivery') {
+                sec.style.display = 'block';
+                if (!map) initMap();
+            } else {
+                sec.style.display = 'none';
             }
         }
 
-        function hisoblaSumma() {
-            let total = 0;
-            menuItems.forEach(m => {
-                total += (cart[m.id] || 0) * m.price;
-            });
-            document.getElementById('total-price-sum').innerText = total.toLocaleString();
+        function initMap() {
+            setTimeout(() => {
+                map = L.map('map').setView([userLat, userLng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                marker = L.marker([userLat, userLng], {draggable: true}).addTo(map);
+
+                marker.on('dragend', function(e) {
+                    const pos = marker.getLatLng();
+                    userLat = pos.lat;
+                    userLng = pos.lng;
+                });
+            }, 200);
         }
 
-        async function dostavkaBuyurtmaYuborish() {
-            const name = document.getElementById('cust-name').value;
-            const phone = document.getElementById('cust-phone').value;
-            const address = document.getElementById('cust-address').value;
-
-            if(!name || !phone) return alert("Iltimos, ismingiz va telefon raqamingizni kiriting!");
-
-            let itemsText = [];
-            let totalAmount = 0;
-            let totalCost = 0;
-
-            menuItems.forEach(m => {
-                const qty = cart[m.id] || 0;
-                if(qty > 0) {
-                    itemsText.push(`${m.title} (x${qty})`);
-                    totalAmount += m.price * qty;
-                    totalCost += (m.cost || 0) * qty;
+        function submitOrder() {
+            const type = document.getElementById('order-type').value;
+            if (type === 'delivery') {
+                const phone = document.getElementById('cust-phone').value;
+                if (!phone) {
+                    Swal.fire({ icon: 'error', title: 'Xatolik', text: 'Iltimos, telefon raqamingizni kiriting!' });
+                    return;
                 }
-            });
-
-            if(itemsText.length === 0) return alert("Iltimos, kamida bitta taom tanlang!");
-
-            const mapLink = `https://www.google.com/maps?q=${selectedLat},${selectedLng}`;
-            const fullStatusText = `🛵 DOSTAVKA: ${itemsText.join(', ')} | Mijoz: ${name} (${phone}) | Manzil: ${address || 'Kartada ko\'rsatilgan'} | MAP_LINK:${mapLink}`;
-
-            const { error } = await db.from('sales').insert([{
-                total_amount: totalAmount,
-                total_cost: totalCost,
-                profit: (totalAmount - totalCost),
-                status: fullStatusText
-            }]);
-
-            if(error) alert("Xatolik: " + error.message);
-            else {
-                alert("✅ Buyurtmangiz qabul qilindi! Tez orada siz bilan bog'lanamiz.");
-                location.reload();
             }
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Buyurtma qabul qilindi!',
+                text: 'Tez orada oshpazlarimiz tayyorlashni boshlaydi.',
+                background: '#1a1a1a',
+                color: '#fff',
+                confirmButtonColor: '#ffc107'
+            }).then(() => {
+                cart = {};
+                updateCartBar();
+                closeCart();
+            });
         }
 
-        window.onload = function() {
-            menyuniYuklash();
-            initMap();
-        };
+        renderMenu(menuData);
     </script>
 </body>
 </html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chef Hotdog</title>
-
-  <!-- PWA Manifest ulash -->
-  <link rel="manifest" href="manifest.json">
-
-  <!-- iPhone va iOS qurilmalari uchun ikonka va sarlavha -->
-  <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
-  <meta name="apple-mobile-web-app-title" content="Chef Hotdog">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-
-  <!-- Android va Brauzerlar uchun favicon -->
-  <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
-  <meta name="theme-color" content="#ffc107">
-</head>
