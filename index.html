@@ -405,6 +405,13 @@
     </div>
 
     <script> 
+<script>
+    // Kafe koordinatalari (Qarshi)
+    const KAFE_LAT = 38.849464;
+    const KAFE_LNG = 65.793417;
+
+    // Supabase'dan zonalarni yuklash
+    async function loadAdminDeliverySettings() {
         // Supabase'dan zonalarni yuklash
 async function loadAdminDeliverySettings() {
     const { data } = await db.from('delivery_settings').select('*').single();
