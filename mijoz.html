@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHEF HOTDOG - Buyurtma berish</title>
 
-    <!-- Siz yuborgan CHEF HOTDOG shaxsiy logotipi -->
+    <!-- iOS va Android uchun pwa / ikonka menyu logotipi -->
     <link rel="apple-touch-icon" href="https://i.ibb.co/3ykX4S2/IMG-5133.jpg">
     <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/3ykX4S2/IMG-5133.jpg">
     <link rel="icon" type="image/jpeg" href="https://i.ibb.co/3ykX4S2/IMG-5133.jpg">
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-title" content="Chef Hotdog">
 
-    <!-- SweetAlert2 va Leaflet Xarita kutubxonalari -->
+    <!-- SweetAlert2 & Leaflet Map -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -20,7 +20,6 @@
     <style>
         :root {
             --gold-gradient: linear-gradient(135deg, #f5d061 0%, #e3a833 100%);
-            --gold-btn: linear-gradient(180deg, #f7ce68 0%, #fbab7e 100%);
             --gold-text: #f5d061;
             --bg-card: rgba(18, 18, 20, 0.95);
             --border-color: rgba(245, 208, 97, 0.25);
@@ -77,6 +76,7 @@
             gap: 8px;
         }
 
+        /* Taomlar Katakchasi (Setka) */
         .menu-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -122,7 +122,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .qty-btn {
@@ -276,12 +276,14 @@
             document.getElementById('order-type').value = 'table';
         }
 
-        // Sizning aniq rasmlaringiz va narxlaringiz
+        // Aynan siz yuborgan rasmdagi to'g'ri taomlar ro'yxati va narxlari:
         const menuData = [
-            { id: 1, name: "Tuxum & Sasiska", price: 15000, img: "https://i.ibb.co/3ykX4S2/IMG-5133.jpg" },
-            { id: 2, name: "Chicken hotdog", price: 15000, img: "https://i.ibb.co/3ykX4S2/IMG-5133.jpg" },
-            { id: 3, name: "Classic lavash", price: 28000, img: "https://i.ibb.co/3ykX4S2/IMG-5133.jpg" },
-            { id: 4, name: "Chicken lavash", price: 22000, img: "https://i.ibb.co/3ykX4S2/IMG-5133.jpg" }
+            { id: 1, name: "TUXUM & SASISKA", price: 15000, img: "img/tuxum_sasiska.jpg" },
+            { id: 2, name: "Chicken hotdog", price: 15000, img: "img/chicken_hotdog.jpg" },
+            { id: 3, name: "Classic lavash", price: 28000, img: "img/classic_lavash.jpg" },
+            { id: 4, name: "chicken lavash", price: 22000, img: "img/chicken_lavash.jpg" },
+            { id: 5, name: "SASISKA lavash", price: 25000, img: "img/sasiska_lavash.jpg" },
+            { id: 6, name: "DIL-DIL lagmon", price: 30000, img: "img/dildil_lagmon.jpg" }
         ];
 
         let cart = {};
@@ -293,7 +295,7 @@
                 const qty = cart[item.id] || 0;
                 return `
                     <div class="food-card">
-                        <img src="${item.img}" class="food-img" alt="${item.name}">
+                        <img src="${item.img}" class="food-img" alt="${item.name}" onerror="this.onerror=null;this.src='https://i.ibb.co/3ykX4S2/IMG-5133.jpg';">
                         <div class="food-title">${item.name}</div>
                         <div class="food-price">${item.price.toLocaleString()} so'm</div>
                         <div class="counter-btn-group">
