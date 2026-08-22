@@ -428,40 +428,44 @@
             if(id === 'reports') hisobotniYuklash();
         }
 
-        // Toshkent vaqtini aniq ko'rsatuvchi tuzatilgan funksiya (HH:mm)
+        // Tashkent vaqtini aniq ko'rsatuvchi tuzatilgan funksiya (HH:mm)
         function getTashkentTimeString(dateInput) {
             if (!dateInput) return "00:00";
             
-            let d = new Date(dateInput);
-            
-            // Supabase UTC yuborganda 'Z' belgisi bo'lmasa, uni to'g'ri UTC ekanligini bildiruvchi mantiq
-            if (typeof dateInput === 'string' && !dateInput.endsWith('Z') && !dateInput.includes('+')) {
-                d = new Date(dateInput + 'Z');
+            let dateStr = dateInput;
+            if (typeof dateStr === 'string' && !dateStr.endsWith('Z') && !dateStr.includes('+')) {
+                dateStr += 'Z';
             }
-
+            
+            const d = new Date(dateStr);
             if (isNaN(d.getTime())) return "00:00";
 
-            return d.toLocaleTimeString('uz-UZ', {
+            return new Intl.DateTimeFormat('uz-UZ', {
                 timeZone: 'Asia/Tashkent',
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: false
-            });
+            }).format(d);
         }
 
-        // Toshkent sanasini aniq ko'rsatuvchi tuzatilgan funksiya (YYYY-MM-DD)
+        // Tashkent sanasini aniq ko'rsatuvchi tuzatilgan funksiya (YYYY-MM-DD)
         function getTashkentDateString(dateInput) {
-            let d = dateInput ? new Date(dateInput) : new Date();
-
-            if (typeof dateInput === 'string' && !dateInput.endsWith('Z') && !dateInput.includes('+')) {
-                d = new Date(dateInput + 'Z');
+            let dateStr = dateInput || new Date();
+            if (typeof dateStr === 'string' && !dateStr.endsWith('Z') && !dateStr.includes('+')) {
+                dateStr += 'Z';
             }
 
-            if (isNaN(d.getTime())) d = new Date();
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0];
 
-            return d.toLocaleDateString('sv-SE', {
-                timeZone: 'Asia/Tashkent'
+            const formatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Asia/Tashkent',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
             });
+            
+            return formatter.format(d);
         }
 
         function formatOrderTextWithPurpleQty(text) {
