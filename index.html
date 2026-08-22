@@ -22,7 +22,7 @@
             --gold-text: #f5d061;
             --card-bg: rgba(18, 18, 18, 0.85);
             --dark-bg: #0a0a0d;
-            --qty-purple: #c084fc; /* Och binafsha rang */
+            --qty-purple: #c084fc;
         }
 
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
@@ -177,7 +177,6 @@
             background: rgba(20, 20, 25, 0.7);
         }
         
-        /* Miqdor (x1, x2...) uchun och binafsha rang stil */
         .qty-highlight {
             color: var(--qty-purple) !important;
             font-weight: 800;
@@ -429,20 +428,25 @@
             if(id === 'reports') hisobotniYuklash();
         }
 
-        function getTashkentDateString(dateObj = new Date()) {
-            return new Date(dateObj).toLocaleDateString('sv-SE', { timeZone: 'Asia/Tashkent' });
+        // Toshkent vaqtini to'g'ri (+5 soat UTC offset bilan) qaytarish uchun funksiyalar
+        function getTashkentDateObj(dateInput) {
+            let d = dateInput ? new Date(dateInput) : new Date();
+            // UTC vaqtiga majburan 5 soat qo'shiladi
+            return new Date(d.getTime() + (5 * 60 * 60 * 1000));
         }
 
-        function getTashkentTimeString(dateObj = new Date()) {
-            return new Date(dateObj).toLocaleTimeString('uz-UZ', {
-                timeZone: 'Asia/Tashkent',
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: false
-            });
+        function getTashkentDateString(dateInput) {
+            const d = getTashkentDateObj(dateInput);
+            return d.toISOString().split('T')[0];
         }
 
-        // Miqdor (x1, x2...) yozuvlarini och binafsha fonga va rangga aylantirish funksiyasi
+        function getTashkentTimeString(dateInput) {
+            const d = getTashkentDateObj(dateInput);
+            const hours = String(d.getUTCHours()).padStart(2, '0');
+            const minutes = String(d.getUTCMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
         function formatOrderTextWithPurpleQty(text) {
             if (!text) return '';
             return text.replace(/\(x(\d+)\)/g, '<span class="qty-highlight">(x$1)</span>');
