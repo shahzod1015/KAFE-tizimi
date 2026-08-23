@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHEF Hotdog POS</title>
+    <title>CHEF Hotdog POS - Admin</title>
 
     <link rel="apple-touch-icon" sizes="180x180" href="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png">
     <link rel="icon" type="image/png" sizes="32x32" href="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png">
@@ -322,7 +322,7 @@
 
         <div class="app-header">
             <img src="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png" alt="CHEF HOTDOG Logo">
-            <h2>CHEF HOTDOG</h2>
+            <h2>CHEF HOTDOG - ADMIN</h2>
         </div>
 
         <div class="nav">
@@ -330,7 +330,7 @@
             <button id="tab-kitchen" onclick="switchTab('kitchen')">👨‍🍳 Oshxona</button>
             <button id="tab-recipes" onclick="switchTab('recipes')">📖 Menyu va Stop-List</button>
             <button id="tab-stock" onclick="switchTab('stock')">📦 Ombor</button>
-            <button id="tab-reports" onclick="switchTab('reports')">📊 Kassa</button>
+            <button id="tab-reports" onclick="switchTab('reports')">📊 Kassa va Sozlamalar</button>
         </div>
 
         <!-- 1. OFITSIANT -->
@@ -366,8 +366,12 @@
             </div>
             <div id="kitchen-orders-list">Yuklanmoqda...</div>
 
+            <!-- NAQD PUL VA CLICK/PAYME BUYURTMALARI (TASDIQLASH KUTAYOTGANLAR) -->
             <hr style="margin: 20px 0; border-color:rgba(212, 175, 55, 0.2);">
+            <h3 style="color:var(--gold-text); margin-bottom:12px;">💵 Naqd pul va Onlayn to'lov Buyurtmalari (Tasdiqlash)</h3>
+            <div id="pending-cash-orders-list">Yuklanmoqda...</div>
 
+            <hr style="margin: 20px 0; border-color:rgba(212, 175, 55, 0.2);">
             <h3 style="color:var(--gold-text); margin-bottom:12px;">📅 Sanalar bo'yicha Kunlik Buyurtmalar Tarixi</h3>
             <div id="daily-history-list">Yuklanmoqda...</div>
         </div>
@@ -401,7 +405,7 @@
             <div id="stock-list" style="margin-top:10px;"></div>
         </div>
 
-        <!-- 5. KASSA -->
+        <!-- 5. KASSA VA SOZLAMALAR -->
         <div id="reports" class="tab-content">
             <h3 style="color:var(--gold-text);">📊 Bugungi Kassa (<span id="today-date-str"></span>)</h3>
             <div class="card" style="margin-top:10px;">Bugungi Tushum: <b id="rep-rev" class="tag-price">0</b> so'm</div>
@@ -412,6 +416,26 @@
             <div style="margin-top:25px;">
                 <h3 style="color:var(--gold-text); margin-bottom:12px;">📜 Kassa Tarixi (O'tgan kunlar hisoboti)</h3>
                 <div id="cash-history-list">Yuklanmoqda...</div>
+            </div>
+
+            <!-- TO'LOV REKvizitlari (KARTA RAQAMI VA QR KOD RASMI) -->
+            <div style="background:#121218; border:1px solid rgba(212,175,55,0.4); padding:16px; border-radius:16px; margin-top:25px;">
+                <h3 style="color:#f5d061; margin-bottom:12px; font-size:16px;">💳 To'lov Rekvizitlarini Sozlash (Karta va QR)</h3>
+                
+                <label style="color:#aaa; font-size:11px;">Karta raqami (masalan: 9860 **** **** 1234):</label>
+                <input type="text" id="adm-card-number" placeholder="Karta raqamini kiriting" style="background:#000; color:#fff;">
+
+                <label style="color:#aaa; font-size:11px;">Karta egasining F.I.O:</label>
+                <input type="text" id="adm-card-holder" placeholder="Ism Familiya" style="background:#000; color:#fff;">
+
+                <label style="color:#aaa; font-size:11px;">QR Kod rasmini yuklash (Click/Payme QR):</label>
+                <input type="file" id="adm-qr-file" accept="image/*" style="background:#000; color:#fff; margin-bottom:10px;">
+                
+                <div id="current-qr-preview" style="margin-bottom:12px;"></div>
+
+                <button onclick="savePaymentSettings()" style="width:100%; padding:12px; background:linear-gradient(180deg, #f7e089 0%, #c8962c 100%); color:#000; font-weight:bold; border:none; border-radius:10px; cursor:pointer;">
+                    💾 To'lov Ma'lumotlarini Saqlash
+                </button>
             </div>
 
             <!-- KAFE JOYLASHUVI VA DOSTAVKA ZONALARINI SOZLASH -->
@@ -463,7 +487,7 @@
                 </div>
                 
                 <button onclick="saveDeliverySettings()" style="width:100%; padding:12px; background:linear-gradient(180deg, #f7e089 0%, #c8962c 100%); color:#000; font-weight:bold; border:none; border-radius:10px; cursor:pointer;">
-                    💾 Barcha Sozlamalarni Saqlash
+                    💾 Yetkazish Sozlamalarini Saqlash
                 </button>
             </div>
         </div>
@@ -475,10 +499,8 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // 🤖 YANGI TELEGRAM BOT SOZLAMALARI
         const TELEGRAM_BOT_TOKEN = "8992397944:AAFPRv6NKFKn7dLz6hxBcLSqf93z5VfAvNs"; 
         const TELEGRAM_CHAT_ID = "8630700790";
-
         const LOGO_URL = "https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png";
 
         let itemQuantities = {};
@@ -486,7 +508,6 @@
         let isMapInitialized = false;
         let lastKnownOrderCount = 0; 
 
-        // Telegram botga xabar yuborish funksiyasi
         async function sendTelegramMessage(text) {
             if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
             try {
@@ -504,7 +525,6 @@
             }
         }
 
-        // Ruxsatlarni olish va ovozni faollashtirish
         async function enableAppPermissions() {
             const audio = document.getElementById('order-audio');
             audio.play().then(() => {
@@ -518,7 +538,7 @@
                     alert("✅ Tizimli bildirishnoma va ovoz muvaffaqiyatli yoqildi!");
                     document.getElementById('sound-activation-banner').style.display = 'none';
                 } else {
-                    alert("⚠️ Bildirishnomaga ruxsat berilmadi. Telefon sozlamalaridan ruxsat bering.");
+                    alert("⚠️ Bildirishnomaga ruxsat berilmadi.");
                 }
             } else {
                 alert("✅ Ovozli signal faollashdi!");
@@ -539,7 +559,6 @@
                 window.speechSynthesis.speak(utterance);
             }
 
-            // Tizimli push-bildirishnoma
             if ('Notification' in window && Notification.permission === 'granted') {
                 try {
                     navigator.serviceWorker.ready.then(registration => {
@@ -576,6 +595,8 @@
             if(id === 'kitchen') oshxonaniYuklash();
             if(id === 'reports') {
                 hisobotniYuklash();
+                loadPaymentSettings();
+                loadAdminDeliverySettings();
                 initAdminMap();
             }
         }
@@ -609,6 +630,55 @@
             }
             if (lat && lng) return `<br><a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${lat},${lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
             return '';
+        }
+
+        // TO'LOV REKVIZITLARINI YUKLASH VA SAQLASH
+        async function loadPaymentSettings() {
+            const { data } = await db.from('payment_settings').select('*').maybeSingle();
+            if(data) {
+                document.getElementById('adm-card-number').value = data.card_number || '';
+                document.getElementById('adm-card-holder').value = data.card_holder || '';
+                if(data.qr_image_url) {
+                    document.getElementById('current-qr-preview').innerHTML = `<img src="${data.qr_image_url}" style="width:100px; height:100px; border-radius:8px; border:1px solid #d4af37; object-fit:cover;"><br><small style="color:#aaa;">Joriy QR kod</small>`;
+                }
+            }
+        }
+
+        async function savePaymentSettings() {
+            const card_number = document.getElementById('adm-card-number').value;
+            const card_holder = document.getElementById('adm-card-holder').value;
+            const qrFileInput = document.getElementById('adm-qr-file');
+            
+            let qr_image_url = '';
+            const { data: existingData } = await db.from('payment_settings').select('qr_image_url').maybeSingle();
+            if(existingData && existingData.qr_image_url) {
+                qr_image_url = existingData.qr_image_url;
+            }
+
+            if(qrFileInput.files.length > 0) {
+                const file = qrFileInput.files[0];
+                const fileExt = file.name.split('.').pop();
+                const fileName = `qr_${Date.now()}.${fileExt}`;
+                const { error: uploadErr } = await db.storage.from('menu-images').upload(fileName, file);
+                if(uploadErr) {
+                    return alert("QR rasmni yuklashda xatolik: " + uploadErr.message);
+                }
+                const { data: publicUrlData } = db.storage.from('menu-images').getPublicUrl(fileName);
+                qr_image_url = publicUrlData.publicUrl;
+            }
+
+            const { error } = await db.from('payment_settings').upsert({
+                id: 1,
+                card_number,
+                card_holder,
+                qr_image_url
+            });
+
+            if(error) alert("Xatolik: " + error.message);
+            else {
+                alert("✅ To'lov rekvizitlari muvaffaqiyatli saqlandi!");
+                loadPaymentSettings();
+            }
         }
 
         async function loadAdminDeliverySettings() {
@@ -856,17 +926,18 @@
             const totalCost = (menuItem.cost || 0) * qty;
             const orderStatus = `Stol #${tableNum} - ${menuItem.title} (x${qty})`;
 
+            // Ofitsiant kiritgan buyurtmalar to'g'ridan-to'g'ri kassaga hisoblanadi (is_paid: true)
             const { error } = await db.from('sales').insert([{ 
                 total_amount: totalPrice, 
                 total_cost: totalCost, 
                 profit: (totalPrice - totalCost),
-                status: orderStatus
+                status: orderStatus,
+                is_paid: true 
             }]);
 
             if(error) {
                 alert("Xato: " + error.message);
             } else {
-                // Telegram botga xabar yuborish
                 await sendTelegramMessage(`🔥 <b>Yangi buyurtma! (Ofitsiant)</b>\n\n📌 ${orderStatus}\n💰 Summa: <b>${totalPrice.toLocaleString()} so'm</b>`);
 
                 alert(`✅ Stol #${tableNum}: ${qty}x ${menuItem.title} oshxonaga yuborildi!`);
@@ -908,6 +979,7 @@
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
             
             let activeHtml = '';
+            let pendingCashHtml = '';
             let dailyGroups = {};
             let currentActiveCount = 0;
 
@@ -916,7 +988,26 @@
                 const timeStr = getTashkentTimeString(s.created_at);
                 const dateStr = getTashkentDateString(s.created_at);
 
-                if (!isReady) {
+                // Naqd pul yoki onlayn buyurtmalar va hali to'lanmaganlar (is_paid === false)
+                const isPendingPayment = s.is_paid === false;
+
+                if (isPendingPayment) {
+                    const yandexBtn = getYandexButton(s);
+                    pendingCashHtml += `<div class="card" style="border: 1px solid #f59e0b;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <b>⏰ ${timeStr}</b>
+                            <span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold;">💵 TO'LOV KUTILMOQDA</span>
+                        </div>
+                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${formatOrderTextWithPurpleQty(s.status || 'Buyurtma')}</p>
+                        <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
+                        ${yandexBtn}
+
+                        <div class="kitchen-actions">
+                            <button class="btn-ready" onclick="kassagaTasdiqlash(${s.id})" style="background:#f59e0b; color:#000;">✅ TO'LANDI (Kassaga qo'shish)</button>
+                            <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Rad etish</button>
+                        </div>
+                    </div>`;
+                } else if (!isReady) {
                     currentActiveCount++;
                     const yandexBtn = getYandexButton(s);
 
@@ -950,6 +1041,7 @@
             lastKnownOrderCount = currentActiveCount;
 
             document.getElementById('kitchen-orders-list').innerHTML = activeHtml || '<p style="color:#a1a1aa; padding:10px 0;">Hozircha tayyorlanayotgan faol buyurtmalar yo\'q.</p>';
+            document.getElementById('pending-cash-orders-list').innerHTML = pendingCashHtml || '<p style="color:#a1a1aa; padding:10px 0;">Tasdiqlashni kutayotgan naqd/onlayn buyurtmalar yo\'q.</p>';
 
             let historyHtml = '';
             const sortedDates = Object.keys(dailyGroups).sort().reverse();
@@ -987,6 +1079,20 @@
             document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali tayyor bo\'lgan buyurtmalar yo\'q.</i>';
         }
 
+        // "TO'LANDI" TUGMASI ORQALI KASSAGA QO'SHISH VA OSHXONAGA YO'LLASH
+        async function kassagaTasdiqlash(id) {
+            const { error } = await db.from('sales').update({ is_paid: true }).eq('id', id);
+            if(error) {
+                alert("Xatolik: " + error.message);
+            } else {
+                alert("✅ To'lov tasdiqlandi va buyurtma kassaga qo'shildi!");
+                oshxonaniYuklash();
+                if (document.getElementById('reports').classList.contains('active')) {
+                    hisobotniYuklash();
+                }
+            }
+        }
+
         async function buyurtmaniTayyorLash(id, currentStatus) {
             const updatedStatus = currentStatus + " [TAYYOR BO'LDI]";
             const { error } = await db.from('sales').update({ status: updatedStatus }).eq('id', id);
@@ -1022,11 +1128,10 @@
             let dailyFinancials = {};
 
             (sales || []).forEach(s => {
-                const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
-                if (!isReady) return;
+                // Faqat to'langan va tayyor bo'lgan yoki kassaga hisoblangan buyurtmalar hisoblanadi
+                if (s.is_paid === false) return;
 
                 const dateStr = getTashkentDateString(s.created_at);
-
                 const rev = parseFloat(s.total_amount || 0);
                 const cost = parseFloat(s.total_cost || 0);
                 const profit = parseFloat(s.profit || (rev - cost));
@@ -1095,6 +1200,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             loadAdminDeliverySettings();
+            loadPaymentSettings();
             tanlovlarniYuklash();
             oshxonaniYuklash();
             initRealtimeListener();
