@@ -13,6 +13,11 @@
     <meta name="apple-mobile-web-app-title" content="CHEF hotdog">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- OpenStreetMap Leaflet JS va CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         :root {
             --gold-gradient: linear-gradient(135deg, #d4af37 0%, #fff3a8 30%, #aa771c 70%, #fcf6ba 100%);
@@ -273,6 +278,15 @@
             padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px;
             box-shadow: 0 4px 10px rgba(252, 63, 29, 0.3);
         }
+
+        #admin-map {
+            width: 100%;
+            height: 250px;
+            border-radius: 12px;
+            border: var(--gold-border-thin);
+            margin: 8px 0 12px 0;
+            z-index: 1;
+        }
     </style>
 </head>
 <body>
@@ -376,15 +390,35 @@
                 <div id="cash-history-list">Yuklanmoqda...</div>
             </div>
 
-            <!-- DOSTAVKA ZONALARINI SOZLASH -->
+            <!-- KAFE JOYLASHUVI VA DOSTAVKA ZONALARINI SOZLASH -->
             <div style="background:#121218; border:1px solid rgba(212,175,55,0.4); padding:16px; border-radius:16px; margin-top:25px;">
-                <h3 style="color:#f5d061; margin-bottom:12px; font-size:16px;">🛵 Yetkazib Berish Hududini Sozlash</h3>
+                <h3 style="color:#f5d061; margin-bottom:12px; font-size:16px;">🛵 Yetkazib Berish va Kafe Joylashuvini Sozlash</h3>
                 
+                <!-- KAFE KOORDINATASI VA XARITASI -->
+                <div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:10px; margin-bottom:12px;">
+                    <strong style="color:#f5d061; display:block; margin-bottom:6px;">📍 Kafe Joylashuvi:</strong>
+                    <p style="font-size:11px; color:#aaa; margin-bottom:8px;">Xaritaning ustiga bosing, belgilagichni sudrang yoki koordinatani qo'lda kiriting:</p>
+                    
+                    <div id="admin-map"></div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <div>
+                            <label style="color:#aaa; font-size:11px;">Latitude (Kenglik):</label>
+                            <input type="number" step="any" id="adm-cafe-lat" style="padding:8px; margin-bottom:0; background:#000; color:#fff; border:1px solid #444; border-radius:6px;" oninput="syncMapFromInputs()">
+                        </div>
+                        <div>
+                            <label style="color:#aaa; font-size:11px;">Longitude (Uzunlik):</label>
+                            <input type="number" step="any" id="adm-cafe-lng" style="padding:8px; margin-bottom:0; background:#000; color:#fff; border:1px solid #444; border-radius:6px;" oninput="syncMapFromInputs()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ZONALAR -->
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
                     <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:10px;">
                         <strong style="color:#f5d061; display:block; margin-bottom:8px;">🟢 1-Zona (Yaqin)</strong>
                         <label style="color:#aaa; font-size:11px;">Maksimal masofa (km):</label>
-                        <input type="number" id="adm-zone1-km" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                        <input type="number" step="any" id="adm-zone1-km" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
                         
                         <label style="color:#aaa; font-size:11px;">Narxi (so'm):</label>
                         <input type="number" id="adm-zone1-price" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
@@ -393,7 +427,7 @@
                     <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:10px;">
                         <strong style="color:#f5d061; display:block; margin-bottom:8px;">🟡 2-Zona (Uzoq)</strong>
                         <label style="color:#aaa; font-size:11px;">Maksimal masofa (km):</label>
-                        <input type="number" id="adm-zone2-km" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                        <input type="number" step="any" id="adm-zone2-km" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
                         
                         <label style="color:#aaa; font-size:11px;">Narxi (so'm):</label>
                         <input type="number" id="adm-zone2-price" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
@@ -401,7 +435,7 @@
                 </div>
                 
                 <button onclick="saveDeliverySettings()" style="width:100%; padding:12px; background:linear-gradient(180deg, #f7e089 0%, #c8962c 100%); color:#000; font-weight:bold; border:none; border-radius:10px; cursor:pointer;">
-                    💾 Zonalar Narxini Saqlash
+                    💾 Barcha Sozlamalarni Saqlash
                 </button>
             </div>
         </div>
@@ -415,6 +449,9 @@
 
         let itemQuantities = {};
         let stopList = JSON.parse(localStorage.getItem('chef_stop_list')) || [];
+        
+        let adminMap, cafeMarker;
+        let isMapInitialized = false;
 
         function switchTab(id) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -426,7 +463,10 @@
             if(id === 'stock') omborniYuklash();
             if(id === 'pos' || id === 'recipes') tanlovlarniYuklash();
             if(id === 'kitchen') oshxonaniYuklash();
-            if(id === 'reports') hisobotniYuklash();
+            if(id === 'reports') {
+                hisobotniYuklash();
+                initAdminMap();
+            }
         }
 
         function getTashkentTimeString(dateInput) {
@@ -490,17 +530,86 @@
             return '';
         }
 
+        // ADMIN XARITASINI VA SOZLAMALARNI YUKLASH
         async function loadAdminDeliverySettings() {
             const { data } = await db.from('delivery_settings').select('*').maybeSingle();
+            const defaultLat = 38.849449, defaultLng = 65.793410;
+
             if(data) {
+                if(document.getElementById('adm-cafe-lat')) document.getElementById('adm-cafe-lat').value = data.cafe_lat || defaultLat;
+                if(document.getElementById('adm-cafe-lng')) document.getElementById('adm-cafe-lng').value = data.cafe_lng || defaultLng;
+
                 if(document.getElementById('adm-zone1-km')) document.getElementById('adm-zone1-km').value = data.zone1_km || 0;
                 if(document.getElementById('adm-zone1-price')) document.getElementById('adm-zone1-price').value = data.zone1_price || 0;
                 if(document.getElementById('adm-zone2-km')) document.getElementById('adm-zone2-km').value = data.zone2_km || 0;
                 if(document.getElementById('adm-zone2-price')) document.getElementById('adm-zone2-price').value = data.zone2_price || 0;
+            } else {
+                if(document.getElementById('adm-cafe-lat')) document.getElementById('adm-cafe-lat').value = defaultLat;
+                if(document.getElementById('adm-cafe-lng')) document.getElementById('adm-cafe-lng').value = defaultLng;
+            }
+
+            if(isMapInitialized) {
+                updateAdminMapMarker();
+            }
+        }
+
+        function initAdminMap() {
+            if (isMapInitialized) {
+                setTimeout(() => adminMap.invalidateSize(), 200);
+                return;
+            }
+
+            let lat = parseFloat(document.getElementById('adm-cafe-lat').value) || 38.849449;
+            let lng = parseFloat(document.getElementById('adm-cafe-lng').value) || 65.793410;
+
+            adminMap = L.map('admin-map').setView([lat, lng], 14);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(adminMap);
+
+            cafeMarker = L.marker([lat, lng], { draggable: true }).addTo(adminMap)
+                .bindPopup("<b>🍔 CHEF Hotdog Kafe Joylashuvi</b>").openPopup();
+
+            cafeMarker.on('dragend', function (e) {
+                const coord = cafeMarker.getLatLng();
+                document.getElementById('adm-cafe-lat').value = coord.lat.toFixed(6);
+                document.getElementById('adm-cafe-lng').value = coord.lng.toFixed(6);
+            });
+
+            adminMap.on('click', function (e) {
+                cafeMarker.setLatLng(e.latlng);
+                document.getElementById('adm-cafe-lat').value = e.latlng.lat.toFixed(6);
+                document.getElementById('adm-cafe-lng').value = e.latlng.lng.toFixed(6);
+            });
+
+            isMapInitialized = true;
+            setTimeout(() => adminMap.invalidateSize(), 200);
+        }
+
+        function syncMapFromInputs() {
+            if (!isMapInitialized) return;
+            let lat = parseFloat(document.getElementById('adm-cafe-lat').value);
+            let lng = parseFloat(document.getElementById('adm-cafe-lng').value);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                cafeMarker.setLatLng([lat, lng]);
+                adminMap.panTo([lat, lng]);
+            }
+        }
+
+        function updateAdminMapMarker() {
+            let lat = parseFloat(document.getElementById('adm-cafe-lat').value) || 38.849449;
+            let lng = parseFloat(document.getElementById('adm-cafe-lng').value) || 65.793410;
+            if(cafeMarker) {
+                cafeMarker.setLatLng([lat, lng]);
+                adminMap.setView([lat, lng], 14);
             }
         }
 
         async function saveDeliverySettings() {
+            const cafe_lat = parseFloat(document.getElementById('adm-cafe-lat').value) || 38.849449;
+            const cafe_lng = parseFloat(document.getElementById('adm-cafe-lng').value) || 65.793410;
+
             const z1_km = parseFloat(document.getElementById('adm-zone1-km').value) || 0;
             const z1_pr = parseFloat(document.getElementById('adm-zone1-price').value) || 0;
             const z2_km = parseFloat(document.getElementById('adm-zone2-km').value) || 0;
@@ -508,6 +617,8 @@
 
             const { error } = await db.from('delivery_settings').upsert({
                 id: 1,
+                cafe_lat: cafe_lat,
+                cafe_lng: cafe_lng,
                 zone1_km: z1_km,
                 zone1_price: z1_pr,
                 zone2_km: z2_km,
@@ -515,7 +626,7 @@
             });
 
             if(error) alert("Xatolik: " + error.message);
-            else alert("✅ Dostavka zonalari saqlandi!");
+            else alert("✅ Kafe joylashuvi va Dostavka zonalari saqlandi!");
         }
 
         async function taomQoshish() {
