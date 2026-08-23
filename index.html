@@ -287,6 +287,22 @@
             margin: 8px 0 12px 0;
             z-index: 1;
         }
+
+        .map-popup-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: bold;
+            color: #000;
+            font-size: 13px;
+        }
+        .map-popup-header img {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #d4af37;
+        }
     </style>
 </head>
 <body>
@@ -447,6 +463,8 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        const LOGO_URL = "https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png";
+
         let itemQuantities = {};
         let stopList = JSON.parse(localStorage.getItem('chef_stop_list')) || [];
         
@@ -511,7 +529,6 @@
             return text.replace(/\(x(\d+)\)/g, '<span class="qty-highlight">(x$1)</span>');
         }
 
-        // GPS koordinatalarini har qanday joydan (matndan ham) ajratib olish funksiyasi
         function getYandexButton(s) {
             let lat = s.lat;
             let lng = s.lng;
@@ -569,7 +586,7 @@
             }).addTo(adminMap);
 
             cafeMarker = L.marker([lat, lng], { draggable: true }).addTo(adminMap)
-                .bindPopup("<b>🍔 CHEF Hotdog Kafe Joylashuvi</b>").openPopup();
+                .bindPopup(`<div class="map-popup-header"><img src="${LOGO_URL}" alt="Logo"> CHEF Hotdog Kafe Joylashuvi</div>`).openPopup();
 
             cafeMarker.on('dragend', function (e) {
                 const coord = cafeMarker.getLatLng();
