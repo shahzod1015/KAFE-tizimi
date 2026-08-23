@@ -478,7 +478,7 @@
         // Ovozli bildirishnoma funksiyasi
         function playNotificationSound() {
             if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance("Diqqat! Yangi buyurtma keldi!");
+                const utterance = new SpeechSynthesisUtterance("Diqqat! Yangi dastavka buyurtmasi keldi!");
                 utterance.lang = 'uz-UZ';
                 utterance.rate = 1.0;
                 utterance.pitch = 1.0;
@@ -984,14 +984,32 @@
             document.getElementById('cash-history-list').innerHTML = cashHistoryHtml || '<i>Kassa tarixi topilmadi.</i>';
         }
 
-        // Supabase Realtime orqali yangi buyurtmalarni jonli tinglash va ovoz chiqarish
+        // Supabase Realtime orqali faqat DASTAVKA buyurtmalarini ovozli tinglash
         function initRealtimeListener() {
             db.channel('public:sales')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sales' }, payload => {
-                    console.log("Yangi buyurtma tushdi:", payload.new);
-                    playNotificationSound(); // Ovozli bildirishnoma
+                    const newOrder = payload.new || {};
+                    const statusText = (newOrder.status || '').toLowerCase();
+
+                    // Dastavka buyurtmasi ekanligini aniqlash:
+                    // 1. Koordinataga ega bo'lsa (lat/lng bo'lsa)
+                    // 2. Statusida 'dastavka', 'dostavka', 'yetkazib' yoki 'gps' sozlar bo'lsa
+                    // 3. Yoki statusi 'Stol #' bilan boshlanmagan bo'lsa
+                    const isDelivery = newOrder.lat || newOrder.lng || newOrder.is_delivery || 
+                                       statusText.includes('dastavka') || 
+                                       statusText.includes('dostavka') || 
+                                       statusText.includes('yetkazib') || 
+                                       statusText.includes('gps') ||
+                                       (!statusText.startsWith('stol #') && !statusText.startsWith('stol'));
+
+                    console.log("Yangi buyurtma tushdi:", newOrder, "Dastavka-mi?", isDelivery);
+
+                    // Faqat DASTAVKA buyurtmasi bo'lsa ovoz chalinadi
+                    if (isDelivery) {
+                        playNotificationSound();
+                    }
                     
-                    // Agar oshxona sahifasi ochiq bo'lsa, ro'yxatni avtomatik yangilash
+                    // Oshxona sahifasi ochiq bo'lsa, ro'yxatni avtomatik yangilash
                     if (document.getElementById('kitchen').classList.contains('active')) {
                         oshxonaniYuklash();
                     }
