@@ -475,6 +475,17 @@
         let adminMap, cafeMarker;
         let isMapInitialized = false;
 
+        // Ovozli bildirishnoma funksiyasi
+        function playNotificationSound() {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance("Diqqat! Yangi buyurtma keldi!");
+                utterance.lang = 'uz-UZ';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
         function switchTab(id) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav button').forEach(btn => btn.classList.remove('active-tab'));
@@ -522,7 +533,7 @@
             return '';
         }
 
-        // ADMIN XARITASINI VA SOZLAMALARNI YUKLASH
+        // ADMIN XARITASINI VA SOZLAMALARINI YUKLASH
         async function loadAdminDeliverySettings() {
             const { data } = await db.from('delivery_settings').select('*').maybeSingle();
             const defaultLat = 38.849449, defaultLng = 65.793410;
@@ -973,14 +984,26 @@
             document.getElementById('cash-history-list').innerHTML = cashHistoryHtml || '<i>Kassa tarixi topilmadi.</i>';
         }
 
+        // Supabase Realtime orqali yangi buyurtmalarni jonli tinglash va ovoz chiqarish
+        function initRealtimeListener() {
+            db.channel('public:sales')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sales' }, payload => {
+                    console.log("Yangi buyurtma tushdi:", payload.new);
+                    playNotificationSound(); // Ovozli bildirishnoma
+                    
+                    // Agar oshxona sahifasi ochiq bo'lsa, ro'yxatni avtomatik yangilash
+                    if (document.getElementById('kitchen').classList.contains('active')) {
+                        oshxonaniYuklash();
+                    }
+                })
+                .subscribe();
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             loadAdminDeliverySettings();
             tanlovlarniYuklash();
+            initRealtimeListener(); // Realtime tinglovchini yoqish
         });
-
-        setInterval(() => {
-            if(document.getElementById('kitchen').classList.contains('active')) oshxonaniYuklash();
-        }, 10000);
     </script>
 </body>
 </html>
