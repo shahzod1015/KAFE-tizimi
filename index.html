@@ -475,12 +475,34 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // 🤖 TELEGRAM BOT SOZLAMALARI
+        const TELEGRAM_BOT_TOKEN = "8656105414:AAEQoNLQSqtOE-LFkSDkqyAczI6TuWdnY7Y"; 
+        const TELEGRAM_CHAT_ID = "8962661283";
+
         const LOGO_URL = "https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png";
 
         let itemQuantities = {};
         let adminMap, cafeMarker;
         let isMapInitialized = false;
         let lastKnownOrderCount = 0; 
+
+        // Telegram botga xabar yuborish funksiyasi
+        async function sendTelegramMessage(text) {
+            if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
+            try {
+                await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: TELEGRAM_CHAT_ID,
+                        text: text,
+                        parse_mode: 'HTML'
+                    })
+                });
+            } catch (e) {
+                console.log("Telegramga xabar yuborish xatosi:", e);
+            }
+        }
 
         // Ruxsatlarni olish va ovozni faollashtirish
         async function enableAppPermissions() {
@@ -517,7 +539,7 @@
                 window.speechSynthesis.speak(utterance);
             }
 
-            // Tizimli push-bildirishnoma (telefon boshqa ilovada yoki qulflangan bo'lsa ham chiqadi)
+            // Tizimli push-bildirishnoma
             if ('Notification' in window && Notification.permission === 'granted') {
                 try {
                     navigator.serviceWorker.ready.then(registration => {
@@ -832,16 +854,21 @@
 
             const totalPrice = (menuItem.price || 0) * qty;
             const totalCost = (menuItem.cost || 0) * qty;
+            const orderStatus = `Stol #${tableNum} - ${menuItem.title} (x${qty})`;
 
             const { error } = await db.from('sales').insert([{ 
                 total_amount: totalPrice, 
                 total_cost: totalCost, 
                 profit: (totalPrice - totalCost),
-                status: `Stol #${tableNum} - ${menuItem.title} (x${qty})`
+                status: orderStatus
             }]);
 
-            if(error) alert("Xato: " + error.message);
-            else {
+            if(error) {
+                alert("Xato: " + error.message);
+            } else {
+                // Telegram botga xabar yuborish
+                await sendTelegramMessage(`🔥 <b>Yangi buyurtma! (Ofitsiant)</b>\n\n📌 ${orderStatus}\n💰 Summa: <b>${totalPrice.toLocaleString()} so'm</b>`);
+
                 alert(`✅ Stol #${tableNum}: ${qty}x ${menuItem.title} oshxonaga yuborildi!`);
                 itemQuantities[menu_id] = 1;
                 document.getElementById(`qty-val-${menu_id}`).innerText = 1;
