@@ -483,6 +483,7 @@
         let itemQuantities = {};
         let adminMap, cafeMarker;
         let isMapInitialized = false;
+        let lastKnownOrderCount = 0; // Yangi buyurtmalarni aniqlash uchun o'zgaruvchi
 
         // Ovozni brauzer blokirovkasidan chiqarish uchun foydalanuvchi tugmani bosishi
         function enableAudioAndHide() {
@@ -501,6 +502,7 @@
         function playNotificationSound() {
             const audio = document.getElementById('order-audio');
             if (audio) {
+                audio.currentTime = 0;
                 audio.play().catch(err => console.log("Audio ijro etilmadi:", err));
             }
             if ('speechSynthesis' in window) {
@@ -559,7 +561,6 @@
             return '';
         }
 
-        // ADMIN XARITASINI VA SOZLAMALARINI YUKLASH
         async function loadAdminDeliverySettings() {
             const { data } = await db.from('delivery_settings').select('*').maybeSingle();
             const defaultLat = 38.849449, defaultLng = 65.793410;
@@ -848,11 +849,13 @@
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
-        async function oshxonaniYuklash() {
+        // Oshxona va avto-yangilash logikasi
+        async function oshxonaniYuklash(isAutoCheck = false) {
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
             
             let activeHtml = '';
             let dailyGroups = {};
+            let currentActiveCount = 0;
 
             (sales || []).forEach((s) => {
                 const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
@@ -860,6 +863,7 @@
                 const dateStr = getTashkentDateString(s.created_at);
 
                 if (!isReady) {
+                    currentActiveCount++;
                     const yandexBtn = getYandexButton(s);
 
                     activeHtml += `<div class="card">
@@ -885,6 +889,12 @@
                     dailyGroups[dateStr].orders.push(s);
                 }
             });
+
+            // Agar avtomatik tekshiruv vaqtida yangi buyurtma soni ko'paygan bo'lsa - ovoz chalish
+            if (isAutoCheck && currentActiveCount > lastKnownOrderCount && lastKnownOrderCount !== 0) {
+                playNotificationSound();
+            }
+            lastKnownOrderCount = currentActiveCount;
 
             document.getElementById('kitchen-orders-list').innerHTML = activeHtml || '<p style="color:#a1a1aa; padding:10px 0;">Hozircha tayyorlanayotgan faol buyurtmalar yo\'q.</p>';
 
@@ -1010,27 +1020,33 @@
             document.getElementById('cash-history-list').innerHTML = cashHistoryHtml || '<i>Kassa tarixi topilmadi.</i>';
         }
 
-        // Supabase Realtime orqali har qanday yangi buyurtma tushganda ovozli signal berish
+        // Supabase Realtime va Avto-yangilash mexanizmi
         function initRealtimeListener() {
             db.channel('public:sales')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sales' }, payload => {
-                    console.log("Yangi buyurtma keldi:", payload.new);
-                    
-                    // Ovozli signalni ijro etish
+                    console.log("Realtime orqali yangi buyurtma keldi:", payload.new);
                     playNotificationSound();
-                    
-                    // Agar oshxona sahifasi ochiq bo'lsa, ro'yxatni avtomatik yangilash
-                    if (document.getElementById('kitchen').classList.contains('active')) {
-                        oshxonaniYuklash();
-                    }
+                    oshxonaniYuklash();
+                })
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sales' }, payload => {
+                    oshxonaniYuklash();
+                })
+                .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'sales' }, payload => {
+                    oshxonaniYuklash();
                 })
                 .subscribe();
+
+            // Zaxira sifatida har 5 sekundda bazadan ma'lumotni o'zi tekshirib turishi (Polling)
+            setInterval(() => {
+                oshxonaniYuklash(true);
+            }, 5000);
         }
 
         window.addEventListener('DOMContentLoaded', () => {
             loadAdminDeliverySettings();
             tanlovlarniYuklash();
-            initRealtimeListener(); // Realtime tinglovchini yoqish
+            oshxonaniYuklash();
+            initRealtimeListener(); // Realtime va fon yangilanishini yoqish
         });
     </script>
 </body>
