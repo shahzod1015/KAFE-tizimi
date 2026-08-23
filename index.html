@@ -436,8 +436,11 @@
                         <label style="color:#aaa; font-size:11px;">Maksimal masofa (km):</label>
                         <input type="number" step="any" id="adm-zone1-km" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
                         
-                        <label style="color:#aaa; font-size:11px;">Narxi (so'm):</label>
-                        <input type="number" id="adm-zone1-price" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                        <label style="color:#aaa; font-size:11px;">Dostavka Narxi (so'm):</label>
+                        <input type="number" id="adm-zone1-price" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                        
+                        <label style="color:#aaa; font-size:11px;"><b>Eng kam buyurtma (so'm):</b></label>
+                        <input type="number" id="adm-zone1-min" placeholder="48000" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
                     </div>
                     
                     <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:10px;">
@@ -445,8 +448,11 @@
                         <label style="color:#aaa; font-size:11px;">Maksimal masofa (km):</label>
                         <input type="number" step="any" id="adm-zone2-km" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
                         
-                        <label style="color:#aaa; font-size:11px;">Narxi (so'm):</label>
-                        <input type="number" id="adm-zone2-price" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                        <label style="color:#aaa; font-size:11px;">Dostavka Narxi (so'm):</label>
+                        <input type="number" id="adm-zone2-price" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                        
+                        <label style="color:#aaa; font-size:11px;"><b>Eng kam buyurtma (so'm):</b></label>
+                        <input type="number" id="adm-zone2-min" placeholder="70000" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
                     </div>
                 </div>
                 
@@ -466,8 +472,6 @@
         const LOGO_URL = "https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png";
 
         let itemQuantities = {};
-        let stopList = JSON.parse(localStorage.getItem('chef_stop_list')) || [];
-        
         let adminMap, cafeMarker;
         let isMapInitialized = false;
 
@@ -489,39 +493,18 @@
 
         function getTashkentTimeString(dateInput) {
             if (!dateInput) return "00:00";
-            
             let rawStr = String(dateInput).replace(' ', 'T');
             let d = new Date(rawStr);
-            
             if (isNaN(d.getTime())) return "00:00";
-
             const correctedDate = new Date(d.getTime() - (5 * 60 * 60 * 1000));
-
-            const hours = String(correctedDate.getHours()).padStart(2, '0');
-            const minutes = String(correctedDate.getMinutes()).padStart(2, '0');
-            return `${hours}:${minutes}`;
+            return `${String(correctedDate.getHours()).padStart(2, '0')}:${String(correctedDate.getMinutes()).padStart(2, '0')}`;
         }
 
         function getTashkentDateString(dateInput) {
-            let d;
-            if (!dateInput) {
-                d = new Date();
-            } else {
-                let rawStr = String(dateInput).replace(' ', 'T');
-                d = new Date(rawStr);
-            }
-
-            if (isNaN(d.getTime())) {
-                d = new Date();
-            }
-
+            let d = dateInput ? new Date(String(dateInput).replace(' ', 'T')) : new Date();
+            if (isNaN(d.getTime())) d = new Date();
             const correctedDate = dateInput ? new Date(d.getTime() - (5 * 60 * 60 * 1000)) : d;
-
-            const year = correctedDate.getFullYear();
-            const month = String(correctedDate.getMonth() + 1).padStart(2, '0');
-            const day = String(correctedDate.getDate()).padStart(2, '0');
-
-            return `${year}-${month}-${day}`;
+            return `${correctedDate.getFullYear()}-${String(correctedDate.getMonth() + 1).padStart(2, '0')}-${String(correctedDate.getDate()).padStart(2, '0')}`;
         }
 
         function formatOrderTextWithPurpleQty(text) {
@@ -530,20 +513,12 @@
         }
 
         function getYandexButton(s) {
-            let lat = s.lat;
-            let lng = s.lng;
-
+            let lat = s.lat, lng = s.lng;
             if ((!lat || !lng) && s.status) {
                 const match = s.status.match(/GPS:\s*([0-9.]+),\s*([0-9.]+)/i);
-                if (match) {
-                    lat = match[1];
-                    lng = match[2];
-                }
+                if (match) { lat = match[1]; lng = match[2]; }
             }
-
-            if (lat && lng) {
-                return `<br><a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${lat},${lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
-            }
+            if (lat && lng) return `<br><a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${lat},${lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
             return '';
         }
 
@@ -556,18 +531,19 @@
                 if(document.getElementById('adm-cafe-lat')) document.getElementById('adm-cafe-lat').value = data.cafe_lat || defaultLat;
                 if(document.getElementById('adm-cafe-lng')) document.getElementById('adm-cafe-lng').value = data.cafe_lng || defaultLng;
 
-                if(document.getElementById('adm-zone1-km')) document.getElementById('adm-zone1-km').value = data.zone1_km || 0;
-                if(document.getElementById('adm-zone1-price')) document.getElementById('adm-zone1-price').value = data.zone1_price || 0;
-                if(document.getElementById('adm-zone2-km')) document.getElementById('adm-zone2-km').value = data.zone2_km || 0;
-                if(document.getElementById('adm-zone2-price')) document.getElementById('adm-zone2-price').value = data.zone2_price || 0;
+                if(document.getElementById('adm-zone1-km')) document.getElementById('adm-zone1-km').value = data.zone1_km || 0.7;
+                if(document.getElementById('adm-zone1-price')) document.getElementById('adm-zone1-price').value = data.zone1_price || 5000;
+                if(document.getElementById('adm-zone1-min')) document.getElementById('adm-zone1-min').value = data.zone1_min_order || 48000;
+
+                if(document.getElementById('adm-zone2-km')) document.getElementById('adm-zone2-km').value = data.zone2_km || 2.0;
+                if(document.getElementById('adm-zone2-price')) document.getElementById('adm-zone2-price').value = data.zone2_price || 10000;
+                if(document.getElementById('adm-zone2-min')) document.getElementById('adm-zone2-min').value = data.zone2_min_order || 70000;
             } else {
                 if(document.getElementById('adm-cafe-lat')) document.getElementById('adm-cafe-lat').value = defaultLat;
                 if(document.getElementById('adm-cafe-lng')) document.getElementById('adm-cafe-lng').value = defaultLng;
             }
 
-            if(isMapInitialized) {
-                updateAdminMapMarker();
-            }
+            if(isMapInitialized) updateAdminMapMarker();
         }
 
         function initAdminMap() {
@@ -588,7 +564,7 @@
             cafeMarker = L.marker([lat, lng], { draggable: true }).addTo(adminMap)
                 .bindPopup(`<div class="map-popup-header"><img src="${LOGO_URL}" alt="Logo"> CHEF Hotdog Kafe Joylashuvi</div>`).openPopup();
 
-            cafeMarker.on('dragend', function (e) {
+            cafeMarker.on('dragend', function () {
                 const coord = cafeMarker.getLatLng();
                 document.getElementById('adm-cafe-lat').value = coord.lat.toFixed(6);
                 document.getElementById('adm-cafe-lng').value = coord.lng.toFixed(6);
@@ -629,8 +605,11 @@
 
             const z1_km = parseFloat(document.getElementById('adm-zone1-km').value) || 0;
             const z1_pr = parseFloat(document.getElementById('adm-zone1-price').value) || 0;
+            const z1_min = parseFloat(document.getElementById('adm-zone1-min').value) || 48000;
+
             const z2_km = parseFloat(document.getElementById('adm-zone2-km').value) || 0;
             const z2_pr = parseFloat(document.getElementById('adm-zone2-price').value) || 0;
+            const z2_min = parseFloat(document.getElementById('adm-zone2-min').value) || 70000;
 
             const { error } = await db.from('delivery_settings').upsert({
                 id: 1,
@@ -638,8 +617,10 @@
                 cafe_lng: cafe_lng,
                 zone1_km: z1_km,
                 zone1_price: z1_pr,
+                zone1_min_order: z1_min,
                 zone2_km: z2_km,
-                zone2_price: z2_pr
+                zone2_price: z2_pr,
+                zone2_min_order: z2_min
             });
 
             if(error) alert("Xatolik: " + error.message);
@@ -680,7 +661,7 @@
                 image_url = publicUrlData.publicUrl;
             }
 
-            const { error } = await db.from('menu').insert([{ title, price, cost, image_url }]);
+            const { error } = await db.from('menu').insert([{ title, price, cost, image_url, is_stopped: false }]);
             
             saveBtn.innerText = "Taomni Saqlash";
             saveBtn.disabled = false;
@@ -699,19 +680,12 @@
         async function taomniOchirish(id, title) {
             if(confirm(`"${title}" taomini o'chirmoqchimisiz?`)) {
                 await db.from('menu').delete().eq('id', id);
-                stopList = stopList.filter(stopId => stopId !== id);
-                localStorage.setItem('chef_stop_list', JSON.stringify(stopList));
                 tanlovlarniYuklash();
             }
         }
 
-        function toggleStopList(id) {
-            if (stopList.includes(id)) {
-                stopList = stopList.filter(stopId => stopId !== id);
-            } else {
-                stopList.push(id);
-            }
-            localStorage.setItem('chef_stop_list', JSON.stringify(stopList));
+        async function toggleStopList(id, currentStatus) {
+            await db.from('menu').update({ is_stopped: !currentStatus }).eq('id', id);
             tanlovlarniYuklash();
         }
 
@@ -723,14 +697,14 @@
         }
 
         async function tanlovlarniYuklash() {
-            const { data: menu } = await db.from('menu').select('*');
+            const { data: menu } = await db.from('menu').select('*').order('id', { ascending: true });
             const defaultImg = 'https://via.placeholder.com/150?text=Rasm+Yo%27q';
 
             let posHtml = '';
             (menu || []).forEach(m => {
                 if (!itemQuantities[m.id]) itemQuantities[m.id] = 1;
                 const imgSrc = m.image_url || defaultImg;
-                const isStopped = stopList.includes(m.id);
+                const isStopped = m.is_stopped;
 
                 posHtml += `
                 <div class="pos-card ${isStopped ? 'is-stopped' : ''}">
@@ -755,7 +729,7 @@
             (menu || []).forEach(m => {
                 const costVal = m.cost || 0;
                 const imgSrc = m.image_url || defaultImg;
-                const isStopped = stopList.includes(m.id);
+                const isStopped = m.is_stopped;
 
                 menuCards += `<div class="card">
                     <div class="menu-card">
@@ -764,7 +738,7 @@
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <b>${m.title}</b>
                                 <div>
-                                    <button class="${isStopped ? 'btn-activate' : 'btn-stop'}" onclick="toggleStopList(${m.id})">
+                                    <button class="${isStopped ? 'btn-activate' : 'btn-stop'}" onclick="toggleStopList(${m.id}, ${isStopped})">
                                         ${isStopped ? '✅ Aktivlash' : '🛑 Stop'}
                                     </button>
                                     <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑</button>
@@ -780,15 +754,15 @@
         }
 
         async function buyurtmaBeringDirect(menu_id) {
-            if (stopList.includes(menu_id)) {
+            const { data: menuItem } = await db.from('menu').select('*').eq('id', menu_id).single();
+            if(!menuItem) return alert("Taom topilmadi!");
+
+            if (menuItem.is_stopped) {
                 return alert("Ushbu taom STOP-LISTda!");
             }
 
             const tableNum = document.getElementById('table-select').value;
             const qty = itemQuantities[menu_id] || 1;
-
-            const { data: menuItem } = await db.from('menu').select('*').eq('id', menu_id).single();
-            if(!menuItem) return alert("Taom topilmadi!");
 
             const totalPrice = (menuItem.price || 0) * qty;
             const totalCost = (menuItem.cost || 0) * qty;
