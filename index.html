@@ -310,15 +310,14 @@
     <div class="leaf-decor leaf-top-right"></div>
     <div class="leaf-decor leaf-bottom-left"></div>
 
-    <!-- Brauzer blokirovkasini chetlab o'tish uchun ovozli element va tugma -->
     <audio id="order-audio" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
     <div class="screen-frame">
 
-        <!-- Ovozni faollashtirish paneli (Birinchi marta bosish uchun) -->
-        <div id="sound-activation-banner" style="background: rgba(212, 175, 55, 0.15); border: 1px solid #d4af37; padding: 10px 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 13px; font-weight: bold; color: var(--gold-text);">🔊 Oshxona ovozli signalini yoqish uchun bosing:</span>
-            <button onclick="enableAudioAndHide()" style="padding: 6px 14px; background: var(--gold-btn-grad); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Ovozni Yoqish</button>
+        <!-- To'liq faollashtirish paneli (Ovoz + Tizimli Bildirishnoma) -->
+        <div id="sound-activation-banner" style="background: rgba(212, 175, 55, 0.15); border: 1px solid #d4af37; padding: 12px 16px; border-radius: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-size: 13px; font-weight: bold; color: var(--gold-text);">🚨 Oshxona signalini va fon rejimida bildirishnomani yoqish:</span>
+            <button onclick="enableAppPermissions()" style="padding: 10px 14px; background: var(--gold-btn-grad); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase;">Bildirishnoma va Ovozni Yoqish</button>
         </div>
 
         <div class="app-header">
@@ -419,7 +418,6 @@
             <div style="background:#121218; border:1px solid rgba(212,175,55,0.4); padding:16px; border-radius:16px; margin-top:25px;">
                 <h3 style="color:#f5d061; margin-bottom:12px; font-size:16px;">🛵 Yetkazib Berish va Kafe Joylashuvini Sozlash</h3>
                 
-                <!-- KAFE KOORDINATASI VA XARITASI -->
                 <div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:10px; margin-bottom:12px;">
                     <strong style="color:#f5d061; display:block; margin-bottom:6px;">📍 Kafe Joylashuvi:</strong>
                     <p style="font-size:11px; color:#aaa; margin-bottom:8px;">Xaritaning ustiga bosing, belgilagichni sudrang yoki koordinatani qo'lda kiriting:</p>
@@ -438,7 +436,6 @@
                     </div>
                 </div>
 
-                <!-- ZONALAR -->
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
                     <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:10px;">
                         <strong style="color:#f5d061; display:block; margin-bottom:8px;">🟢 1-Zona (Yaqin)</strong>
@@ -483,34 +480,65 @@
         let itemQuantities = {};
         let adminMap, cafeMarker;
         let isMapInitialized = false;
-        let lastKnownOrderCount = 0; // Yangi buyurtmalarni aniqlash uchun o'zgaruvchi
+        let lastKnownOrderCount = 0; 
 
-        // Ovozni brauzer blokirovkasidan chiqarish uchun foydalanuvchi tugmani bosishi
-        function enableAudioAndHide() {
+        // Ruxsatlarni olish va ovozni faollashtirish
+        async function enableAppPermissions() {
             const audio = document.getElementById('order-audio');
             audio.play().then(() => {
                 audio.pause();
                 audio.currentTime = 0;
-                document.getElementById('sound-activation-banner').style.display = 'none';
+            }).catch(e => console.log("Audio xatosi:", e));
+
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    alert("✅ Tizimli bildirishnoma va ovoz muvaffaqiyatli yoqildi!");
+                    document.getElementById('sound-activation-banner').style.display = 'none';
+                } else {
+                    alert("⚠️ Bildirishnomaga ruxsat berilmadi. Telefon sozlamalaridan ruxsat bering.");
+                }
+            } else {
                 alert("✅ Ovozli signal faollashdi!");
-            }).catch(e => {
-                console.log("Audio xatosi:", e);
-            });
+                document.getElementById('sound-activation-banner').style.display = 'none';
+            }
         }
 
-        // Ovozli bildirishnoma funksiyasi (Audio fayl + matnli ovoz uyg'unligi)
-        function playNotificationSound() {
+        function playNotificationSoundAndPush(orderText) {
             const audio = document.getElementById('order-audio');
             if (audio) {
                 audio.currentTime = 0;
                 audio.play().catch(err => console.log("Audio ijro etilmadi:", err));
             }
+
             if ('speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance("Diqqat! Yangi buyurtma keldi!");
                 utterance.lang = 'uz-UZ';
-                utterance.rate = 1.0;
-                utterance.pitch = 1.0;
                 window.speechSynthesis.speak(utterance);
+            }
+
+            // Tizimli push-bildirishnoma (telefon boshqa ilovada yoki qulflangan bo'lsa ham chiqadi)
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.showNotification("CHEF Hotdog - Yangi Buyurtma!", {
+                            body: orderText || "Oshxonaga yangi buyurtma tushdi!",
+                            icon: LOGO_URL,
+                            vibrate: [200, 100, 200, 100, 200],
+                            tag: 'new-order'
+                        });
+                    }).catch(() => {
+                        new Notification("CHEF Hotdog - Yangi Buyurtma!", {
+                            body: orderText || "Oshxonaga yangi buyurtma tushdi!",
+                            icon: LOGO_URL
+                        });
+                    });
+                } catch (e) {
+                    new Notification("CHEF Hotdog - Yangi Buyurtma!", {
+                        body: orderText || "Oshxonaga yangi buyurtma tushdi!",
+                        icon: LOGO_URL
+                    });
+                }
             }
         }
 
@@ -849,8 +877,7 @@
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
-        // Oshxona va avto-yangilash logikasi
-        async function oshxonaniYuklash(isAutoCheck = false) {
+        async function oshxonaniYuklash(isAutoCheck = false, newOrderText = '') {
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
             
             let activeHtml = '';
@@ -890,9 +917,8 @@
                 }
             });
 
-            // Agar avtomatik tekshiruv vaqtida yangi buyurtma soni ko'paygan bo'lsa - ovoz chalish
             if (isAutoCheck && currentActiveCount > lastKnownOrderCount && lastKnownOrderCount !== 0) {
-                playNotificationSound();
+                playNotificationSoundAndPush(newOrderText);
             }
             lastKnownOrderCount = currentActiveCount;
 
@@ -1020,12 +1046,11 @@
             document.getElementById('cash-history-list').innerHTML = cashHistoryHtml || '<i>Kassa tarixi topilmadi.</i>';
         }
 
-        // Supabase Realtime va Avto-yangilash mexanizmi
         function initRealtimeListener() {
             db.channel('public:sales')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sales' }, payload => {
                     console.log("Realtime orqali yangi buyurtma keldi:", payload.new);
-                    playNotificationSound();
+                    playNotificationSoundAndPush(payload.new.status);
                     oshxonaniYuklash();
                 })
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sales' }, payload => {
@@ -1036,9 +1061,8 @@
                 })
                 .subscribe();
 
-            // Zaxira sifatida har 5 sekundda bazadan ma'lumotni o'zi tekshirib turishi (Polling)
             setInterval(() => {
-                oshxonaniYuklash(true);
+                oshxonaniYuklash(true, "Yangi buyurtma keldi!");
             }, 5000);
         }
 
@@ -1046,7 +1070,7 @@
             loadAdminDeliverySettings();
             tanlovlarniYuklash();
             oshxonaniYuklash();
-            initRealtimeListener(); // Realtime va fon yangilanishini yoqish
+            initRealtimeListener();
         });
     </script>
 </body>
