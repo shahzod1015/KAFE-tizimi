@@ -270,7 +270,8 @@
 
         .btn-yandex {
             display: inline-block; margin-top: 8px; background: #fc3f1d; color: #fff;
-            padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 12px;
+            padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px;
+            box-shadow: 0 4px 10px rgba(252, 63, 29, 0.3);
         }
     </style>
 </head>
@@ -428,7 +429,6 @@
             if(id === 'reports') hisobotniYuklash();
         }
 
-        // Toshkent vaqtini aniq -5 soat offset bilan to'g'irlash funksiyasi (HH:mm)
         function getTashkentTimeString(dateInput) {
             if (!dateInput) return "00:00";
             
@@ -437,7 +437,6 @@
             
             if (isNaN(d.getTime())) return "00:00";
 
-            // Supabase vaqtidan majburiy -5 soat ayiramiz
             const correctedDate = new Date(d.getTime() - (5 * 60 * 60 * 1000));
 
             const hours = String(correctedDate.getHours()).padStart(2, '0');
@@ -445,7 +444,6 @@
             return `${hours}:${minutes}`;
         }
 
-        // Toshkent sanasini aniq -5 soat offset bilan to'g'irlash funksiyasi (YYYY-MM-DD)
         function getTashkentDateString(dateInput) {
             let d;
             if (!dateInput) {
@@ -471,6 +469,25 @@
         function formatOrderTextWithPurpleQty(text) {
             if (!text) return '';
             return text.replace(/\(x(\d+)\)/g, '<span class="qty-highlight">(x$1)</span>');
+        }
+
+        // GPS koordinatalarini har qanday joydan (matndan ham) ajratib olish funksiyasi
+        function getYandexButton(s) {
+            let lat = s.lat;
+            let lng = s.lng;
+
+            if ((!lat || !lng) && s.status) {
+                const match = s.status.match(/GPS:\s*([0-9.]+),\s*([0-9.]+)/i);
+                if (match) {
+                    lat = match[1];
+                    lng = match[2];
+                }
+            }
+
+            if (lat && lng) {
+                return `<br><a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${lat},${lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
+            }
+            return '';
         }
 
         async function loadAdminDeliverySettings() {
@@ -704,10 +721,7 @@
                 const dateStr = getTashkentDateString(s.created_at);
 
                 if (!isReady) {
-                    let yandexBtn = '';
-                    if (s.lat && s.lng) {
-                        yandexBtn = `<br><a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${s.lat},${s.lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
-                    }
+                    const yandexBtn = getYandexButton(s);
 
                     activeHtml += `<div class="card">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -744,11 +758,7 @@
 
                 item.orders.forEach(ord => {
                     const timeStr = getTashkentTimeString(ord.created_at);
-
-                    let yandexBtn = '';
-                    if (ord.lat && ord.lng) {
-                        yandexBtn = `<a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${ord.lat},${ord.lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
-                    }
+                    const yandexBtn = getYandexButton(ord);
 
                     ordersInsideHtml += `
                         <div style="padding: 8px 0; border-bottom: 1px dashed rgba(212, 175, 55, 0.2);">
