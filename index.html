@@ -1019,15 +1019,21 @@
             let currentActiveCount = 0;
 
             (sales || []).forEach((s) => {
-                const isReady = s.status && s.status.includes('TAYYOR BO\'LDI');
+                const statusStr = s.status || '';
+                const isReady = statusStr.includes('TAYYOR BO\'LDI') || statusStr.includes('[KURYERGA BERILDI]');
                 const timeStr = getTashkentTimeString(s.created_at);
                 const dateStr = getTashkentDateString(s.created_at);
 
                 const isPendingPayment = s.is_paid === false;
 
-                // Yangilangan to'lov holati (Agar status ichida NAQD bo'lsa - NAQD PUL, aks holda TULANGAN)
+                // Mijozlar ilovasidan kelgan yetkazib berish (dostavka) buyurtmasi ekanligini aniqlash
+                const isDeliveryOrder = statusStr.toLowerCase().includes('dostavka') || 
+                                        statusStr.toLowerCase().includes('yetkazish') || 
+                                        statusStr.toLowerCase().includes('manzil') ||
+                                        statusStr.includes('NAQD');
+
                 let paymentStatusBadge = '';
-                if (s.status && s.status.toUpperCase().includes('NAQD')) {
+                if (statusStr.toUpperCase().includes('NAQD')) {
                     paymentStatusBadge = `<span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; border:1px solid #f59e0b; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">NAQD PUL</span>`;
                 } else {
                     paymentStatusBadge = `<span style="background:rgba(16, 185, 129, 0.2); color:#10b981; border:1px solid #10b981; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">TULANGAN</span>`;
@@ -1042,7 +1048,7 @@
                             <span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold;">💵 TO'LOV KUTILMOQDA</span>
                         </div>
                         <p style="margin-bottom:6px;">${paymentStatusBadge}</p>
-                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${parseAndFormatOrderText(s.status || 'Buyurtma')}</p>
+                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${parseAndFormatOrderText(statusStr)}</p>
                         <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
                         <div style="margin-top: 6px;">
                             ${receiptBtn}
@@ -1059,13 +1065,21 @@
                     const receiptBtn = getReceiptButton(s);
                     const yandexBtn = getYandexButton(s);
 
+                    // Agar yetkazib berish buyurtmasi bo'lsa "Kuryerga berildi", ofitsiantniki bo'lsa "TAYYOR BO'LDI" tugmasi chiqadi
+                    let actionButtonHtml = '';
+                    if (isDeliveryOrder) {
+                        actionButtonHtml = `<button class="btn-ready" onclick="kuryergaBerildi(${s.id}, '${statusStr}')" style="background:#3b82f6;">🛵 KURYERGA BERILDI</button>`;
+                    } else {
+                        actionButtonHtml = `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${statusStr}')">✅ TAYYOR BO'LDI</button>`;
+                    }
+
                     activeHtml += `<div class="card">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                             <b>⏰ ${timeStr}</b>
                             <span class="status-pending">⏱ TAYYORLANMOQDA</span>
                         </div>
                         <div style="margin-bottom:6px;">${paymentStatusBadge}</div>
-                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff; line-height: 1.4;">${parseAndFormatOrderText(s.status || 'Buyurtma')}</p>
+                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff; line-height: 1.4;">${parseAndFormatOrderText(statusStr)}</p>
                         <p style="margin-top:4px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
                         <div style="margin-top: 8px;">
                             ${receiptBtn}
@@ -1073,7 +1087,7 @@
                         </div>
 
                         <div class="kitchen-actions">
-                            <button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${s.status}')">✅ TAYYOR BO'LDI</button>
+                            ${actionButtonHtml}
                             <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
                         </div>
                     </div>`;
@@ -1132,7 +1146,7 @@
                 `;
             });
 
-            document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali tayyor bo\'lgan buyurtmalar yo\'q.</i>';
+            document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali bajarilgan buyurtmalar yo\'q.</i>';
         }
 
         async function kassagaTasdiqlash(id) {
@@ -1153,6 +1167,19 @@
             const { error } = await db.from('sales').update({ status: updatedStatus }).eq('id', id);
             if(error) alert("Xatolik: " + error.message);
             else {
+                oshxonaniYuklash();
+                if (document.getElementById('reports').classList.contains('active')) {
+                    hisobotniYuklash();
+                }
+            }
+        }
+
+        async function kuryergaBerildi(id, currentStatus) {
+            const updatedStatus = currentStatus + " [KURYERGA BERILDI]";
+            const { error } = await db.from('sales').update({ status: updatedStatus }).eq('id', id);
+            if(error) alert("Xatolik: " + error.message);
+            else {
+                alert("📦 Buyurtma kuryerga berildi deb belgilandi!");
                 oshxonaniYuklash();
                 if (document.getElementById('reports').classList.contains('active')) {
                     hisobotniYuklash();
