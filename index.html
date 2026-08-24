@@ -926,7 +926,6 @@
             const totalCost = (menuItem.cost || 0) * qty;
             const orderStatus = `Stol #${tableNum} - ${menuItem.title} (x${qty})`;
 
-            // Ofitsiant kiritgan buyurtmalar to'g'ridan-to'g'ri kassaga hisoblanadi (is_paid: true)
             const { error } = await db.from('sales').insert([{ 
                 total_amount: totalPrice, 
                 total_cost: totalCost, 
@@ -988,7 +987,6 @@
                 const timeStr = getTashkentTimeString(s.created_at);
                 const dateStr = getTashkentDateString(s.created_at);
 
-                // Naqd pul yoki onlayn buyurtmalar va hali to'lanmaganlar (is_paid === false)
                 const isPendingPayment = s.is_paid === false;
 
                 if (isPendingPayment) {
@@ -1079,7 +1077,6 @@
             document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali tayyor bo\'lgan buyurtmalar yo\'q.</i>';
         }
 
-        // "TO'LANDI" TUGMASI ORQALI KASSAGA QO'SHISH VA OSHXONAGA YO'LLASH
         async function kassagaTasdiqlash(id) {
             const { error } = await db.from('sales').update({ is_paid: true }).eq('id', id);
             if(error) {
@@ -1128,7 +1125,6 @@
             let dailyFinancials = {};
 
             (sales || []).forEach(s => {
-                // Faqat to'langan va tayyor bo'lgan yoki kassaga hisoblangan buyurtmalar hisoblanadi
                 if (s.is_paid === false) return;
 
                 const dateStr = getTashkentDateString(s.created_at);
@@ -1181,7 +1177,6 @@
         function initRealtimeListener() {
             db.channel('public:sales')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sales' }, payload => {
-                    console.log("Realtime orqali yangi buyurtma keldi:", payload.new);
                     playNotificationSoundAndPush(payload.new.status);
                     oshxonaniYuklash();
                 })
