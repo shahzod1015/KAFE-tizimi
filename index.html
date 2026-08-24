@@ -630,16 +630,13 @@
             return `${correctedDate.getFullYear()}-${String(correctedDate.getMonth() + 1).padStart(2, '0')}-${String(correctedDate.getDate()).padStart(2, '0')}`;
         }
 
-        // Taom nomi va miqdorini pushti rangga o'tkazish hamda xavola/keraksiz joylarni tozalash
         function parseAndFormatOrderText(rawStatus) {
             if (!rawStatus) return '';
             
-            // Chek havolasi va GPS larni matndan olib tashlaymiz (ular tugma orqali chiqadi)
             let cleaned = rawStatus.replace(/Chek:\s*https?:\/\/[^\s]+/gi, '')
                                  .replace(/https?:\/\/[^\s]+/gi, '')
                                  .replace(/GPS:\s*[0-9.,\s]+/gi, '');
 
-            // Miqdorlarni (x2) pushti rangli blokka o'raymiz
             cleaned = cleaned.replace(/\(x(\d+)\)/g, '<span class="qty-highlight">(x$1)</span>');
             
             return cleaned;
@@ -1028,8 +1025,13 @@
 
                 const isPendingPayment = s.is_paid === false;
 
-                // TO'LOV HOLATI (TULANGAN - yashil rangda)
-                const paymentStatusBadge = `<span style="background:rgba(16, 185, 129, 0.2); color:#10b981; border:1px solid #10b981; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">TULANGAN</span>`;
+                // Yangilangan to'lov holati (Agar status ichida NAQD bo'lsa - NAQD PUL, aks holda TULANGAN)
+                let paymentStatusBadge = '';
+                if (s.status && s.status.toUpperCase().includes('NAQD')) {
+                    paymentStatusBadge = `<span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; border:1px solid #f59e0b; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">NAQD PUL</span>`;
+                } else {
+                    paymentStatusBadge = `<span style="background:rgba(16, 185, 129, 0.2); color:#10b981; border:1px solid #10b981; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">TULANGAN</span>`;
+                }
 
                 if (isPendingPayment) {
                     const receiptBtn = getReceiptButton(s);
