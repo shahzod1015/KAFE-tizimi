@@ -274,9 +274,27 @@
         .btn-activate { background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
         .btn-yandex {
-            display: inline-block; margin-top: 8px; background: #fc3f1d; color: #fff;
+            display: inline-block; margin-top: 8px; background: #ef4444; color: #fff;
             padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px;
-            box-shadow: 0 4px 10px rgba(252, 63, 29, 0.3);
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-receipt {
+            display: inline-block;
+            margin-top: 8px;
+            margin-right: 6px;
+            background: #2563eb;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 13px;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+            transition: background 0.2s;
+        }
+        .btn-receipt:hover {
+            background: #1d4ed8;
         }
 
         #admin-map {
@@ -314,7 +332,6 @@
 
     <div class="screen-frame">
 
-        <!-- To'liq faollashtirish paneli (Ovoz + Tizimli Bildirishnoma) -->
         <div id="sound-activation-banner" style="background: rgba(212, 175, 55, 0.15); border: 1px solid #d4af37; padding: 12px 16px; border-radius: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
             <span style="font-size: 13px; font-weight: bold; color: var(--gold-text);">🚨 Oshxona signalini va fon rejimida bildirishnomani yoqish:</span>
             <button onclick="enableAppPermissions()" style="padding: 10px 14px; background: var(--gold-btn-grad); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase;">Bildirishnoma va Ovozni Yoqish</button>
@@ -366,7 +383,6 @@
             </div>
             <div id="kitchen-orders-list">Yuklanmoqda...</div>
 
-            <!-- NAQD PUL VA CLICK/PAYME BUYURTMALARI (TASDIQLASH KUTAYOTGANLAR) -->
             <hr style="margin: 20px 0; border-color:rgba(212, 175, 55, 0.2);">
             <h3 style="color:var(--gold-text); margin-bottom:12px;">💵 Naqd pul va Onlayn to'lov Buyurtmalari (Tasdiqlash)</h3>
             <div id="pending-cash-orders-list">Yuklanmoqda...</div>
@@ -412,13 +428,11 @@
             <div class="card">Bugungi Tan Narx: <b id="rep-cost" class="tag-cost">0</b> so'm</div>
             <div class="card">Bugungi Saf Foyda: <b id="rep-profit" style="color:#34d399; font-size:18px;">0</b> so'm</div>
 
-            <!-- KASSA TARIXI -->
             <div style="margin-top:25px;">
                 <h3 style="color:var(--gold-text); margin-bottom:12px;">📜 Kassa Tarixi (O'tgan kunlar hisoboti)</h3>
                 <div id="cash-history-list">Yuklanmoqda...</div>
             </div>
 
-            <!-- TO'LOV REKvizitlari (KARTA RAQAMI VA QR KOD RASMI) -->
             <div style="background:#121218; border:1px solid rgba(212,175,55,0.4); padding:16px; border-radius:16px; margin-top:25px;">
                 <h3 style="color:#f5d061; margin-bottom:12px; font-size:16px;">💳 To'lov Rekvizitlarini Sozlash (Karta va QR)</h3>
                 
@@ -438,7 +452,6 @@
                 </button>
             </div>
 
-            <!-- KAFE JOYLASHUVI VA DOSTAVKA ZONALARINI SOZLASH -->
             <div style="background:#121218; border:1px solid rgba(212,175,55,0.4); padding:16px; border-radius:16px; margin-top:25px;">
                 <h3 style="color:#f5d061; margin-bottom:12px; font-size:16px;">🛵 Yetkazib Berish va Kafe Joylashuvini Sozlash</h3>
                 
@@ -617,9 +630,37 @@
             return `${correctedDate.getFullYear()}-${String(correctedDate.getMonth() + 1).padStart(2, '0')}-${String(correctedDate.getDate()).padStart(2, '0')}`;
         }
 
-        function formatOrderTextWithPurpleQty(text) {
-            if (!text) return '';
-            return text.replace(/\(x(\d+)\)/g, '<span class="qty-highlight">(x$1)</span>');
+        // Taom nomi va miqdorini pushti rangga o'tkazish hamda xavola/keraksiz joylarni tozalash
+        function parseAndFormatOrderText(rawStatus) {
+            if (!rawStatus) return '';
+            
+            // Chek havolasi va GPS larni matndan olib tashlaymiz (ular tugma orqali chiqadi)
+            let cleaned = rawStatus.replace(/Chek:\s*https?:\/\/[^\s]+/gi, '')
+                                 .replace(/https?:\/\/[^\s]+/gi, '')
+                                 .replace(/GPS:\s*[0-9.,\s]+/gi, '');
+
+            // Miqdorlarni (x2) pushti rangli blokka o'raymiz
+            cleaned = cleaned.replace(/\(x(\d+)\)/g, '<span class="qty-highlight">(x$1)</span>');
+            
+            return cleaned;
+        }
+
+        function getReceiptButton(s) {
+            let receiptUrl = '';
+            if (s.status) {
+                const match = s.status.match(/(https?:\/\/[^\s]+)/i);
+                if (match && (match[1].includes('supabase.co') || match[1].includes('receipt') || match[1].includes('png') || match[1].includes('jpg') || match[1].includes('jpeg'))) {
+                    receiptUrl = match[1];
+                }
+            }
+            if (!receiptUrl && s.receipt_url) {
+                receiptUrl = s.receipt_url;
+            }
+
+            if (receiptUrl) {
+                return `<a class="btn-receipt" href="${receiptUrl}" target="_blank">🧾 CHEK</a>`;
+            }
+            return '';
         }
 
         function getYandexButton(s) {
@@ -628,11 +669,10 @@
                 const match = s.status.match(/GPS:\s*([0-9.]+),\s*([0-9.]+)/i);
                 if (match) { lat = match[1]; lng = match[2]; }
             }
-            if (lat && lng) return `<br><a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${lat},${lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
+            if (lat && lng) return `<a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${lat},${lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
             return '';
         }
 
-        // TO'LOV REKVIZITLARINI YUKLASH VA SAQLASH
         async function loadPaymentSettings() {
             const { data } = await db.from('payment_settings').select('*').maybeSingle();
             if(data) {
@@ -988,16 +1028,24 @@
 
                 const isPendingPayment = s.is_paid === false;
 
+                // TO'LOV HOLATI (TULANGAN - yashil rangda)
+                const paymentStatusBadge = `<span style="background:rgba(16, 185, 129, 0.2); color:#10b981; border:1px solid #10b981; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">TULANGAN</span>`;
+
                 if (isPendingPayment) {
+                    const receiptBtn = getReceiptButton(s);
                     const yandexBtn = getYandexButton(s);
                     pendingCashHtml += `<div class="card" style="border: 1px solid #f59e0b;">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                             <b>⏰ ${timeStr}</b>
                             <span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold;">💵 TO'LOV KUTILMOQDA</span>
                         </div>
-                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${formatOrderTextWithPurpleQty(s.status || 'Buyurtma')}</p>
+                        <p style="margin-bottom:6px;">${paymentStatusBadge}</p>
+                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${parseAndFormatOrderText(s.status || 'Buyurtma')}</p>
                         <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
-                        ${yandexBtn}
+                        <div style="margin-top: 6px;">
+                            ${receiptBtn}
+                            ${yandexBtn}
+                        </div>
 
                         <div class="kitchen-actions">
                             <button class="btn-ready" onclick="kassagaTasdiqlash(${s.id})" style="background:#f59e0b; color:#000;">✅ TO'LANDI (Kassaga qo'shish)</button>
@@ -1006,16 +1054,21 @@
                     </div>`;
                 } else if (!isReady) {
                     currentActiveCount++;
+                    const receiptBtn = getReceiptButton(s);
                     const yandexBtn = getYandexButton(s);
 
                     activeHtml += `<div class="card">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                             <b>⏰ ${timeStr}</b>
                             <span class="status-pending">⏱ TAYYORLANMOQDA</span>
                         </div>
-                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${formatOrderTextWithPurpleQty(s.status || 'Buyurtma')}</p>
-                        <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
-                        ${yandexBtn}
+                        <div style="margin-bottom:6px;">${paymentStatusBadge}</div>
+                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff; line-height: 1.4;">${parseAndFormatOrderText(s.status || 'Buyurtma')}</p>
+                        <p style="margin-top:4px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
+                        <div style="margin-top: 8px;">
+                            ${receiptBtn}
+                            ${yandexBtn}
+                        </div>
 
                         <div class="kitchen-actions">
                             <button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${s.status}')">✅ TAYYOR BO'LDI</button>
@@ -1049,15 +1102,19 @@
 
                 item.orders.forEach(ord => {
                     const timeStr = getTashkentTimeString(ord.created_at);
+                    const receiptBtn = getReceiptButton(ord);
                     const yandexBtn = getYandexButton(ord);
 
                     ordersInsideHtml += `
                         <div style="padding: 8px 0; border-bottom: 1px dashed rgba(212, 175, 55, 0.2);">
                             <div style="display:flex; justify-content:space-between; font-size:13px;">
-                                <span><b>⏰ ${timeStr}</b> - ${formatOrderTextWithPurpleQty(ord.status)}</span>
+                                <span><b>⏰ ${timeStr}</b> - ${parseAndFormatOrderText(ord.status)}</span>
                                 <b style="color:var(--gold-text);">${Number(ord.total_amount || 0).toLocaleString()} so'm</b>
                             </div>
-                            ${yandexBtn}
+                            <div style="margin-top: 4px;">
+                                ${receiptBtn}
+                                ${yandexBtn}
+                            </div>
                         </div>
                     `;
                 });
