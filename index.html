@@ -411,10 +411,6 @@
             </div>
 
             <hr style="margin: 20px 0; border-color:rgba(212, 175, 55, 0.2);">
-            <h3 style="color:var(--gold-text); margin-bottom:12px;">💵 Naqd pul va Onlayn to'lov Buyurtmalari (Tasdiqlash)</h3>
-            <div id="pending-cash-orders-list">Yuklanmoqda...</div>
-
-            <hr style="margin: 20px 0; border-color:rgba(212, 175, 55, 0.2);">
             <h3 style="color:var(--gold-text); margin-bottom:12px;">📅 Sanalar bo'yicha Kunlik Buyurtmalar Tarixi</h3>
             <div id="daily-history-list">Yuklanmoqda...</div>
         </div>
@@ -851,7 +847,6 @@
             else alert("✅ Kafe joylashuvi va Dostavka zonalari saqlandi!");
         }
 
-        // --- TAOM QO'SHISH VA TAHRIRLASH ---
         async function taomniSaqlashYokiQoshish() {
             const editId = document.getElementById('edit-menu-id').value;
             const title = document.getElementById('menu-title').value;
@@ -892,7 +887,6 @@
             }
 
             if(editId) {
-                // Yangilash (Tahrirlash)
                 const { error } = await db.from('menu').update({ title, price, cost, image_url }).eq('id', editId);
                 saveBtn.innerText = "Taomni Saqlash";
                 saveBtn.disabled = false;
@@ -904,7 +898,6 @@
                     tanlovlarniYuklash();
                 }
             } else {
-                // Yangi qo'shish
                 const { error } = await db.from('menu').insert([{ title, price, cost, image_url, is_stopped: false }]);
                 saveBtn.innerText = "Taomni Saqlash";
                 saveBtn.disabled = false;
@@ -1043,8 +1036,7 @@
                 total_amount: totalPrice, 
                 total_cost: totalCost, 
                 profit: (totalPrice - totalCost),
-                status: orderStatus,
-                is_paid: true
+                status: orderStatus
             }]);
 
             if(error) {
@@ -1070,7 +1062,6 @@
                 return alert("Iltimos, sana, savdo nomi va summani to'liq kiriting!");
             }
 
-            // Sana va vaqtni to'g'ri ISO formatga o'tkazish (+5 soat Toshkent vaqti uchun hisobga olinadi)
             const fullDateTime = `${dateVal}T${timeVal}:00+05:00`;
 
             const { error } = await db.from('sales').insert([{
@@ -1078,7 +1069,6 @@
                 total_cost: cost,
                 profit: (amount - cost),
                 status: `[ESKI SAVDO] ${desc}`,
-                is_paid: true,
                 created_at: fullDateTime
             }]);
 
@@ -1095,7 +1085,6 @@
 
         async function eskiSavdolarniTozalash() {
             if(confirm("Haqiqatan ham barcha eski savdo ma'lumotlarini o'chirib, asl holatiga qaytarmoqchimisiz?")) {
-                // [ESKI SAVDO] deb belgilangan yozuvlarni bazadan o'chirish
                 const { data, error } = await db.from('sales').select('id, status');
                 if(error) return alert("Xatolik: " + error.message);
 
@@ -1152,7 +1141,6 @@
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
             
             let activeHtml = '';
-            let pendingCashHtml = '';
             let dailyGroups = {};
             let currentActiveCount = 0;
 
@@ -1161,8 +1149,6 @@
                 const isReady = statusStr.includes('TAYYOR BO\'LDI') || statusStr.includes('[KURYERGA BERILDI]') || statusStr.includes('[ESKI SAVDO]');
                 const timeStr = getTashkentTimeString(s.created_at);
                 const dateStr = getTashkentDateString(s.created_at);
-
-                const isPendingPayment = s.is_paid === false;
 
                 const isDeliveryOrder = statusStr.toLowerCase().includes('dostavka') || 
                                         statusStr.toLowerCase().includes('yetkazish') || 
@@ -1176,28 +1162,7 @@
                     paymentStatusBadge = `<span style="background:rgba(16, 185, 129, 0.2); color:#10b981; border:1px solid #10b981; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">TULANGAN</span>`;
                 }
 
-                if (isPendingPayment) {
-                    const receiptBtn = getReceiptButton(s);
-                    const yandexBtn = getYandexButton(s);
-                    pendingCashHtml += `<div class="card" style="border: 1px solid #f59e0b;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <b>⏰ ${timeStr}</b>
-                            <span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold;">💵 TO'LOV KUTILMOQDA</span>
-                        </div>
-                        <p style="margin-bottom:6px;">${paymentStatusBadge}</p>
-                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${parseAndFormatOrderText(statusStr)}</p>
-                        <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
-                        <div style="margin-top: 6px;">
-                            ${receiptBtn}
-                            ${yandexBtn}
-                        </div>
-
-                        <div class="kitchen-actions">
-                            <button class="btn-ready" onclick="kassagaTasdiqlash(${s.id})" style="background:#f59e0b; color:#000;">✅ TO'LANDI (Kassaga qo'shish)</button>
-                            <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Rad etish</button>
-                        </div>
-                    </div>`;
-                } else if (!isReady) {
+                if (!isReady) {
                     currentActiveCount++;
                     const receiptBtn = getReceiptButton(s);
                     const yandexBtn = getYandexButton(s);
@@ -1243,7 +1208,6 @@
             lastKnownOrderCount = currentActiveCount;
 
             document.getElementById('kitchen-orders-list').innerHTML = activeHtml || '<p style="color:#a1a1aa; padding:10px 0;">Hozircha tayyorlanayotgan faol buyurtmalar yo\'q.</p>';
-            document.getElementById('pending-cash-orders-list').innerHTML = pendingCashHtml || '<p style="color:#a1a1aa; padding:10px 0;">Tasdiqlashni kutayotgan naqd/onlayn buyurtmalar yo\'q.</p>';
 
             let historyHtml = '';
             const sortedDates = Object.keys(dailyGroups).sort().reverse();
@@ -1283,19 +1247,6 @@
             });
 
             document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali bajarilgan buyurtmalar yo\'q.</i>';
-        }
-
-        async function kassagaTasdiqlash(id) {
-            const { error } = await db.from('sales').update({ is_paid: true }).eq('id', id);
-            if(error) {
-                alert("Xatolik: " + error.message);
-            } else {
-                alert("✅ To'lov tasdiqlandi va buyurtma kassaga qo'shildi!");
-                oshxonaniYuklash();
-                if (document.getElementById('reports').classList.contains('active')) {
-                    hisobotniYuklash();
-                }
-            }
         }
 
         async function buyurtmaniTayyorLash(id, currentStatus) {
@@ -1346,8 +1297,6 @@
             let dailyFinancials = {};
 
             (sales || []).forEach(s => {
-                if (s.is_paid === false) return;
-
                 const dateStr = getTashkentDateString(s.created_at);
                 const rev = parseFloat(s.total_amount || 0);
                 const cost = parseFloat(s.total_cost || 0);
