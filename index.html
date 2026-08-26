@@ -384,10 +384,10 @@
             </div>
             <div id="kitchen-orders-list">Yuklanmoqda...</div>
 
-            <!-- ESKI SAVDOLARNI QO'SHISH BO'LIMI -->
+            <!-- ESKI SAVDOLARNI QO'SHISH VA TAHRIRLASH BO'LIMI -->
             <div style="background: rgba(212, 175, 55, 0.05); border: 1px dashed #d4af37; padding: 14px; border-radius: 14px; margin: 20px 0;">
-                <h3 style="color: var(--gold-text); font-size: 16px; margin-bottom: 8px;">📓 Daftardagi Eski Savdolarni Kiritish</h3>
-                <p style="font-size: 11px; color: #aaa; margin-bottom: 10px;">Ilova ochilishidan avvalgi kunlardagi savdolarni sana, vaqt va summa bilan kiritib kassa tarixiga qo'shing:</p>
+                <h3 style="color: var(--gold-text); font-size: 16px; margin-bottom: 8px;">📓 Daftardagi Eski Savdolarni Kiritish va Tahrirlash</h3>
+                <p style="font-size: 11px; color: #aaa; margin-bottom: 10px;">Xatoni tuzatish yoki eski savdolarni qo'shish uchun quyidagi shakldan foydalaning:</p>
                 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <div>
@@ -406,12 +406,16 @@
 
                 <div style="display: flex; gap: 8px;">
                     <button class="btn-save" onclick="eskiSavdoniQoshish()" style="flex: 2; margin-top:0;">💾 Eski Savdoni Qo'shish</button>
-                    <button onclick="eskiSavdolarniTozalash()" style="flex: 1; background: #dc2626; color: #fff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 11px;">🗑 Asliga Qaytarish (O'chirish)</button>
+                    <button onclick="eskiSavdolarniTozalash()" style="flex: 1; background: #dc2626; color: #fff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 11px;">🗑 Hammasini Tozalash</button>
                 </div>
             </div>
 
             <hr style="margin: 20px 0; border-color:rgba(212, 175, 55, 0.2);">
-            <h3 style="color:var(--gold-text); margin-bottom:12px;">📅 Sanalar bo'yicha Kunlik Buyurtmalar Tarixi</h3>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="color:var(--gold-text); margin:0;">📅 Sanalar bo'yicha Kunlik Buyurtmalar Tarixi</h3>
+                <button onclick="barchaTarixniTahrirlashModal()" style="padding: 6px 10px; background: #3b82f6; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px;">✏️ Xatolikni Tuzatish (Tarix)</button>
+            </div>
             <div id="daily-history-list">Yuklanmoqda...</div>
         </div>
 
@@ -452,6 +456,24 @@
             <div class="card" style="margin-top:10px;">Bugungi Tushum: <b id="rep-rev" class="tag-price">0</b> so'm</div>
             <div class="card">Bugungi Tan Narx: <b id="rep-cost" class="tag-cost">0</b> so'm</div>
             <div class="card">Bugungi Saf Foyda: <b id="rep-profit" style="color:#34d399; font-size:18px;">0</b> so'm</div>
+
+            <!-- HAFTALIK VA OYLIK HISOBOT QISMI -->
+            <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.4); padding: 14px; border-radius: 16px; margin-top: 20px;">
+                <h3 style="color: var(--gold-text); margin-bottom: 12px; font-size: 16px;">📈 Haftalik va Oylik Hisobot</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                    <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.2);">
+                        <span style="font-size: 11px; color: #aaa; display: block;">📅 Oxirgi 7 Kun (Haftalik):</span>
+                        <b id="weekly-rev" class="tag-price" style="font-size: 15px;">0 so'm</b>
+                        <div style="font-size: 11px; color: #34d399; margin-top: 4px;">Foyda: <span id="weekly-profit">0 so'm</span></div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.2);">
+                        <span style="font-size: 11px; color: #aaa; display: block;">🗓 Joriy Oy (Oylik):</span>
+                        <b id="monthly-rev" class="tag-price" style="font-size: 15px;">0 so'm</b>
+                        <div style="font-size: 11px; color: #34d399; margin-top: 4px;">Foyda: <span id="monthly-profit">0 so'm</span></div>
+                    </div>
+                </div>
+            </div>
 
             <div style="margin-top:25px;">
                 <h3 style="color:var(--gold-text); margin-bottom:12px;">📜 Kassa Tarixi (O'tgan kunlar hisoboti)</h3>
@@ -1050,7 +1072,7 @@
             }
         }
 
-        // --- ESKI SAVDOLARNI QO'SHISH VA O'CHIRISH ---
+        // --- ESKI SAVDOLARNI QO'SHISH VA TAHRIRLASH ---
         async function eskiSavdoniQoshish() {
             const dateVal = document.getElementById('old-sale-date').value;
             const timeVal = document.getElementById('old-sale-time').value || '12:00';
@@ -1105,6 +1127,29 @@
 
                 alert("✅ Barcha kiritilgan eski savdolar tozalandi va asl holatiga qaytarildi!");
                 oshxonaniYuklash();
+            }
+        }
+
+        async function barchaTarixniTahrirlashModal() {
+            const { data, error } = await db.from('sales').select('id, created_at, status, total_amount').order('created_at', { ascending: false }).limit(20);
+            if(error || !data || data.length === 0) return alert("Tahrirlash uchun oxirgi savdolar topilmadi.");
+
+            let listStr = "Oxirgi savdolar ro'yxati (O'chirish uchun ID kerak):\n\n";
+            data.forEach(s => {
+                listStr += `ID: ${s.id} | Sana: ${getTashkentDateString(s.created_at)} | ${s.status} | ${Number(s.total_amount).toLocaleString()} so'm\n`;
+            });
+
+            let saleIdToDel = prompt(listStr + "\nO'chirmoqchi bo'lgan savdo ID raqamini kiriting:");
+            if (saleIdToDel) {
+                let idNum = parseInt(saleIdToDel);
+                if (!isNaN(idNum)) {
+                    const { error: delErr } = await db.from('sales').delete().eq('id', idNum);
+                    if (delErr) alert("Xatolik: " + delErr.message);
+                    else {
+                        alert("✅ Tanlangan savdo tarixidan muvaffaqiyatli o'chirildi!");
+                        oshxonaniYuklash();
+                    }
+                }
             }
         }
 
@@ -1222,15 +1267,16 @@
                     const yandexBtn = getYandexButton(ord);
 
                     ordersInsideHtml += `
-                        <div style="padding: 8px 0; border-bottom: 1px dashed rgba(212, 175, 55, 0.2);">
-                            <div style="display:flex; justify-content:space-between; font-size:13px;">
-                                <span><b>⏰ ${timeStr}</b> - ${parseAndFormatOrderText(ord.status)}</span>
+                        <div style="padding: 8px 0; border-bottom: 1px dashed rgba(212, 175, 55, 0.2); display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-size:13px; flex-grow:1;">
+                                <span><b>⏰ ${timeStr}</b> (ID: ${ord.id}) - ${parseAndFormatOrderText(ord.status)}</span><br>
                                 <b style="color:var(--gold-text);">${Number(ord.total_amount || 0).toLocaleString()} so'm</b>
+                                <div style="margin-top: 4px;">
+                                    ${receiptBtn}
+                                    ${yandexBtn}
+                                </div>
                             </div>
-                            <div style="margin-top: 4px;">
-                                ${receiptBtn}
-                                ${yandexBtn}
-                            </div>
+                            <button onclick="bittaSavdoniOchirish(${ord.id})" style="background:#dc2626; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:bold; cursor:pointer; height:fit-content;">🗑 O'chirish</button>
                         </div>
                     `;
                 });
@@ -1247,6 +1293,19 @@
             });
 
             document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali bajarilgan buyurtmalar yo\'q.</i>';
+        }
+
+        async function bittaSavdoniOchirish(id) {
+            if(confirm(`ID: ${id} bo'lgan ushbu savdoni o'chirmoqchimisiz?`)) {
+                const { error } = await db.from('sales').delete().eq('id', id);
+                if(error) alert("Xatolik: " + error.message);
+                else {
+                    oshxonaniYuklash();
+                    if (document.getElementById('reports').classList.contains('active')) {
+                        hisobotniYuklash();
+                    }
+                }
+            }
         }
 
         async function buyurtmaniTayyorLash(id, currentStatus) {
@@ -1294,7 +1353,15 @@
             const { data: sales } = await db.from('sales').select('*');
 
             let todayRev = 0, todayCost = 0, todayProfit = 0;
+            let weeklyRev = 0, weeklyProfit = 0;
+            let monthlyRev = 0, monthlyProfit = 0;
+            
             let dailyFinancials = {};
+
+            const now = new Date();
+            const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
 
             (sales || []).forEach(s => {
                 const dateStr = getTashkentDateString(s.created_at);
@@ -1302,10 +1369,24 @@
                 const cost = parseFloat(s.total_cost || 0);
                 const profit = parseFloat(s.profit || (rev - cost));
 
+                let saleDate = new Date(String(s.created_at).replace(' ', 'T'));
+
                 if (dateStr === todayStr) {
                     todayRev += rev;
                     todayCost += cost;
                     todayProfit += profit;
+                }
+
+                // Haftalik (oxirgi 7 kun)
+                if (saleDate >= sevenDaysAgo) {
+                    weeklyRev += rev;
+                    weeklyProfit += profit;
+                }
+
+                // Oylik (joriy oy)
+                if (saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
+                    monthlyRev += rev;
+                    monthlyProfit += profit;
                 }
 
                 if (!dailyFinancials[dateStr]) {
@@ -1320,6 +1401,12 @@
             document.getElementById('rep-rev').innerText = todayRev.toLocaleString();
             document.getElementById('rep-cost').innerText = todayCost.toLocaleString();
             document.getElementById('rep-profit').innerText = todayProfit.toLocaleString();
+
+            document.getElementById('weekly-rev').innerText = weeklyRev.toLocaleString() + " so'm";
+            document.getElementById('weekly-profit').innerText = weeklyProfit.toLocaleString() + " so'm";
+
+            document.getElementById('monthly-rev').innerText = monthlyRev.toLocaleString() + " so'm";
+            document.getElementById('monthly-profit').innerText = monthlyProfit.toLocaleString() + " so'm";
 
             let cashHistoryHtml = '';
             const sortedDates = Object.keys(dailyFinancials).sort().reverse();
