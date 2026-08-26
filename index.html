@@ -269,7 +269,6 @@
         .btn-ready { background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 2; }
         .btn-cancel { background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; }
         .btn-delete { background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .btn-edit { background: #3b82f6; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
         
         .btn-stop { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .btn-activate { background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
@@ -391,39 +390,11 @@
             <hr style="margin: 20px 0; border-color:rgba(212, 175, 55, 0.2);">
             <h3 style="color:var(--gold-text); margin-bottom:12px;">📅 Sanalar bo'yicha Kunlik Buyurtmalar Tarixi</h3>
             <div id="daily-history-list">Yuklanmoqda...</div>
-
-            <hr style="margin: 25px 0; border-color:rgba(212, 175, 55, 0.4);">
-            <div style="background:rgba(212, 175, 55, 0.05); border:1px solid rgba(212, 175, 55, 0.3); padding:16px; border-radius:16px;">
-                <h3 style="color:var(--gold-text); margin-bottom:8px; font-size:16px;">📓 Eski Savdolar Arxivi (Daftardan kiritish)</h3>
-                <p style="font-size:12px; color:#aaa; margin-bottom:12px;">Ilova ochilishidan avval daftarga yozilgan savdolarni shu yerga kiritib kassaga qo'shishingiz mumkin:</p>
-                
-                <label style="color:#aaa; font-size:11px;">Sana va vaqt:</label>
-                <input type="datetime-local" id="old-sale-date" style="background:#000; color:#fff;">
-
-                <label style="color:#aaa; font-size:11px;">Taom nomi (Tafsili):</label>
-                <input type="text" id="old-sale-title" placeholder="Masalan: 3ta Hotdog va 2ta Cola" style="background:#000; color:#fff;">
-
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <div>
-                        <label style="color:#aaa; font-size:11px;">Jami Sotuv Summasi (so'm):</label>
-                        <input type="number" id="old-sale-amount" placeholder="50000" style="background:#000; color:#fff;">
-                    </div>
-                    <div>
-                        <label style="color:#aaa; font-size:11px;">Tan Narxi (so'm):</label>
-                        <input type="number" id="old-sale-cost" placeholder="25000" style="background:#000; color:#fff;">
-                    </div>
-                </div>
-
-                <button onclick="eskiSavdoniQo'shish()" style="width:100%; padding:12px; background:linear-gradient(180deg, #f7e089 0%, #c8962c 100%); color:#000; font-weight:bold; border:none; border-radius:10px; cursor:pointer; margin-top:8px;">
-                    ➕ Eski Savdoni Kassaga Qo'shish
-                </button>
-            </div>
         </div>
 
         <!-- 3. MENYU VA STOP-LIST -->
         <div id="recipes" class="tab-content">
-            <h3 id="menu-form-title" style="color:var(--gold-text); margin-bottom:10px;">Yangi Taom Yaratish</h3>
-            <input type="hidden" id="edit-menu-id" value="">
+            <h3 style="color:var(--gold-text); margin-bottom:10px;">Yangi Taom Yaratish</h3>
             <input type="text" id="menu-title" placeholder="Taom nomi (masalan: Classic Hotdog)">
             <input type="number" id="menu-price" placeholder="Sotuv narxi (masalan: 12000 so'm)">
             <input type="number" id="menu-cost" placeholder="Tan narxi (masalan: 6000 so'm)">
@@ -431,10 +402,6 @@
             <label style="font-size:13px; font-weight:bold; color:#d4d4d8;">📱 Galereyadan rasm tanlang:</label>
             <input type="file" id="menu-file" accept="image/*">
             
-            <div id="edit-cancel-box" style="display:none; gap:10px; margin-bottom:6px;">
-                <button class="btn-save" style="background:#3b82f6; color:#fff;" onclick="taomniYangilash()">O'zgarishlarni Saqlash</button>
-                <button class="btn-save" style="background:#ef4444; color:#fff;" onclick="tahrirlashniBekorQilish()">Bekor Qilish</button>
-            </div>
             <button class="btn-save" id="btn-save-menu" onclick="taomQoshish()">Taomni Saqlash</button>
 
             <h4 style="margin-top:15px; color:var(--gold-text);">Mavjud Taomlar Sozlamasi va Stop-List:</h4>
@@ -905,69 +872,6 @@
             }
         }
 
-        async function taomniTahrirlashgaOshirish(id, title, price, cost, imageUrl) {
-            document.getElementById('edit-menu-id').value = id;
-            document.getElementById('menu-title').value = title;
-            document.getElementById('menu-price').value = price;
-            document.getElementById('menu-cost').value = cost;
-            
-            document.getElementById('menu-form-title').innerText = "Taomni Tahrirlash: " + title;
-            document.getElementById('btn-save-menu').style.display = 'none';
-            document.getElementById('edit-cancel-box').style.display = 'flex';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function tahrirlashniBekorQilish() {
-            document.getElementById('edit-menu-id').value = '';
-            document.getElementById('menu-title').value = '';
-            document.getElementById('menu-price').value = '';
-            document.getElementById('menu-cost').value = '';
-            document.getElementById('menu-file').value = '';
-
-            document.getElementById('menu-form-title').innerText = "Yangi Taom Yaratish";
-            document.getElementById('btn-save-menu').style.display = 'block';
-            document.getElementById('edit-cancel-box').style.display = 'none';
-        }
-
-        async function taomniYangilash() {
-            const id = document.getElementById('edit-menu-id').value;
-            const title = document.getElementById('menu-title').value;
-            const price = parseFloat(document.getElementById('menu-price').value);
-            const cost = parseFloat(document.getElementById('menu-cost').value) || 0;
-            const fileInput = document.getElementById('menu-file');
-
-            if(!title || isNaN(price)) return alert("Taom nomi va sotuv narxini kiriting!");
-
-            let updateData = { title, price, cost };
-
-            if(fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}.${fileExt}`;
-
-                const { error: uploadErr } = await db.storage
-                    .from('menu-images')
-                    .upload(fileName, file);
-
-                if(uploadErr) {
-                    return alert("Rasm yuklashda xatolik: " + uploadErr.message);
-                }
-
-                const { data: publicUrlData } = db.storage.from('menu-images').getPublicUrl(fileName);
-                updateData.image_url = publicUrlData.publicUrl;
-            }
-
-            const { error } = await db.from('menu').update(updateData).eq('id', id);
-
-            if(error) {
-                alert("Xato: " + error.message);
-            } else {
-                alert("✅ Taom ma'lumotlari muvaffaqiyatli yangilandi!");
-                tahrirlashniBekorQilish();
-                tanlovlarniYuklash();
-            }
-        }
-
         async function taomniOchirish(id, title) {
             if(confirm(`"${title}" taomini o'chirmoqchimisiz?`)) {
                 await db.from('menu').delete().eq('id', id);
@@ -1030,9 +934,8 @@
                                 <b>${m.title}</b>
                                 <div>
                                     <button class="${isStopped ? 'btn-activate' : 'btn-stop'}" onclick="toggleStopList(${m.id}, ${isStopped})">
-                                        ${isStopped ? '✅ Aktiv' : '🛑 Stop'}
+                                        ${isStopped ? '✅ Aktivlash' : '🛑 Stop'}
                                     </button>
-                                    <button class="btn-edit" onclick="taomniTahrirlashgaOshirish(${m.id}, '${m.title}', ${m.price}, ${costVal}, '${m.image_url || ''}')">📝 Tahrirlash</button>
                                     <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑</button>
                                 </div>
                             </div>
@@ -1064,8 +967,7 @@
                 total_amount: totalPrice, 
                 total_cost: totalCost, 
                 profit: (totalPrice - totalCost),
-                status: orderStatus,
-                is_paid: true
+                status: orderStatus
             }]);
 
             if(error) {
@@ -1076,43 +978,6 @@
                 alert(`✅ Stol #${tableNum}: ${qty}x ${menuItem.title} oshxonaga yuborildi!`);
                 itemQuantities[menu_id] = 1;
                 document.getElementById(`qty-val-${menu_id}`).innerText = 1;
-            }
-        }
-
-        async function eskiSavdoniQo'shish() {
-            const dateVal = document.getElementById('old-sale-date').value;
-            const titleVal = document.getElementById('old-sale-title').value;
-            const amountVal = parseFloat(document.getElementById('old-sale-amount').value);
-            const costVal = parseFloat(document.getElementById('old-sale-cost').value) || 0;
-
-            if(!dateVal || !titleVal || isNaN(amountVal)) {
-                return alert("Iltimos, sana, vaqt, taom nomi va jami summani to'ldiring!");
-            }
-
-            // Sana vaqtini UTC formatga o'tkazish uchun moslab yuboramiz (+5 soat qo'shib yozamiz)
-            let localDate = new Date(dateVal);
-            let correctedIsoString = new Date(localDate.getTime() + (5 * 60 * 60 * 1000)).toISOString();
-
-            const statusText = `📓 [Eski Savdo Arxivi] ${titleVal}`;
-
-            const { error } = await db.from('sales').insert([{
-                total_amount: amountVal,
-                total_cost: costVal,
-                profit: (amountVal - costVal),
-                status: statusText,
-                is_paid: true,
-                created_at: correctedIsoString
-            }]);
-
-            if(error) {
-                alert("Xatolik: " + error.message);
-            } else {
-                alert("✅ Eski savdo arxivi muvaffaqiyatli qo'shildi va kassaga kiritildi!");
-                document.getElementById('old-sale-date').value = '';
-                document.getElementById('old-sale-title').value = '';
-                document.getElementById('old-sale-amount').value = '';
-                document.getElementById('old-sale-cost').value = '';
-                oshxonaniYuklash();
             }
         }
 
@@ -1155,21 +1020,20 @@
 
             (sales || []).forEach((s) => {
                 const statusStr = s.status || '';
-                const isReady = statusStr.includes('TAYYOR BO\'LDI') || statusStr.includes('[KURYERGA BERILDI]') || statusStr.includes('[Eski Savdo Arxivi]');
+                const isReady = statusStr.includes('TAYYOR BO\'LDI') || statusStr.includes('[KURYERGA BERILDI]');
                 const timeStr = getTashkentTimeString(s.created_at);
                 const dateStr = getTashkentDateString(s.created_at);
 
                 const isPendingPayment = s.is_paid === false;
 
+                // Mijozlar ilovasidan kelgan yetkazib berish (dostavka) buyurtmasi ekanligini aniqlash
                 const isDeliveryOrder = statusStr.toLowerCase().includes('dostavka') || 
                                         statusStr.toLowerCase().includes('yetkazish') || 
                                         statusStr.toLowerCase().includes('manzil') ||
                                         statusStr.includes('NAQD');
 
                 let paymentStatusBadge = '';
-                if (statusStr.includes('[Eski Savdo Arxivi]')) {
-                    paymentStatusBadge = `<span style="background:rgba(59, 130, 246, 0.2); color:#3b82f6; border:1px solid #3b82f6; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">📓 ESKI SAVDO ARXIVI</span>`;
-                } else if (statusStr.toUpperCase().includes('NAQD')) {
+                if (statusStr.toUpperCase().includes('NAQD')) {
                     paymentStatusBadge = `<span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; border:1px solid #f59e0b; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">NAQD PUL</span>`;
                 } else {
                     paymentStatusBadge = `<span style="background:rgba(16, 185, 129, 0.2); color:#10b981; border:1px solid #10b981; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">TULANGAN</span>`;
@@ -1201,6 +1065,7 @@
                     const receiptBtn = getReceiptButton(s);
                     const yandexBtn = getYandexButton(s);
 
+                    // Agar yetkazib berish buyurtmasi bo'lsa "Kuryerga berildi", ofitsiantniki bo'lsa "TAYYOR BO'LDI" tugmasi chiqadi
                     let actionButtonHtml = '';
                     if (isDeliveryOrder) {
                         actionButtonHtml = `<button class="btn-ready" onclick="kuryergaBerildi(${s.id}, '${statusStr}')" style="background:#3b82f6;">🛵 KURYERGA BERILDI</button>`;
@@ -1256,21 +1121,15 @@
                     const receiptBtn = getReceiptButton(ord);
                     const yandexBtn = getYandexButton(ord);
 
-                    let deleteArchiveBtn = '';
-                    if (ord.status && ord.status.includes('[Eski Savdo Arxivi]')) {
-                        deleteArchiveBtn = `<button class="btn-delete" onclick="buyurtmaniBekorQilish(${ord.id})" style="margin-top:4px;">🗑 O'chirish (Asliga qaytarish)</button>`;
-                    }
-
                     ordersInsideHtml += `
                         <div style="padding: 8px 0; border-bottom: 1px dashed rgba(212, 175, 55, 0.2);">
                             <div style="display:flex; justify-content:space-between; font-size:13px;">
                                 <span><b>⏰ ${timeStr}</b> - ${parseAndFormatOrderText(ord.status)}</span>
                                 <b style="color:var(--gold-text);">${Number(ord.total_amount || 0).toLocaleString()} so'm</b>
                             </div>
-                            <div style="margin-top: 4px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                            <div style="margin-top: 4px;">
                                 ${receiptBtn}
                                 ${yandexBtn}
-                                ${deleteArchiveBtn}
                             </div>
                         </div>
                     `;
@@ -1329,7 +1188,7 @@
         }
 
         async function buyurtmaniBekorQilish(id) {
-            if(confirm("Ushbu yozuvni o'chirmoqchimisiz?")) {
+            if(confirm("Ushbu buyurtmani bekor qilmoqchimisiz?")) {
                 const { error } = await db.from('sales').delete().eq('id', id);
                 if(error) alert("Xatolik: " + error.message);
                 else {
@@ -1386,7 +1245,7 @@
                     <div class="cash-history-card">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                             <b style="color:var(--gold-text); font-size:15px;">📅 ${date}</b>
-                            <span style="font-size:12px; color:#aaa;">${item.count} ta yozuv</span>
+                            <span style="font-size:12px; color:#aaa;">${item.count} ta buyurtma</span>
                         </div>
                         <div style="font-size:13px; color:#d4d4d8; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:6px;">
                             <div>Savdo:<br><b class="tag-price">${item.rev.toLocaleString()}</b></div>
