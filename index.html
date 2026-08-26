@@ -484,7 +484,7 @@
 
             <button class="btn-save" onclick="bozorXaridiniQoshish()">🛒 Xaridni Saqlash</button>
 
-            <!-- BOZOR HISOBOTI QISMI -->
+            <!-- BOZOR HISOBOTI QISMI (YANGI QO'SHILDI) -->
             <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.4); padding: 14px; border-radius: 16px; margin-top: 20px;">
                 <h3 style="color: var(--gold-text); margin-bottom: 12px; font-size: 16px;">📊 Bozor Hisoboti (Haftalik va Oylik)</h3>
                 
@@ -1236,7 +1236,7 @@
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
-        // --- BOZOR OYNASI VA HISOBOTI (KASSA BILAN ARALASHMAYDIGAN QILIB TO'G'RILANDI) ---
+        // --- BOZOR OYNASI VA HISOBOTI ---
         async function bozorXaridiniQoshish() {
             const dateVal = document.getElementById('market-date').value || getTashkentDateString();
             const timeVal = document.getElementById('market-time').value || '09:00';
@@ -1252,13 +1252,11 @@
             const fullDateTime = `${dateVal}T${timeVal}:00+05:00`;
             const unitPrice = totalPrice / qty;
 
-            // Xarid sales jadvaliga faqat [BOZOR XARIDI] sifatida yoziladi (total_amount=0, total_cost=0 qilingan)
-            // Shunda u kassa tan narxiga va foydasiga mutlaqo ta'sir qilmaydi!
             const { error: salesErr } = await db.from('sales').insert([{
                 total_amount: 0,
-                total_cost: 0,
-                profit: 0,
-                status: `[BOZOR XARIDI] ${qty} ${unit} ${itemName} - ${totalPrice.toLocaleString()} so'm`,
+                total_cost: totalPrice,
+                profit: -totalPrice,
+                status: `[BOZOR XARIDI] ${qty} ${unit} ${itemName}`,
                 created_at: fullDateTime
             }]);
 
@@ -1305,14 +1303,7 @@
                 if(s.status && s.status.includes('[BOZOR XARIDI]')) {
                     const timeStr = getTashkentTimeString(s.created_at);
                     const dateStr = getTashkentDateString(s.created_at);
-                    
-                    // Status ichidan xarajat summasini ajratib olamiz yoki tahlil qilamiz
-                    let costVal = 0;
-                    const matchCost = s.status.match(/-\s*([\d\s]+)\s*so'm/i);
-                    if (matchCost) {
-                        costVal = parseFloat(matchCost[1].replace(/\s+/g, '')) || 0;
-                    }
-
+                    const costVal = parseFloat(s.total_cost || 0);
                     let saleDate = new Date(String(s.created_at).replace(' ', 'T'));
 
                     if (saleDate >= sevenDaysAgo) {
@@ -1326,7 +1317,8 @@
                         <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
                             <div>
                                 <b style="color:var(--gold-text);">${dateStr} (${timeStr})</b><br>
-                                <span>${parseAndFormatOrderText(s.status)}</span>
+                                <span>${parseAndFormatOrderText(s.status)}</span><br>
+                                <small style="color:#f59e0b;">Xarajat: <b>${costVal.toLocaleString()} so'm</b></small>
                             </div>
                             <button onclick="bittaSavdoniOchirish(${s.id}); setTimeout(bozorTarixiniYuklash, 500);" style="background:#dc2626; color:#fff; border:none; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">🗑</button>
                         </div>
@@ -1524,9 +1516,6 @@
             const currentYear = now.getFullYear();
 
             (sales || []).forEach(s => {
-                const statusStr = s.status || '';
-                if(statusStr.includes('[BOZOR XARIDI]')) return; // Bozor xaridlari kassaga ta'sir qilmaydi
-
                 const dateStr = getTashkentDateString(s.created_at);
                 const rev = parseFloat(s.total_amount || 0);
                 const cost = parseFloat(s.total_cost || 0);
@@ -1582,7 +1571,7 @@
                         </div>
                         <div style="font-size:13px; color:#d4d4d8; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:6px;">
                             <div>Savdo:<br><b class="tag-price">${item.rev.toLocaleString()}</b></div>
-                            <div>Tan narx:<br><b class="tag-cost">${item.cost.toLocaleString()}</b></div>
+                            <div>Xarajat/Tan narx:<br><b class="tag-cost">${item.cost.toLocaleString()}</b></div>
                             <div>Saf foyda:<br><b style="color:#34d399;">${item.profit.toLocaleString()}</b></div>
                         </div>
                     </div>
