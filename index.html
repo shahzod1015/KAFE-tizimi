@@ -1252,8 +1252,6 @@
             const fullDateTime = `${dateVal}T${timeVal}:00+05:00`;
             const unitPrice = totalPrice / qty;
 
-            // Xarid sales jadvaliga faqat [BOZOR XARIDI] sifatida yoziladi (total_amount=0, total_cost=0 qilingan)
-            // Shunda u kassa tan narxiga va foydasiga mutlaqo ta'sir qilmaydi!
             const { error: salesErr } = await db.from('sales').insert([{
                 total_amount: 0,
                 total_cost: 0,
@@ -1306,7 +1304,6 @@
                     const timeStr = getTashkentTimeString(s.created_at);
                     const dateStr = getTashkentDateString(s.created_at);
                     
-                    // Status ichidan xarajat summasini ajratib olamiz yoki tahlil qilamiz
                     let costVal = 0;
                     const matchCost = s.status.match(/-\s*([\d\s]+)\s*so'm/i);
                     if (matchCost) {
@@ -1525,7 +1522,7 @@
 
             (sales || []).forEach(s => {
                 const statusStr = s.status || '';
-                if(statusStr.includes('[BOZOR XARIDI]')) return; // Bozor xaridlari kassaga ta'sir qilmaydi
+                if(statusStr.includes('[BOZOR XARIDI]')) return;
 
                 const dateStr = getTashkentDateString(s.created_at);
                 const rev = parseFloat(s.total_amount || 0);
