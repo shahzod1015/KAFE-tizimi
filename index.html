@@ -573,10 +573,12 @@
 
         async function enableAppPermissions() {
             const audio = document.getElementById('order-audio');
-            audio.play().then(() => {
-                audio.pause();
-                audio.currentTime = 0;
-            }).catch(e => console.log("Audio xatosi:", e));
+            if (audio) {
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }).catch(e => console.log("Audio xatosi:", e));
+            }
 
             if ('Notification' in window) {
                 const permission = await Notification.requestPermission();
@@ -704,13 +706,17 @@
         }
 
         async function loadPaymentSettings() {
-            const { data } = await db.from('payment_settings').select('*').maybeSingle();
-            if(data) {
-                document.getElementById('adm-card-number').value = data.card_number || '';
-                document.getElementById('adm-card-holder').value = data.card_holder || '';
-                if(data.qr_image_url) {
-                    document.getElementById('current-qr-preview').innerHTML = `<img src="${data.qr_image_url}" style="width:100px; height:100px; border-radius:8px; border:1px solid #d4af37; object-fit:cover;"><br><small style="color:#aaa;">Joriy QR kod</small>`;
+            try {
+                const { data } = await db.from('payment_settings').select('*').maybeSingle();
+                if(data) {
+                    document.getElementById('adm-card-number').value = data.card_number || '';
+                    document.getElementById('adm-card-holder').value = data.card_holder || '';
+                    if(data.qr_image_url) {
+                        document.getElementById('current-qr-preview').innerHTML = `<img src="${data.qr_image_url}" style="width:100px; height:100px; border-radius:8px; border:1px solid #d4af37; object-fit:cover;"><br><small style="color:#aaa;">Joriy QR kod</small>`;
+                    }
                 }
+            } catch (err) {
+                console.log("Payment settings load error:", err);
             }
         }
 
@@ -752,26 +758,30 @@
         }
 
         async function loadAdminDeliverySettings() {
-            const { data } = await db.from('delivery_settings').select('*').maybeSingle();
-            const defaultLat = 38.849449, defaultLng = 65.793410;
+            try {
+                const { data } = await db.from('delivery_settings').select('*').maybeSingle();
+                const defaultLat = 38.849449, defaultLng = 65.793410;
 
-            if(data) {
-                if(document.getElementById('adm-cafe-lat')) document.getElementById('adm-cafe-lat').value = data.cafe_lat || defaultLat;
-                if(document.getElementById('adm-cafe-lng')) document.getElementById('adm-cafe-lng').value = data.cafe_lng || defaultLng;
+                if(data) {
+                    if(document.getElementById('adm-cafe-lat')) document.getElementById('adm-cafe-lat').value = data.cafe_lat || defaultLat;
+                    if(document.getElementById('adm-cafe-lng')) document.getElementById('adm-cafe-lng').value = data.cafe_lng || defaultLng;
 
-                if(document.getElementById('adm-zone1-km')) document.getElementById('adm-zone1-km').value = data.zone1_km || 0.7;
-                if(document.getElementById('adm-zone1-price')) document.getElementById('adm-zone1-price').value = data.zone1_price || 5000;
-                if(document.getElementById('adm-zone1-min')) document.getElementById('adm-zone1-min').value = data.zone1_min_order || 48000;
+                    if(document.getElementById('adm-zone1-km')) document.getElementById('adm-zone1-km').value = data.zone1_km || 0.7;
+                    if(document.getElementById('adm-zone1-price')) document.getElementById('adm-zone1-price').value = data.zone1_price || 5000;
+                    if(document.getElementById('adm-zone1-min')) document.getElementById('adm-zone1-min').value = data.zone1_min_order || 48000;
 
-                if(document.getElementById('adm-zone2-km')) document.getElementById('adm-zone2-km').value = data.zone2_km || 2.0;
-                if(document.getElementById('adm-zone2-price')) document.getElementById('adm-zone2-price').value = data.zone2_price || 10000;
-                if(document.getElementById('adm-zone2-min')) document.getElementById('adm-zone2-min').value = data.zone2_min_order || 70000;
-            } else {
-                if(document.getElementById('adm-cafe-lat')) document.getElementById('adm-cafe-lat').value = defaultLat;
-                if(document.getElementById('adm-cafe-lng')) document.getElementById('adm-cafe-lng').value = defaultLng;
+                    if(document.getElementById('adm-zone2-km')) document.getElementById('adm-zone2-km').value = data.zone2_km || 2.0;
+                    if(document.getElementById('adm-zone2-price')) document.getElementById('adm-zone2-price').value = data.zone2_price || 10000;
+                    if(document.getElementById('adm-zone2-min')) document.getElementById('adm-zone2-min').value = data.zone2_min_order || 70000;
+                } else {
+                    if(document.getElementById('adm-cafe-lat')) document.getElementById('adm-cafe-lat').value = defaultLat;
+                    if(document.getElementById('adm-cafe-lng')) document.getElementById('adm-cafe-lng').value = defaultLng;
+                }
+
+                if(isMapInitialized) updateAdminMapMarker();
+            } catch (err) {
+                console.log("Delivery settings load error:", err);
             }
-
-            if(isMapInitialized) updateAdminMapMarker();
         }
 
         function initAdminMap() {
@@ -984,65 +994,77 @@
             if (!itemQuantities[id]) itemQuantities[id] = 1;
             itemQuantities[id] += delta;
             if (itemQuantities[id] < 1) itemQuantities[id] = 1;
-            document.getElementById(`qty-val-${id}`).innerText = itemQuantities[id];
+            const qtyEl = document.getElementById(`qty-val-${id}`);
+            if(qtyEl) qtyEl.innerText = itemQuantities[id];
         }
 
         async function tanlovlarniYuklash() {
-            const { data: menu } = await db.from('menu').select('*').order('id', { ascending: true });
-            const defaultImg = 'https://via.placeholder.com/150?text=Rasm+Yo%27q';
+            try {
+                const { data: menu, error } = await db.from('menu').select('*').order('id', { ascending: true });
+                if(error) {
+                    console.error("Menu load error:", error);
+                    document.getElementById('pos-menu-grid').innerHTML = '<p style="color:#ef4444; grid-column:1/-1;">Menyuni yuklashda xatolik yuz berdi.</p>';
+                    return;
+                }
 
-            let posHtml = '';
-            (menu || []).forEach(m => {
-                if (!itemQuantities[m.id]) itemQuantities[m.id] = 1;
-                const imgSrc = m.image_url || defaultImg;
-                const isStopped = m.is_stopped;
+                const defaultImg = 'https://via.placeholder.com/150?text=Rasm+Yo%27q';
 
-                posHtml += `
-                <div class="pos-card ${isStopped ? 'is-stopped' : ''}">
-                    <div>
-                        <img src="${imgSrc}" alt="${m.title}">
-                        <h4>${m.title}</h4>
-                        <div class="price">${m.price.toLocaleString()} so'm</div>
-                    </div>
-                    <div>
-                        <div class="qty-box">
-                            <button class="qty-btn" onclick="changeQty(${m.id}, -1)">-</button>
-                            <span class="qty-val" id="qty-val-${m.id}">${itemQuantities[m.id]}</span>
-                            <button class="qty-btn" onclick="changeQty(${m.id}, 1)">+</button>
+                let posHtml = '';
+                (menu || []).forEach(m => {
+                    if (!itemQuantities[m.id]) itemQuantities[m.id] = 1;
+                    const imgSrc = m.image_url || defaultImg;
+                    const isStopped = m.is_stopped;
+
+                    posHtml += `
+                    <div class="pos-card ${isStopped ? 'is-stopped' : ''}">
+                        <div>
+                            <img src="${imgSrc}" alt="${m.title}">
+                            <h4>${m.title}</h4>
+                            <div class="price">${m.price.toLocaleString()} so'm</div>
                         </div>
-                        <button class="btn-order" onclick="buyurtmaBeringDirect(${m.id})">🛒 Buyurtma</button>
-                    </div>
-                </div>`;
-            });
-            document.getElementById('pos-menu-grid').innerHTML = posHtml || '<p style="grid-column:1/-1;">Hali taomlar qo\'shilmagan.</p>';
-
-            let menuCards = '';
-            (menu || []).forEach(m => {
-                const costVal = m.cost || 0;
-                const imgSrc = m.image_url || defaultImg;
-                const isStopped = m.is_stopped;
-
-                menuCards += `<div class="card">
-                    <div class="menu-card">
-                        <img src="${imgSrc}" class="menu-img" alt="${m.title}">
-                        <div style="flex-grow:1;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <b>${m.title}</b>
-                                <div>
-                                    <button class="${isStopped ? 'btn-activate' : 'btn-stop'}" onclick="toggleStopList(${m.id}, ${isStopped})">
-                                        ${isStopped ? '✅ Aktiv' : '🛑 Stop'}
-                                    </button>
-                                    <button class="btn-edit" onclick="taomniTahrirlashgaOshirish(${m.id}, '${m.title}', ${m.price}, ${costVal}, '${m.image_url || ''}')">📝 Tahrirlash</button>
-                                    <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑</button>
-                                </div>
+                        <div>
+                            <div class="qty-box">
+                                <button class="qty-btn" onclick="changeQty(${m.id}, -1)">-</button>
+                                <span class="qty-val" id="qty-val-${m.id}">${itemQuantities[m.id]}</span>
+                                <button class="qty-btn" onclick="changeQty(${m.id}, 1)">+</button>
                             </div>
-                            <small>Sotuv: <span class="tag-price">${m.price.toLocaleString()} so'm</span></small><br>
-                            <small>Tan narx: <span class="tag-cost">${costVal.toLocaleString()} so'm</span></small>
+                            <button class="btn-order" onclick="buyurtmaBeringDirect(${m.id})">🛒 Buyurtma</button>
                         </div>
-                    </div>
-                </div>`;
-            });
-            document.getElementById('menu-with-cost-list').innerHTML = menuCards || 'Taomlar yo\'q';
+                    </div>`;
+                });
+                document.getElementById('pos-menu-grid').innerHTML = posHtml || '<p style="grid-column:1/-1;">Hali taomlar qo\'shilmagan.</p>';
+
+                let menuCards = '';
+                (menu || []).forEach(m => {
+                    const costVal = m.cost || 0;
+                    const imgSrc = m.image_url || defaultImg;
+                    const isStopped = m.is_stopped;
+
+                    menuCards += `<div class="card">
+                        <div class="menu-card">
+                            <img src="${imgSrc}" class="menu-img" alt="${m.title}">
+                            <div style="flex-grow:1;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <b>${m.title}</b>
+                                    <div>
+                                        <button class="${isStopped ? 'btn-activate' : 'btn-stop'}" onclick="toggleStopList(${m.id}, ${isStopped})">
+                                            ${isStopped ? '✅ Aktiv' : '🛑 Stop'}
+                                        </button>
+                                        <button class="btn-edit" onclick="taomniTahrirlashgaOshirish(${m.id}, '${m.title}', ${m.price}, ${costVal}, '${m.image_url || ''}')">📝 Tahrirlash</button>
+                                        <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑</button>
+                                    </div>
+                                </div>
+                                <small>Sotuv: <span class="tag-price">${m.price.toLocaleString()} so'm</span></small><br>
+                                <small>Tan narx: <span class="tag-cost">${costVal.toLocaleString()} so'm</span></small>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('menu-with-cost-list').innerHTML = menuCards || 'Taomlar yo\'q';
+            } catch (err) {
+                console.error("tanlovlarniYuklash catch error:", err);
+                document.getElementById('pos-menu-grid').innerHTML = '<p style="color:#ef4444; grid-column:1/-1;">Tarmoqda xatolik yuz berdi.</p>';
+            }
         }
 
         async function buyurtmaBeringDirect(menu_id) {
@@ -1075,7 +1097,8 @@
 
                 alert(`✅ Stol #${tableNum}: ${qty}x ${menuItem.title} oshxonaga yuborildi!`);
                 itemQuantities[menu_id] = 1;
-                document.getElementById(`qty-val-${menu_id}`).innerText = 1;
+                const qtyEl = document.getElementById(`qty-val-${menu_id}`);
+                if(qtyEl) qtyEl.innerText = 1;
             }
         }
 
@@ -1089,7 +1112,6 @@
                 return alert("Iltimos, sana, vaqt, taom nomi va jami summani to'ldiring!");
             }
 
-            // Sana vaqtini UTC formatga o'tkazish uchun moslab yuboramiz (+5 soat qo'shib yozamiz)
             let localDate = new Date(dateVal);
             let correctedIsoString = new Date(localDate.getTime() + (5 * 60 * 60 * 1000)).toISOString();
 
@@ -1137,157 +1159,165 @@
         }
 
         async function omborniYuklash() {
-            const { data } = await db.from('ingredients').select('*');
-            let html = '';
-            (data || []).forEach(i => {
-                html += `<div class="card"><b>${i.name}</b>: ${i.quantity} ${i.unit} (${i.cost_per_unit || 0} so'm)</div>`;
-            });
-            document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
+            try {
+                const { data } = await db.from('ingredients').select('*');
+                let html = '';
+                (data || []).forEach(i => {
+                    html += `<div class="card"><b>${i.name}</b>: ${i.quantity} ${i.unit} (${i.cost_per_unit || 0} so'm)</div>`;
+                });
+                document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
+            } catch (err) {
+                console.log("Ombor load error:", err);
+            }
         }
 
         async function oshxonaniYuklash(isAutoCheck = false, newOrderText = '') {
-            const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
-            
-            let activeHtml = '';
-            let pendingCashHtml = '';
-            let dailyGroups = {};
-            let currentActiveCount = 0;
+            try {
+                const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
+                
+                let activeHtml = '';
+                let pendingCashHtml = '';
+                let dailyGroups = {};
+                let currentActiveCount = 0;
 
-            (sales || []).forEach((s) => {
-                const statusStr = s.status || '';
-                const isReady = statusStr.includes('TAYYOR BO\'LDI') || statusStr.includes('[KURYERGA BERILDI]') || statusStr.includes('[Eski Savdo Arxivi]');
-                const timeStr = getTashkentTimeString(s.created_at);
-                const dateStr = getTashkentDateString(s.created_at);
+                (sales || []).forEach((s) => {
+                    const statusStr = s.status || '';
+                    const isReady = statusStr.includes('TAYYOR BO\'LDI') || statusStr.includes('[KURYERGA BERILDI]') || statusStr.includes('[Eski Savdo Arxivi]');
+                    const timeStr = getTashkentTimeString(s.created_at);
+                    const dateStr = getTashkentDateString(s.created_at);
 
-                const isPendingPayment = s.is_paid === false;
+                    const isPendingPayment = s.is_paid === false;
 
-                const isDeliveryOrder = statusStr.toLowerCase().includes('dostavka') || 
-                                        statusStr.toLowerCase().includes('yetkazish') || 
-                                        statusStr.toLowerCase().includes('manzil') ||
-                                        statusStr.includes('NAQD');
+                    const isDeliveryOrder = statusStr.toLowerCase().includes('dostavka') || 
+                                            statusStr.toLowerCase().includes('yetkazish') || 
+                                            statusStr.toLowerCase().includes('manzil') ||
+                                            statusStr.includes('NAQD');
 
-                let paymentStatusBadge = '';
-                if (statusStr.includes('[Eski Savdo Arxivi]')) {
-                    paymentStatusBadge = `<span style="background:rgba(59, 130, 246, 0.2); color:#3b82f6; border:1px solid #3b82f6; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">📓 ESKI SAVDO ARXIVI</span>`;
-                } else if (statusStr.toUpperCase().includes('NAQD')) {
-                    paymentStatusBadge = `<span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; border:1px solid #f59e0b; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">NAQD PUL</span>`;
-                } else {
-                    paymentStatusBadge = `<span style="background:rgba(16, 185, 129, 0.2); color:#10b981; border:1px solid #10b981; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">TULANGAN</span>`;
-                }
-
-                if (isPendingPayment) {
-                    const receiptBtn = getReceiptButton(s);
-                    const yandexBtn = getYandexButton(s);
-                    pendingCashHtml += `<div class="card" style="border: 1px solid #f59e0b;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <b>⏰ ${timeStr}</b>
-                            <span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold;">💵 TO'LOV KUTILMOQDA</span>
-                        </div>
-                        <p style="margin-bottom:6px;">${paymentStatusBadge}</p>
-                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${parseAndFormatOrderText(statusStr)}</p>
-                        <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
-                        <div style="margin-top: 6px;">
-                            ${receiptBtn}
-                            ${yandexBtn}
-                        </div>
-
-                        <div class="kitchen-actions">
-                            <button class="btn-ready" onclick="kassagaTasdiqlash(${s.id})" style="background:#f59e0b; color:#000;">✅ TO'LANDI (Kassaga qo'shish)</button>
-                            <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Rad etish</button>
-                        </div>
-                    </div>`;
-                } else if (!isReady) {
-                    currentActiveCount++;
-                    const receiptBtn = getReceiptButton(s);
-                    const yandexBtn = getYandexButton(s);
-
-                    let actionButtonHtml = '';
-                    if (isDeliveryOrder) {
-                        actionButtonHtml = `<button class="btn-ready" onclick="kuryergaBerildi(${s.id}, '${statusStr}')" style="background:#3b82f6;">🛵 KURYERGA BERILDI</button>`;
+                    let paymentStatusBadge = '';
+                    if (statusStr.includes('[Eski Savdo Arxivi]')) {
+                        paymentStatusBadge = `<span style="background:rgba(59, 130, 246, 0.2); color:#3b82f6; border:1px solid #3b82f6; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">📓 ESKI SAVDO ARXIVI</span>`;
+                    } else if (statusStr.toUpperCase().includes('NAQD')) {
+                        paymentStatusBadge = `<span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; border:1px solid #f59e0b; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">NAQD PUL</span>`;
                     } else {
-                        actionButtonHtml = `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${statusStr}')">✅ TAYYOR BO'LDI</button>`;
+                        paymentStatusBadge = `<span style="background:rgba(16, 185, 129, 0.2); color:#10b981; border:1px solid #10b981; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">TULANGAN</span>`;
                     }
 
-                    activeHtml += `<div class="card">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                            <b>⏰ ${timeStr}</b>
-                            <span class="status-pending">⏱ TAYYORLANMOQDA</span>
-                        </div>
-                        <div style="margin-bottom:6px;">${paymentStatusBadge}</div>
-                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff; line-height: 1.4;">${parseAndFormatOrderText(statusStr)}</p>
-                        <p style="margin-top:4px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
-                        <div style="margin-top: 8px;">
-                            ${receiptBtn}
-                            ${yandexBtn}
-                        </div>
-
-                        <div class="kitchen-actions">
-                            ${actionButtonHtml}
-                            <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
-                        </div>
-                    </div>`;
-                } else {
-                    if (!dailyGroups[dateStr]) {
-                        dailyGroups[dateStr] = { rev: 0, count: 0, orders: [] };
-                    }
-                    dailyGroups[dateStr].rev += parseFloat(s.total_amount || 0);
-                    dailyGroups[dateStr].count += 1;
-                    dailyGroups[dateStr].orders.push(s);
-                }
-            });
-
-            if (isAutoCheck && currentActiveCount > lastKnownOrderCount && lastKnownOrderCount !== 0) {
-                playNotificationSoundAndPush(newOrderText);
-            }
-            lastKnownOrderCount = currentActiveCount;
-
-            document.getElementById('kitchen-orders-list').innerHTML = activeHtml || '<p style="color:#a1a1aa; padding:10px 0;">Hozircha tayyorlanayotgan faol buyurtmalar yo\'q.</p>';
-            document.getElementById('pending-cash-orders-list').innerHTML = pendingCashHtml || '<p style="color:#a1a1aa; padding:10px 0;">Tasdiqlashni kutayotgan naqd/onlayn buyurtmalar yo\'q.</p>';
-
-            let historyHtml = '';
-            const sortedDates = Object.keys(dailyGroups).sort().reverse();
-
-            sortedDates.forEach(date => {
-                const item = dailyGroups[date];
-                let ordersInsideHtml = '';
-
-                item.orders.forEach(ord => {
-                    const timeStr = getTashkentTimeString(ord.created_at);
-                    const receiptBtn = getReceiptButton(ord);
-                    const yandexBtn = getYandexButton(ord);
-
-                    let deleteArchiveBtn = '';
-                    if (ord.status && ord.status.includes('[Eski Savdo Arxivi]')) {
-                        deleteArchiveBtn = `<button class="btn-delete" onclick="buyurtmaniBekorQilish(${ord.id})" style="margin-top:4px;">🗑 O'chirish (Asliga qaytarish)</button>`;
-                    }
-
-                    ordersInsideHtml += `
-                        <div style="padding: 8px 0; border-bottom: 1px dashed rgba(212, 175, 55, 0.2);">
-                            <div style="display:flex; justify-content:space-between; font-size:13px;">
-                                <span><b>⏰ ${timeStr}</b> - ${parseAndFormatOrderText(ord.status)}</span>
-                                <b style="color:var(--gold-text);">${Number(ord.total_amount || 0).toLocaleString()} so'm</b>
+                    if (isPendingPayment) {
+                        const receiptBtn = getReceiptButton(s);
+                        const yandexBtn = getYandexButton(s);
+                        pendingCashHtml += `<div class="card" style="border: 1px solid #f59e0b;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <b>⏰ ${timeStr}</b>
+                                <span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold;">💵 TO'LOV KUTILMOQDA</span>
                             </div>
-                            <div style="margin-top: 4px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                            <p style="margin-bottom:6px;">${paymentStatusBadge}</p>
+                            <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${parseAndFormatOrderText(statusStr)}</p>
+                            <p style="margin-top:2px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
+                            <div style="margin-top: 6px;">
                                 ${receiptBtn}
                                 ${yandexBtn}
-                                ${deleteArchiveBtn}
                             </div>
+
+                            <div class="kitchen-actions">
+                                <button class="btn-ready" onclick="kassagaTasdiqlash(${s.id})" style="background:#f59e0b; color:#000;">✅ TO'LANDI (Kassaga qo'shish)</button>
+                                <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Rad etish</button>
+                            </div>
+                        </div>`;
+                    } else if (!isReady) {
+                        currentActiveCount++;
+                        const receiptBtn = getReceiptButton(s);
+                        const yandexBtn = getYandexButton(s);
+
+                        let actionButtonHtml = '';
+                        if (isDeliveryOrder) {
+                            actionButtonHtml = `<button class="btn-ready" onclick="kuryergaBerildi(${s.id}, '${statusStr}')" style="background:#3b82f6;">🛵 KURYERGA BERILDI</button>`;
+                        } else {
+                            actionButtonHtml = `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${statusStr}')">✅ TAYYOR BO'LDI</button>`;
+                        }
+
+                        activeHtml += `<div class="card">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <b>⏰ ${timeStr}</b>
+                                <span class="status-pending">⏱ TAYYORLANMOQDA</span>
+                            </div>
+                            <div style="margin-bottom:6px;">${paymentStatusBadge}</div>
+                            <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff; line-height: 1.4;">${parseAndFormatOrderText(statusStr)}</p>
+                            <p style="margin-top:4px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
+                            <div style="margin-top: 8px;">
+                                ${receiptBtn}
+                                ${yandexBtn}
+                            </div>
+
+                            <div class="kitchen-actions">
+                                ${actionButtonHtml}
+                                <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
+                            </div>
+                        </div>`;
+                    } else {
+                        if (!dailyGroups[dateStr]) {
+                            dailyGroups[dateStr] = { rev: 0, count: 0, orders: [] };
+                        }
+                        dailyGroups[dateStr].rev += parseFloat(s.total_amount || 0);
+                        dailyGroups[dateStr].count += 1;
+                        dailyGroups[dateStr].orders.push(s);
+                    }
+                });
+
+                if (isAutoCheck && currentActiveCount > lastKnownOrderCount && lastKnownOrderCount !== 0) {
+                    playNotificationSoundAndPush(newOrderText);
+                }
+                lastKnownOrderCount = currentActiveCount;
+
+                document.getElementById('kitchen-orders-list').innerHTML = activeHtml || '<p style="color:#a1a1aa; padding:10px 0;">Hozircha tayyorlanayotgan faol buyurtmalar yo\'q.</p>';
+                document.getElementById('pending-cash-orders-list').innerHTML = pendingCashHtml || '<p style="color:#a1a1aa; padding:10px 0;">Tasdiqlashni kutayotgan naqd/onlayn buyurtmalar yo\'q.</p>';
+
+                let historyHtml = '';
+                const sortedDates = Object.keys(dailyGroups).sort().reverse();
+
+                sortedDates.forEach(date => {
+                    const item = dailyGroups[date];
+                    let ordersInsideHtml = '';
+
+                    item.orders.forEach(ord => {
+                        const timeStr = getTashkentTimeString(ord.created_at);
+                        const receiptBtn = getReceiptButton(ord);
+                        const yandexBtn = getYandexButton(ord);
+
+                        let deleteArchiveBtn = '';
+                        if (ord.status && ord.status.includes('[Eski Savdo Arxivi]')) {
+                            deleteArchiveBtn = `<button class="btn-delete" onclick="buyurtmaniBekorQilish(${ord.id})" style="margin-top:4px;">🗑 O'chirish (Asliga qaytarish)</button>`;
+                        }
+
+                        ordersInsideHtml += `
+                            <div style="padding: 8px 0; border-bottom: 1px dashed rgba(212, 175, 55, 0.2);">
+                                <div style="display:flex; justify-content:space-between; font-size:13px;">
+                                    <span><b>⏰ ${timeStr}</b> - ${parseAndFormatOrderText(ord.status)}</span>
+                                    <b style="color:var(--gold-text);">${Number(ord.total_amount || 0).toLocaleString()} so'm</b>
+                                </div>
+                                <div style="margin-top: 4px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                                    ${receiptBtn}
+                                    ${yandexBtn}
+                                    ${deleteArchiveBtn}
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    historyHtml += `
+                        <div class="daily-green-block">
+                            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #10b981; padding-bottom:8px; margin-bottom:10px;">
+                                <h4 style="color:#10b981; margin:0; font-size:15px;">📅 Sana: ${date}</h4>
+                                <span style="color:var(--gold-text); font-weight:bold; font-size:13px;">Savdo: ${item.rev.toLocaleString()} so'm (${item.count} ta)</span>
+                            </div>
+                            ${ordersInsideHtml}
                         </div>
                     `;
                 });
 
-                historyHtml += `
-                    <div class="daily-green-block">
-                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #10b981; padding-bottom:8px; margin-bottom:10px;">
-                            <h4 style="color:#10b981; margin:0; font-size:15px;">📅 Sana: ${date}</h4>
-                            <span style="color:var(--gold-text); font-weight:bold; font-size:13px;">Savdo: ${item.rev.toLocaleString()} so'm (${item.count} ta)</span>
-                        </div>
-                        ${ordersInsideHtml}
-                    </div>
-                `;
-            });
-
-            document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali bajarilgan buyurtmalar yo\'q.</i>';
+                document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali bajarilgan buyurtmalar yo\'q.</i>';
+            } catch (err) {
+                console.log("Oshxona load error:", err);
+            }
         }
 
         async function kassagaTasdiqlash(id) {
@@ -1342,81 +1372,89 @@
         }
 
         async function hisobotniYuklash() {
-            const todayStr = getTashkentDateString();
-            document.getElementById('today-date-str').innerText = todayStr;
+            try {
+                const todayStr = getTashkentDateString();
+                document.getElementById('today-date-str').innerText = todayStr;
 
-            const { data: sales } = await db.from('sales').select('*');
+                const { data: sales } = await db.from('sales').select('*');
 
-            let todayRev = 0, todayCost = 0, todayProfit = 0;
-            let dailyFinancials = {};
+                let todayRev = 0, todayCost = 0, todayProfit = 0;
+                let dailyFinancials = {};
 
-            (sales || []).forEach(s => {
-                if (s.is_paid === false) return;
+                (sales || []).forEach(s => {
+                    if (s.is_paid === false) return;
 
-                const dateStr = getTashkentDateString(s.created_at);
-                const rev = parseFloat(s.total_amount || 0);
-                const cost = parseFloat(s.total_cost || 0);
-                const profit = parseFloat(s.profit || (rev - cost));
+                    const dateStr = getTashkentDateString(s.created_at);
+                    const rev = parseFloat(s.total_amount || 0);
+                    const cost = parseFloat(s.total_cost || 0);
+                    const profit = parseFloat(s.profit || (rev - cost));
 
-                if (dateStr === todayStr) {
-                    todayRev += rev;
-                    todayCost += cost;
-                    todayProfit += profit;
-                }
+                    if (dateStr === todayStr) {
+                        todayRev += rev;
+                        todayCost += cost;
+                        todayProfit += profit;
+                    }
 
-                if (!dailyFinancials[dateStr]) {
-                    dailyFinancials[dateStr] = { rev: 0, cost: 0, profit: 0, count: 0 };
-                }
-                dailyFinancials[dateStr].rev += rev;
-                dailyFinancials[dateStr].cost += cost;
-                dailyFinancials[dateStr].profit += profit;
-                dailyFinancials[dateStr].count += 1;
-            });
+                    if (!dailyFinancials[dateStr]) {
+                        dailyFinancials[dateStr] = { rev: 0, cost: 0, profit: 0, count: 0 };
+                    }
+                    dailyFinancials[dateStr].rev += rev;
+                    dailyFinancials[dateStr].cost += cost;
+                    dailyFinancials[dateStr].profit += profit;
+                    dailyFinancials[dateStr].count += 1;
+                });
 
-            document.getElementById('rep-rev').innerText = todayRev.toLocaleString();
-            document.getElementById('rep-cost').innerText = todayCost.toLocaleString();
-            document.getElementById('rep-profit').innerText = todayProfit.toLocaleString();
+                document.getElementById('rep-rev').innerText = todayRev.toLocaleString();
+                document.getElementById('rep-cost').innerText = todayCost.toLocaleString();
+                document.getElementById('rep-profit').innerText = todayProfit.toLocaleString();
 
-            let cashHistoryHtml = '';
-            const sortedDates = Object.keys(dailyFinancials).sort().reverse();
+                let cashHistoryHtml = '';
+                const sortedDates = Object.keys(dailyFinancials).sort().reverse();
 
-            sortedDates.forEach(date => {
-                const item = dailyFinancials[date];
-                cashHistoryHtml += `
-                    <div class="cash-history-card">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                            <b style="color:var(--gold-text); font-size:15px;">📅 ${date}</b>
-                            <span style="font-size:12px; color:#aaa;">${item.count} ta yozuv</span>
+                sortedDates.forEach(date => {
+                    const item = dailyFinancials[date];
+                    cashHistoryHtml += `
+                        <div class="cash-history-card">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <b style="color:var(--gold-text); font-size:15px;">📅 ${date}</b>
+                                <span style="font-size:12px; color:#aaa;">${item.count} ta yozuv</span>
+                            </div>
+                            <div style="font-size:13px; color:#d4d4d8; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:6px;">
+                                <div>Savdo:<br><b class="tag-price">${item.rev.toLocaleString()}</b></div>
+                                <div>Tan narx:<br><b class="tag-cost">${item.cost.toLocaleString()}</b></div>
+                                <div>Saf foyda:<br><b style="color:#34d399;">${item.profit.toLocaleString()}</b></div>
+                            </div>
                         </div>
-                        <div style="font-size:13px; color:#d4d4d8; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:6px;">
-                            <div>Savdo:<br><b class="tag-price">${item.rev.toLocaleString()}</b></div>
-                            <div>Tan narx:<br><b class="tag-cost">${item.cost.toLocaleString()}</b></div>
-                            <div>Saf foyda:<br><b style="color:#34d399;">${item.profit.toLocaleString()}</b></div>
-                        </div>
-                    </div>
-                `;
-            });
+                    `;
+                });
 
-            document.getElementById('cash-history-list').innerHTML = cashHistoryHtml || '<i>Kassa tarixi topilmadi.</i>';
+                document.getElementById('cash-history-list').innerHTML = cashHistoryHtml || '<i>Kassa tarixi topilmadi.</i>';
+            } catch (err) {
+                console.log("Hisobot load error:", err);
+            }
         }
 
         function initRealtimeListener() {
-            db.channel('public:sales')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sales' }, payload => {
-                    playNotificationSoundAndPush(payload.new.status);
-                    oshxonaniYuklash();
-                })
-                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sales' }, payload => {
-                    oshxonaniYuklash();
-                })
-                .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'sales' }, payload => {
-                    oshxonaniYuklash();
-                })
-                .subscribe();
+            try {
+                db.channel('public:sales')
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sales' }, payload => {
+                        playNotificationSoundAndPush(payload.new.status);
+                        oshxonaniYuklash();
+                    })
+                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sales' }, payload => {
+                        oshxonaniYuklash();
+                    })
+                    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'sales' }, payload => {
+                        oshxonaniYuklash();
+                    })
+                    .subscribe();
 
-            setInterval(() => {
-                oshxonaniYuklash(true, "Yangi buyurtma keldi!");
-            }, 5000);
+                setInterval(() => {
+                    oshxonaniYuklash(true, "Yangi buyurtma keldi!");
+                }, 5000);
+            } catch (e) {
+                console.log("Realtime error:", e);
+            }
         }
 
         window.addEventListener('DOMContentLoaded', () => {
