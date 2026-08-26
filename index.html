@@ -348,6 +348,7 @@
             <button id="tab-kitchen" onclick="switchTab('kitchen')">👨‍🍳 Oshxona</button>
             <button id="tab-recipes" onclick="switchTab('recipes')">📖 Menyu va Stop-List</button>
             <button id="tab-stock" onclick="switchTab('stock')">📦 Ombor</button>
+            <button id="tab-market" onclick="switchTab('market')">🛒 Bozor</button>
             <button id="tab-reports" onclick="switchTab('reports')">📊 Kassa va Sozlamalar</button>
         </div>
 
@@ -450,7 +451,44 @@
             <div id="stock-list" style="margin-top:10px;"></div>
         </div>
 
-        <!-- 5. KASSA VA SOZLAMALAR -->
+        <!-- 5. BOZOR OYNASI (YANGI) -->
+        <div id="market" class="tab-content">
+            <h3 style="color:var(--gold-text); margin-bottom:10px;">🛒 Bozor Xaridlari (Haftalik / Kunlik)</h3>
+            <p style="font-size: 12px; color: #aaa; margin-bottom: 12px;">Bozorga qilingan xaridlarni sana va vaqt asosida dona, kg, L va narxlarda kiriting. Xarid omborga yoki xarajatlarga hisoblanadi:</p>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div>
+                    <label style="font-size: 11px; color: #aaa;">Sana:</label>
+                    <input type="date" id="market-date" style="background:#000; color:#fff; margin-bottom:8px;">
+                </div>
+                <div>
+                    <label style="font-size: 11px; color: #aaa;">Vaqt:</label>
+                    <input type="time" id="market-time" value="09:00" style="background:#000; color:#fff; margin-bottom:8px;">
+                </div>
+            </div>
+
+            <input type="text" id="market-item-name" placeholder="Mahsulot nomi (masalan: Go'sht, Un, Yog')" style="background:#000; color:#fff;">
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <input type="number" step="any" id="market-qty" placeholder="Miqdori (masalan: 5)" style="background:#000; color:#fff;">
+                <select id="market-unit" style="background:#000; color:#fff; margin-top:6px; padding:12px;">
+                    <option value="kg">kg (Kilogramm)</option>
+                    <option value="dona">dona (Dona)</option>
+                    <option value="L">L (Litr)</option>
+                    <option value="gr">gr (Gramm)</option>
+                    <option value="paket">paket (Paket)</option>
+                </select>
+            </div>
+
+            <input type="number" id="market-total-price" placeholder="Umumiy narxi (so'mda, masalan: 150000)" style="background:#000; color:#fff;">
+
+            <button class="btn-save" onclick="bozorXaridiniQoshish()">🛒 Xaridni Saqlash</button>
+
+            <h4 style="margin-top:20px; color:var(--gold-text);">📋 Bozor Xaridlari Tarixi:</h4>
+            <div id="market-history-list" style="margin-top:10px;">Yuklanmoqda...</div>
+        </div>
+
+        <!-- 6. KASSA VA SOZLAMALAR -->
         <div id="reports" class="tab-content">
             <h3 style="color:var(--gold-text);">📊 Bugungi Kassa (<span id="today-date-str"></span>)</h3>
             <div class="card" style="margin-top:10px;">Bugungi Tushum: <b id="rep-rev" class="tag-price">0</b> so'm</div>
@@ -651,6 +689,7 @@
             document.getElementById(`tab-${id}`).classList.add('active-tab');
 
             if(id === 'stock') omborniYuklash();
+            if(id === 'market') bozorTarixiniYuklash();
             if(id === 'pos' || id === 'recipes') tanlovlarniYuklash();
             if(id === 'kitchen') oshxonaniYuklash();
             if(id === 'reports') {
@@ -1182,6 +1221,83 @@
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
+        // --- BOZOR XARIDLARI FUNKSIYALARI ---
+        async function bozorXaridiniQoshish() {
+            const dateVal = document.getElementById('market-date').value || getTashkentDateString();
+            const timeVal = document.getElementById('market-time').value || '09:00';
+            const itemName = document.getElementById('market-item-name').value;
+            const qty = parseFloat(document.getElementById('market-qty').value);
+            const unit = document.getElementById('market-unit').value;
+            const totalPrice = parseFloat(document.getElementById('market-total-price').value);
+
+            if(!itemName || isNaN(qty) || isNaN(totalPrice)) {
+                return alert("Mahsulot nomi, miqdori va umumiy narxini to'liq kiriting!");
+            }
+
+            const fullDateTime = `${dateVal}T${timeVal}:00+05:00`;
+            const unitPrice = totalPrice / qty;
+
+            // 1. sales jadvaliga xarajat (tan narx / bozor xaridi) sifatida yozamiz
+            const { error: salesErr } = await db.from('sales').insert([{
+                total_amount: 0,
+                total_cost: totalPrice,
+                profit: -totalPrice,
+                status: `[BOZOR XARIDI] ${qty} ${unit} ${itemName}`,
+                created_at: fullDateTime
+            }]);
+
+            if(salesErr) {
+                return alert("Xatolik: " + salesErr.message);
+            }
+
+            // 2. Omborga ham qo'shib yoki yangilab qo'yamiz
+            const { data: existingIng } = await db.from('ingredients').select('*').ilike('name', itemName).maybeSingle();
+            if(existingIng) {
+                let newQty = parseFloat(existingIng.quantity || 0) + qty;
+                await db.from('ingredients').update({ 
+                    quantity: newQty, 
+                    cost_per_unit: unitPrice 
+                }).eq('id', existingIng.id);
+            } else {
+                await db.from('ingredients').insert([{
+                    name: itemName,
+                    quantity: qty,
+                    unit: unit,
+                    cost_per_unit: unitPrice
+                }]);
+            }
+
+            alert("✅ Bozor xaridi muvaffaqiyatli saqlandi va omborga qo'shildi!");
+            document.getElementById('market-item-name').value = '';
+            document.getElementById('market-qty').value = '';
+            document.getElementById('market-total-price').value = '';
+            bozorTarixiniYuklash();
+        }
+
+        async function bozorTarixiniYuklash() {
+            const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
+            let marketHtml = '';
+
+            (sales || []).forEach(s => {
+                if(s.status && s.status.includes('[BOZOR XARIDI]')) {
+                    const timeStr = getTashkentTimeString(s.created_at);
+                    const dateStr = getTashkentDateString(s.created_at);
+                    marketHtml += `
+                        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <b style="color:var(--gold-text);">${dateStr} (${timeStr})</b><br>
+                                <span>${parseAndFormatOrderText(s.status)}</span><br>
+                                <small style="color:#f59e0b;">Xarajat: <b>${Number(s.total_cost || 0).toLocaleString()} so'm</b></small>
+                            </div>
+                            <button onclick="bittaSavdoniOchirish(${s.id}); setTimeout(bozorTarixiniYuklash, 500);" style="background:#dc2626; color:#fff; border:none; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">🗑</button>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('market-history-list').innerHTML = marketHtml || '<i>Hali bozor xaridlari kiritilmagan.</i>';
+        }
+
         async function oshxonaniYuklash(isAutoCheck = false, newOrderText = '') {
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
             
@@ -1191,6 +1307,10 @@
 
             (sales || []).forEach((s) => {
                 const statusStr = s.status || '';
+                
+                // Bozor xaridlarini oshxona faol buyurtmalariga chiqarmaymiz
+                if(statusStr.includes('[BOZOR XARIDI]')) return;
+
                 const isReady = statusStr.includes('TAYYOR BO\'LDI') || statusStr.includes('[KURYERGA BERILDI]') || statusStr.includes('[ESKI SAVDO]');
                 const timeStr = getTashkentTimeString(s.created_at);
                 const dateStr = getTashkentDateString(s.created_at);
@@ -1296,7 +1416,7 @@
         }
 
         async function bittaSavdoniOchirish(id) {
-            if(confirm(`ID: ${id} bo'lgan ushbu savdoni o'chirmoqchimisiz?`)) {
+            if(confirm(`ID: ${id} bo'lgan ushbu yozuvni o'chirmoqchimisiz?`)) {
                 const { error } = await db.from('sales').delete().eq('id', id);
                 if(error) alert("Xatolik: " + error.message);
                 else {
@@ -1395,7 +1515,7 @@
                 dailyFinancials[dateStr].rev += rev;
                 dailyFinancials[dateStr].cost += cost;
                 dailyFinancials[dateStr].profit += profit;
-                dailyFinancials[dateStr].count += 1;
+                if(rev > 0) dailyFinancials[dateStr].count += 1;
             });
 
             document.getElementById('rep-rev').innerText = todayRev.toLocaleString();
@@ -1421,7 +1541,7 @@
                         </div>
                         <div style="font-size:13px; color:#d4d4d8; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:6px;">
                             <div>Savdo:<br><b class="tag-price">${item.rev.toLocaleString()}</b></div>
-                            <div>Tan narx:<br><b class="tag-cost">${item.cost.toLocaleString()}</b></div>
+                            <div>Xarajat/Tan narx:<br><b class="tag-cost">${item.cost.toLocaleString()}</b></div>
                             <div>Saf foyda:<br><b style="color:#34d399;">${item.profit.toLocaleString()}</b></div>
                         </div>
                     </div>
