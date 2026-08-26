@@ -269,6 +269,7 @@
         .btn-ready { background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 2; }
         .btn-cancel { background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; }
         .btn-delete { background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .btn-edit { background: #3b82f6; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
         
         .btn-stop { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .btn-activate { background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
@@ -383,6 +384,32 @@
             </div>
             <div id="kitchen-orders-list">Yuklanmoqda...</div>
 
+            <!-- ESKI SAVDOLARNI QO'SHISH BO'LIMI -->
+            <div style="background: rgba(212, 175, 55, 0.05); border: 1px dashed #d4af37; padding: 14px; border-radius: 14px; margin: 20px 0;">
+                <h3 style="color: var(--gold-text); font-size: 16px; margin-bottom: 8px;">📓 Daftardagi Eski Savdolarni Kiritish</h3>
+                <p style="font-size: 11px; color: #aaa; margin-bottom: 10px;">Ilova ochilishidan avvalgi kunlardagi savdolarni sana, vaqt va summa bilan kiritib kassa tarixiga qo'shing:</p>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div>
+                        <label style="font-size: 11px; color: #aaa;">Sana:</label>
+                        <input type="date" id="old-sale-date" style="background:#000; color:#fff; margin-bottom:8px;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; color: #aaa;">Vaqt:</label>
+                        <input type="time" id="old-sale-time" value="12:00" style="background:#000; color:#fff; margin-bottom:8px;">
+                    </div>
+                </div>
+                
+                <input type="text" id="old-sale-desc" placeholder="Menyu nomi / Izoh (masalan: 5x Hotdog)" style="background:#000; color:#fff;">
+                <input type="number" id="old-sale-amount" placeholder="Umumiy summa (so'mda)" style="background:#000; color:#fff;">
+                <input type="number" id="old-sale-cost" placeholder="Tan narxi (ixtiyoriy, masalan: 0)" style="background:#000; color:#fff;">
+
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-save" onclick="eskiSavdoniQoshish()" style="flex: 2; margin-top:0;">💾 Eski Savdoni Qo'shish</button>
+                    <button onclick="eskiSavdolarniTozalash()" style="flex: 1; background: #dc2626; color: #fff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 11px;">🗑 Asliga Qaytarish (O'chirish)</button>
+                </div>
+            </div>
+
             <hr style="margin: 20px 0; border-color:rgba(212, 175, 55, 0.2);">
             <h3 style="color:var(--gold-text); margin-bottom:12px;">💵 Naqd pul va Onlayn to'lov Buyurtmalari (Tasdiqlash)</h3>
             <div id="pending-cash-orders-list">Yuklanmoqda...</div>
@@ -394,7 +421,8 @@
 
         <!-- 3. MENYU VA STOP-LIST -->
         <div id="recipes" class="tab-content">
-            <h3 style="color:var(--gold-text); margin-bottom:10px;">Yangi Taom Yaratish</h3>
+            <h3 id="menu-form-title" style="color:var(--gold-text); margin-bottom:10px;">Yangi Taom Yaratish</h3>
+            <input type="hidden" id="edit-menu-id" value="">
             <input type="text" id="menu-title" placeholder="Taom nomi (masalan: Classic Hotdog)">
             <input type="number" id="menu-price" placeholder="Sotuv narxi (masalan: 12000 so'm)">
             <input type="number" id="menu-cost" placeholder="Tan narxi (masalan: 6000 so'm)">
@@ -402,7 +430,8 @@
             <label style="font-size:13px; font-weight:bold; color:#d4d4d8;">📱 Galereyadan rasm tanlang:</label>
             <input type="file" id="menu-file" accept="image/*">
             
-            <button class="btn-save" id="btn-save-menu" onclick="taomQoshish()">Taomni Saqlash</button>
+            <button class="btn-save" id="btn-save-menu" onclick="taomniSaqlashYokiQoshish()">Taomni Saqlash</button>
+            <button id="btn-cancel-edit" onclick="taomTahririniBekorQilish()" style="display:none; width:100%; padding:10px; background:#4b5563; color:#fff; border:none; border-radius:10px; font-weight:bold; cursor:pointer; margin-top:6px;">Tahrirlashni Bekor Qilish</button>
 
             <h4 style="margin-top:15px; color:var(--gold-text);">Mavjud Taomlar Sozlamasi va Stop-List:</h4>
             <div id="menu-with-cost-list" style="margin-top:10px;"></div>
@@ -822,7 +851,9 @@
             else alert("✅ Kafe joylashuvi va Dostavka zonalari saqlandi!");
         }
 
-        async function taomQoshish() {
+        // --- TAOM QO'SHISH VA TAHRIRLASH ---
+        async function taomniSaqlashYokiQoshish() {
+            const editId = document.getElementById('edit-menu-id').value;
             const title = document.getElementById('menu-title').value;
             const price = parseFloat(document.getElementById('menu-price').value);
             const cost = parseFloat(document.getElementById('menu-cost').value) || 0;
@@ -832,6 +863,10 @@
             if(!title || isNaN(price)) return alert("Taom nomi va sotuv narxini kiriting!");
 
             let image_url = '';
+            if(editId) {
+                const { data: currentMenu } = await db.from('menu').select('image_url').eq('id', editId).single();
+                if(currentMenu) image_url = currentMenu.image_url;
+            }
 
             if(fileInput.files.length > 0) {
                 saveBtn.innerText = "⏳ Rasm yuklanmoqda...";
@@ -856,20 +891,60 @@
                 image_url = publicUrlData.publicUrl;
             }
 
-            const { error } = await db.from('menu').insert([{ title, price, cost, image_url, is_stopped: false }]);
-            
-            saveBtn.innerText = "Taomni Saqlash";
-            saveBtn.disabled = false;
+            if(editId) {
+                // Yangilash (Tahrirlash)
+                const { error } = await db.from('menu').update({ title, price, cost, image_url }).eq('id', editId);
+                saveBtn.innerText = "Taomni Saqlash";
+                saveBtn.disabled = false;
 
-            if(error) alert("Xato: " + error.message);
-            else { 
-                alert("Taom saqlandi!"); 
-                document.getElementById('menu-title').value = '';
-                document.getElementById('menu-price').value = '';
-                document.getElementById('menu-cost').value = '';
-                fileInput.value = '';
-                tanlovlarniYuklash(); 
+                if(error) alert("Xato: " + error.message);
+                else {
+                    alert("✅ Taom muvaffaqiyatli tahrirlandi!");
+                    taomTahririniBekorQilish();
+                    tanlovlarniYuklash();
+                }
+            } else {
+                // Yangi qo'shish
+                const { error } = await db.from('menu').insert([{ title, price, cost, image_url, is_stopped: false }]);
+                saveBtn.innerText = "Taomni Saqlash";
+                saveBtn.disabled = false;
+
+                if(error) alert("Xato: " + error.message);
+                else { 
+                    alert("✅ Taom saqlandi!"); 
+                    document.getElementById('menu-title').value = '';
+                    document.getElementById('menu-price').value = '';
+                    document.getElementById('menu-cost').value = '';
+                    fileInput.value = '';
+                    tanlovlarniYuklash(); 
+                }
             }
+        }
+
+        async function taomniTahrirlashgaOlish(id) {
+            const { data: m } = await db.from('menu').select('*').eq('id', id).single();
+            if(!m) return alert("Taom topilmadi!");
+
+            document.getElementById('edit-menu-id').value = m.id;
+            document.getElementById('menu-title').value = m.title;
+            document.getElementById('menu-price').value = m.price;
+            document.getElementById('menu-cost').value = m.cost || '';
+            document.getElementById('menu-form-title').innerText = "📝 Taomni Tahrirlash";
+            document.getElementById('btn-save-menu').innerText = "O'zgarishlarni Saqlash";
+            document.getElementById('btn-cancel-edit').style.display = 'block';
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function taomTahririniBekorQilish() {
+            document.getElementById('edit-menu-id').value = '';
+            document.getElementById('menu-title').value = '';
+            document.getElementById('menu-price').value = '';
+            document.getElementById('menu-cost').value = '';
+            document.getElementById('menu-file').value = '';
+            document.getElementById('menu-form-title').innerText = "Yangi Taom Yaratish";
+            document.getElementById('btn-save-menu').innerText = "Taomni Saqlash";
+            document.getElementById('btn-cancel-edit').style.display = 'none';
         }
 
         async function taomniOchirish(id, title) {
@@ -932,9 +1007,10 @@
                         <div style="flex-grow:1;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <b>${m.title}</b>
-                                <div>
+                                <div style="display:flex; gap:4px;">
+                                    <button class="btn-edit" onclick="taomniTahrirlashgaOlish(${m.id})">📝 Tahrirlash</button>
                                     <button class="${isStopped ? 'btn-activate' : 'btn-stop'}" onclick="toggleStopList(${m.id}, ${isStopped})">
-                                        ${isStopped ? '✅ Aktivlash' : '🛑 Stop'}
+                                        ${isStopped ? '✅ Aktiv' : '🛑 Stop'}
                                     </button>
                                     <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑</button>
                                 </div>
@@ -967,7 +1043,8 @@
                 total_amount: totalPrice, 
                 total_cost: totalCost, 
                 profit: (totalPrice - totalCost),
-                status: orderStatus
+                status: orderStatus,
+                is_paid: true
             }]);
 
             if(error) {
@@ -978,6 +1055,67 @@
                 alert(`✅ Stol #${tableNum}: ${qty}x ${menuItem.title} oshxonaga yuborildi!`);
                 itemQuantities[menu_id] = 1;
                 document.getElementById(`qty-val-${menu_id}`).innerText = 1;
+            }
+        }
+
+        // --- ESKI SAVDOLARNI QO'SHISH VA O'CHIRISH ---
+        async function eskiSavdoniQoshish() {
+            const dateVal = document.getElementById('old-sale-date').value;
+            const timeVal = document.getElementById('old-sale-time').value || '12:00';
+            const desc = document.getElementById('old-sale-desc').value;
+            const amount = parseFloat(document.getElementById('old-sale-amount').value);
+            const cost = parseFloat(document.getElementById('old-sale-cost').value) || 0;
+
+            if(!dateVal || !desc || isNaN(amount)) {
+                return alert("Iltimos, sana, savdo nomi va summani to'liq kiriting!");
+            }
+
+            // Sana va vaqtni to'g'ri ISO formatga o'tkazish (+5 soat Toshkent vaqti uchun hisobga olinadi)
+            const fullDateTime = `${dateVal}T${timeVal}:00+05:00`;
+
+            const { error } = await db.from('sales').insert([{
+                total_amount: amount,
+                total_cost: cost,
+                profit: (amount - cost),
+                status: `[ESKI SAVDO] ${desc}`,
+                is_paid: true,
+                created_at: fullDateTime
+            }]);
+
+            if(error) {
+                alert("Xatolik: " + error.message);
+            } else {
+                alert("✅ Eski savdo muvaffaqiyatli kiritildi va kassa tarixiga qo'shildi!");
+                document.getElementById('old-sale-desc').value = '';
+                document.getElementById('old-sale-amount').value = '';
+                document.getElementById('old-sale-cost').value = '';
+                oshxonaniYuklash();
+            }
+        }
+
+        async function eskiSavdolarniTozalash() {
+            if(confirm("Haqiqatan ham barcha eski savdo ma'lumotlarini o'chirib, asl holatiga qaytarmoqchimisiz?")) {
+                // [ESKI SAVDO] deb belgilangan yozuvlarni bazadan o'chirish
+                const { data, error } = await db.from('sales').select('id, status');
+                if(error) return alert("Xatolik: " + error.message);
+
+                let idsToDelete = [];
+                (data || []).forEach(item => {
+                    if(item.status && item.status.includes('[ESKI SAVDO]')) {
+                        idsToDelete.push(item.id);
+                    }
+                });
+
+                if(idsToDelete.length === 0) {
+                    return alert("O'chiriladigan eski savdolar topilmadi.");
+                }
+
+                for(let id of idsToDelete) {
+                    await db.from('sales').delete().eq('id', id);
+                }
+
+                alert("✅ Barcha kiritilgan eski savdolar tozalandi va asl holatiga qaytarildi!");
+                oshxonaniYuklash();
             }
         }
 
@@ -1020,13 +1158,12 @@
 
             (sales || []).forEach((s) => {
                 const statusStr = s.status || '';
-                const isReady = statusStr.includes('TAYYOR BO\'LDI') || statusStr.includes('[KURYERGA BERILDI]');
+                const isReady = statusStr.includes('TAYYOR BO\'LDI') || statusStr.includes('[KURYERGA BERILDI]') || statusStr.includes('[ESKI SAVDO]');
                 const timeStr = getTashkentTimeString(s.created_at);
                 const dateStr = getTashkentDateString(s.created_at);
 
                 const isPendingPayment = s.is_paid === false;
 
-                // Mijozlar ilovasidan kelgan yetkazib berish (dostavka) buyurtmasi ekanligini aniqlash
                 const isDeliveryOrder = statusStr.toLowerCase().includes('dostavka') || 
                                         statusStr.toLowerCase().includes('yetkazish') || 
                                         statusStr.toLowerCase().includes('manzil') ||
@@ -1065,7 +1202,6 @@
                     const receiptBtn = getReceiptButton(s);
                     const yandexBtn = getYandexButton(s);
 
-                    // Agar yetkazib berish buyurtmasi bo'lsa "Kuryerga berildi", ofitsiantniki bo'lsa "TAYYOR BO'LDI" tugmasi chiqadi
                     let actionButtonHtml = '';
                     if (isDeliveryOrder) {
                         actionButtonHtml = `<button class="btn-ready" onclick="kuryergaBerildi(${s.id}, '${statusStr}')" style="background:#3b82f6;">🛵 KURYERGA BERILDI</button>`;
