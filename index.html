@@ -454,7 +454,7 @@
         <!-- 5. BOZOR OYNASI -->
         <div id="market" class="tab-content">
             <h3 style="color:var(--gold-text); margin-bottom:10px;">🛒 Bozor Xaridlari (Haftalik / Kunlik)</h3>
-            <p style="font-size: 12px; color: #aaa; margin-bottom: 12px;">Bozorga qilingan xaridlarni sana va vaqt asosida dona, kg, L va narxlarda kiriting. Xarid omborga va xarajatlarga qo'shiladi:</p>
+            <p style="font-size: 12px; color: #aaa; margin-bottom: 12px;">Bozorga qilingan xaridlarni sana va vaqt asosida dona, kg, L va narxlarda kiriting. Xarid omborga qo'shiladi va bozor hisobotida yuritiladi:</p>
 
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div>
@@ -1289,7 +1289,6 @@
 
         async function bozorTarixiniYuklash() {
             const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
-            let marketHtml = '';
             
             let marketWeeklyCost = 0;
             let marketMonthlyCost = 0;
@@ -1299,35 +1298,52 @@
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
 
+            let marketGroups = {};
+
             (sales || []).forEach(s => {
                 if(s.status && s.status.includes('[BOZOR XARIDI]')) {
-                    const timeStr = getTashkentTimeString(s.created_at);
                     const dateStr = getTashkentDateString(s.created_at);
                     const costVal = parseFloat(s.total_cost || 0);
                     let saleDate = new Date(String(s.created_at).replace(' ', 'T'));
 
-                    if (saleDate >= sevenDaysAgo) {
-                        marketWeeklyCost += costVal;
-                    }
-                    if (saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
-                        marketMonthlyCost += costVal;
-                    }
+                    if (saleDate >= sevenDaysAgo) marketWeeklyCost += costVal;
+                    if (saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) marketMonthlyCost += costVal;
 
-                    marketHtml += `
-                        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <b style="color:var(--gold-text);">${dateStr} (${timeStr})</b><br>
-                                <span>${parseAndFormatOrderText(s.status)}</span><br>
-                                <small style="color:#f59e0b;">Xarajat: <b>${costVal.toLocaleString()} so'm</b></small>
-                            </div>
-                            <button onclick="bittaSavdoniOchirish(${s.id}); setTimeout(bozorTarixiniYuklash, 500);" style="background:#dc2626; color:#fff; border:none; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">🗑</button>
-                        </div>
-                    `;
+                    if (!marketGroups[dateStr]) marketGroups[dateStr] = [];
+                    marketGroups[dateStr].push(s);
                 }
             });
 
             document.getElementById('market-weekly-cost').innerText = marketWeeklyCost.toLocaleString() + " so'm";
             document.getElementById('market-monthly-cost').innerText = marketMonthlyCost.toLocaleString() + " so'm";
+
+            let marketHtml = '';
+            const sortedDates = Object.keys(marketGroups).sort().reverse();
+
+            sortedDates.forEach(date => {
+                let itemsHtml = '';
+                marketGroups[date].forEach(s => {
+                    const timeStr = getTashkentTimeString(s.created_at);
+                    const costVal = parseFloat(s.total_cost || 0);
+                    itemsHtml += `
+                        <div style="padding: 6px 0; border-bottom: 1px dashed rgba(16, 185, 129, 0.3); display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <b>⏰ ${timeStr}</b> - ${parseAndFormatOrderText(s.status)}<br>
+                                <small style="color:#f59e0b;">Xarajat: <b>${costVal.toLocaleString()} so'm</b></small>
+                            </div>
+                            <button onclick="bittaSavdoniOchirish(${s.id}); setTimeout(bozorTarixiniYuklash, 500);" style="background:#dc2626; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:bold; cursor:pointer;">🗑</button>
+                        </div>
+                    `;
+                });
+
+                marketHtml += `
+                    <div class="daily-green-block">
+                        <h4 style="color:#10b981; margin-bottom:8px; border-bottom:1px solid #10b981; padding-bottom:4px;">📅 Sana: ${date}</h4>
+                        ${itemsHtml}
+                    </div>
+                `;
+            });
+
             document.getElementById('market-history-list').innerHTML = marketHtml || '<i>Hali bozor xaridlari kiritilmagan.</i>';
         }
 
@@ -1516,6 +1532,8 @@
             const currentYear = now.getFullYear();
 
             (sales || []).forEach(s => {
+                if(s.status && s.status.includes('[BOZOR XARIDI]')) return;
+
                 const dateStr = getTashkentDateString(s.created_at);
                 const rev = parseFloat(s.total_amount || 0);
                 const cost = parseFloat(s.total_cost || 0);
