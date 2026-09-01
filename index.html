@@ -716,9 +716,11 @@
             }
         }
 
+        // TO'G'RILANGAN TASHKENT VAQTINI OLISH FUNKSIYALARI
         function getTashkentDate(dateInput) {
             let d = dateInput ? new Date(String(dateInput).replace(' ', 'T')) : new Date();
             if (isNaN(d.getTime())) d = new Date();
+            // 5 soat qo'shib to'g'ri Toshkent vaqtini hosil qilamiz
             return new Date(d.getTime() + (5 * 60 * 60 * 1000));
         }
 
@@ -1236,6 +1238,7 @@
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
+        // --- BOZOR OYNASI VA HISOBOTI ---
         async function bozorXaridiniQoshish() {
             const dateVal = document.getElementById('market-date').value || getTashkentDateString();
             const timeVal = document.getElementById('market-time').value || '09:00';
@@ -1627,3 +1630,4 @@
     </script>
 </body>
 </html>
+```[cite: 4]
