@@ -716,20 +716,22 @@
             }
         }
 
+        // TO'G'RILANGAN TASHKENT VAQTINI OLISH FUNKSIYALARI
+        function getTashkentDate(dateInput) {
+            let d = dateInput ? new Date(String(dateInput).replace(' ', 'T')) : new Date();
+            if (isNaN(d.getTime())) d = new Date();
+            // 5 soat qo'shib to'g'ri Toshkent vaqtini hosil qilamiz
+            return new Date(d.getTime() + (5 * 60 * 60 * 1000));
+        }
+
         function getTashkentTimeString(dateInput) {
-            if (!dateInput) return "00:00";
-            let rawStr = String(dateInput).replace(' ', 'T');
-            let d = new Date(rawStr);
-            if (isNaN(d.getTime())) return "00:00";
-            const correctedDate = new Date(d.getTime() - (5 * 60 * 60 * 1000));
-            return `${String(correctedDate.getHours()).padStart(2, '0')}:${String(correctedDate.getMinutes()).padStart(2, '0')}`;
+            let correctedDate = getTashkentDate(dateInput);
+            return `${String(correctedDate.getUTCHours()).padStart(2, '0')}:${String(correctedDate.getUTCMinutes()).padStart(2, '0')}`;
         }
 
         function getTashkentDateString(dateInput) {
-            let d = dateInput ? new Date(String(dateInput).replace(' ', 'T')) : new Date();
-            if (isNaN(d.getTime())) d = new Date();
-            const correctedDate = dateInput ? new Date(d.getTime() - (5 * 60 * 60 * 1000)) : d;
-            return `${correctedDate.getFullYear()}-${String(correctedDate.getMonth() + 1).padStart(2, '0')}-${String(correctedDate.getDate()).padStart(2, '0')}`;
+            let correctedDate = getTashkentDate(dateInput);
+            return `${correctedDate.getUTCFullYear()}-${String(correctedDate.getUTCMonth() + 1).padStart(2, '0')}-${String(correctedDate.getUTCDate()).padStart(2, '0')}`;
         }
 
         function parseAndFormatOrderText(rawStatus) {
@@ -1293,10 +1295,10 @@
             let marketWeeklyCost = 0;
             let marketMonthlyCost = 0;
 
-            const now = new Date();
+            const now = getTashkentDate();
             const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
-            const currentMonth = now.getMonth();
-            const currentYear = now.getFullYear();
+            const currentMonth = now.getUTCMonth();
+            const currentYear = now.getUTCFullYear();
 
             let marketGroups = {};
 
@@ -1304,10 +1306,10 @@
                 if(s.status && s.status.includes('[BOZOR XARIDI]')) {
                     const dateStr = getTashkentDateString(s.created_at);
                     const costVal = parseFloat(s.total_cost || 0);
-                    let saleDate = new Date(String(s.created_at).replace(' ', 'T'));
+                    let saleDate = getTashkentDate(s.created_at);
 
                     if (saleDate >= sevenDaysAgo) marketWeeklyCost += costVal;
-                    if (saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) marketMonthlyCost += costVal;
+                    if (saleDate.getUTCMonth() === currentMonth && saleDate.getUTCFullYear() === currentYear) marketMonthlyCost += costVal;
 
                     if (!marketGroups[dateStr]) marketGroups[dateStr] = [];
                     marketGroups[dateStr].push(s);
@@ -1526,10 +1528,10 @@
             
             let dailyFinancials = {};
 
-            const now = new Date();
+            const now = getTashkentDate();
             const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
-            const currentMonth = now.getMonth();
-            const currentYear = now.getFullYear();
+            const currentMonth = now.getUTCMonth();
+            const currentYear = now.getUTCFullYear();
 
             (sales || []).forEach(s => {
                 if(s.status && s.status.includes('[BOZOR XARIDI]')) return;
@@ -1539,7 +1541,7 @@
                 const cost = parseFloat(s.total_cost || 0);
                 const profit = parseFloat(s.profit || (rev - cost));
 
-                let saleDate = new Date(String(s.created_at).replace(' ', 'T'));
+                let saleDate = getTashkentDate(s.created_at);
 
                 if (dateStr === todayStr) {
                     todayRev += rev;
@@ -1552,7 +1554,7 @@
                     weeklyProfit += profit;
                 }
 
-                if (saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
+                if (saleDate.getUTCMonth() === currentMonth && saleDate.getUTCFullYear() === currentYear) {
                     monthlyRev += rev;
                     monthlyProfit += profit;
                 }
