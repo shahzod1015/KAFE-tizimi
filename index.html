@@ -3,677 +3,1630 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kafe Admin Paneli va Boshqaruv Tizimi</title>
+    <title>CHEF Hotdog POS - Admin</title>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CHEF hotdog">
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- OpenStreetMap Leaflet JS va CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: #121214; color: #e1e1e6; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .nav { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #29292e; padding-bottom: 10px; overflow-x: auto; }
-        .nav button { background: #202024; color: #a1a1aa; border: 1px solid #29292e; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap; }
-        .nav button.active-tab { background: #00875f; color: #fff; border-color: #00875f; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .card { background: #202024; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #29292e; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
-        button.action-btn { background: #00875f; color: #fff; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
-        button.action-btn:hover { background: #00b37e; }
-        button.danger-btn { background: #f75a68; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
-        button.danger-btn:hover { background: #c83747; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #29292e; }
-        th { color: #a1a1aa; font-size: 14px; background: #18181b; }
-        input, select, textarea { width: 100%; padding: 10px; margin-top: 6px; margin-bottom: 12px; background: #121214; border: 1px solid #29292e; color: #fff; border-radius: 6px; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-        .badge-pending { background: #fba94c; color: #121214; }
-        .badge-ready { background: #00875f; color: #fff; }
-        .badge-cancelled { background: #f75a68; color: #fff; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: #202024; padding: 25px; border-radius: 8px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; border: 1px solid #29292e; }
-        .stats-card { background: #18181b; padding: 15px; border-radius: 6px; border: 1px solid #29292e; text-align: center; }
-        .stats-card h3 { color: #a1a1aa; font-size: 14px; margin-bottom: 5px; }
-        .stats-card p { font-size: 24px; font-weight: bold; color: #00b37e; }
+        :root {
+            --gold-gradient: linear-gradient(135deg, #d4af37 0%, #fff3a8 30%, #aa771c 70%, #fcf6ba 100%);
+            --gold-btn-grad: linear-gradient(180deg, #f7e089 0%, #c8962c 100%);
+            --gold-border: 1px solid rgba(212, 175, 55, 0.4);
+            --gold-border-thin: 1px solid rgba(212, 175, 55, 0.25);
+            --gold-text: #f5d061;
+            --card-bg: rgba(18, 18, 18, 0.85);
+            --dark-bg: #0a0a0d;
+            --qty-purple: #c084fc;
+        }
+
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+        
+        body { 
+            background-color: var(--dark-bg);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 60%),
+                radial-gradient(circle at 100% 100%, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
+            padding: 12px; 
+            color: #f1f5f9; 
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .leaf-decor {
+            position: fixed;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.35;
+            width: 120px;
+            height: 120px;
+        }
+        .leaf-top-right {
+            top: 0; right: 0;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23d4af37' d='M100,0 C70,10 50,30 40,60 C35,40 20,20 0,10 C30,25 45,45 50,70 C60,40 80,20 100,0 Z'/%3E%3Cpath fill='%23d4af37' d='M100,30 C80,40 65,55 60,80 C70,60 85,45 100,30 Z'/%3E%3C/svg%3E") no-repeat;
+            background-size: contain;
+        }
+        .leaf-bottom-left {
+            bottom: 0; left: 0;
+            transform: rotate(180deg);
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23d4af37' d='M100,0 C70,10 50,30 40,60 C35,40 20,20 0,10 C30,25 45,45 50,70 C60,40 80,20 100,0 Z'/%3E%3Cpath fill='%23d4af37' d='M100,30 C80,40 65,55 60,80 C70,60 85,45 100,30 Z'/%3E%3C/svg%3E") no-repeat;
+            background-size: contain;
+        }
+
+        .screen-frame {
+            border: var(--gold-border-thin);
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.05), 0 10px 30px rgba(0,0,0,0.8);
+            position: relative;
+            background: rgba(10, 10, 13, 0.6);
+            backdrop-filter: blur(5px);
+        }
+
+        .app-header { 
+            display: flex; 
+            align-items: center; 
+            gap: 14px; 
+            margin-bottom: 12px; 
+            background: var(--card-bg); 
+            padding: 10px 16px; 
+            border-radius: 16px; 
+            border: var(--gold-border);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), 0 0 10px rgba(212, 175, 55, 0.1);
+        }
+        .app-header img { 
+            width: 46px; 
+            height: 46px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            border: 1.5px solid #d4af37; 
+        }
+        .app-header h2 { 
+            font-size: 20px; 
+            font-weight: 800; 
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
+
+        .nav { 
+            display: flex; 
+            gap: 8px; 
+            margin-bottom: 14px; 
+            overflow-x: auto; 
+            padding: 4px 2px;
+        }
+        .nav::-webkit-scrollbar { display: none; }
+        .nav button { 
+            padding: 10px 16px; 
+            background: rgba(20, 20, 22, 0.9); 
+            color: var(--gold-text); 
+            border: var(--gold-border-thin); 
+            border-radius: 12px; 
+            font-weight: 600; 
+            font-size: 13px; 
+            white-space: nowrap; 
+            cursor: pointer; 
+            transition: all 0.25s ease;
+        }
+        .nav button:hover, .nav button.active-tab {
+            border-color: #d4af37;
+            background: rgba(35, 30, 20, 0.9);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+        }
+
+        .tab-content { 
+            display: none; 
+            background: var(--card-bg); 
+            padding: 14px; 
+            border-radius: 16px; 
+            border: var(--gold-border-thin);
+        }
+        .active { display: block !important; }
+        
+        input, select, button.btn-save { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 6px 0 12px 0; 
+            border: var(--gold-border-thin); 
+            border-radius: 10px; 
+            font-size: 14px; 
+            background: #08080a; 
+            color: #fff; 
+        }
+
+        button.btn-save { 
+            background: var(--gold-btn-grad); 
+            color: #000; 
+            border: none; 
+            font-weight: 800; 
+            cursor: pointer; 
+            text-transform: uppercase;
+        }
+
+        .card { 
+            border: var(--gold-border-thin); 
+            padding: 12px; 
+            margin-bottom: 10px; 
+            border-radius: 12px; 
+            background: rgba(12, 12, 14, 0.8); 
+            color: #f1f5f9; 
+        }
+
+        .daily-green-block {
+            border: 2px solid #10b981 !important;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 16px;
+            background: rgba(16, 185, 129, 0.04);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+        }
+
+        .cash-history-card {
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(20, 20, 25, 0.7);
+        }
+        
+        .qty-highlight {
+            color: var(--qty-purple) !important;
+            font-weight: 800;
+            background: rgba(192, 132, 252, 0.12);
+            padding: 1px 6px;
+            border-radius: 6px;
+            border: 1px solid rgba(192, 132, 252, 0.3);
+            display: inline-block;
+            margin: 0 2px;
+        }
+
+        .pos-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 12px; 
+            margin-top: 10px; 
+        }
+        @media (min-width: 600px) {
+            .pos-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+        }
+
+        .pos-card { 
+            border: var(--gold-border-thin); 
+            border-radius: 16px; 
+            padding: 10px; 
+            text-align: center; 
+            background: linear-gradient(180deg, rgba(22, 22, 25, 0.9) 0%, rgba(12, 12, 14, 0.95) 100%); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            position: relative;
+        }
+        .pos-card img { 
+            width: 100%; 
+            height: 110px; 
+            object-fit: cover; 
+            border-radius: 12px; 
+            border: var(--gold-border-thin); 
+            margin-bottom: 8px; 
+        }
+
+        .pos-card.is-stopped {
+            opacity: 0.45;
+            filter: grayscale(0.8);
+        }
+        .pos-card.is-stopped::after {
+            content: "🛑 STOP LIST";
+            position: absolute;
+            top: 35%; left: 5%; right: 5%;
+            background: rgba(239, 68, 68, 0.95);
+            color: #fff;
+            font-weight: 900;
+            padding: 6px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .pos-card h4 { font-size: 13px; margin-bottom: 4px; color: #ffffff; }
+        .pos-card .price { color: var(--gold-text); font-weight: 800; font-size: 14px; margin-bottom: 8px; }
+        
+        .qty-box { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; }
+        .qty-btn { 
+            width: 28px; height: 28px; 
+            background: rgba(35, 30, 20, 0.8); 
+            color: var(--gold-text); 
+            border: var(--gold-border-thin); 
+            border-radius: 8px; font-weight: bold; cursor: pointer;
+        }
+        .qty-val { font-weight: bold; font-size: 14px; color: #fff; width: 16px; text-align: center; }
+
+        .pos-card button.btn-order { 
+            background: var(--gold-btn-grad); 
+            color: #000; border: none; 
+            padding: 8px 4px; border-radius: 10px; 
+            font-weight: 800; font-size: 12px; cursor: pointer; width: 100%;
+        }
+
+        .menu-card { display: flex; gap: 12px; align-items: center; }
+        .menu-img { width: 65px; height: 65px; border-radius: 10px; object-fit: cover; border: var(--gold-border-thin); flex-shrink: 0; }
+        .tag-cost { color: #f59e0b; font-weight: bold; }
+        .tag-price { color: var(--gold-text); font-weight: bold; }
+        .status-pending { background: rgba(120, 53, 15, 0.4); color: #fde047; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+        
+        .kitchen-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-ready { background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 2; }
+        .btn-cancel { background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; }
+        .btn-delete { background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .btn-edit { background: #3b82f6; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        
+        .btn-stop { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .btn-activate { background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+
+        .btn-yandex {
+            display: inline-block; margin-top: 8px; background: #ef4444; color: #fff;
+            padding: 8px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-receipt {
+            display: inline-block;
+            margin-top: 8px;
+            margin-right: 6px;
+            background: #2563eb;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 13px;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+            transition: background 0.2s;
+        }
+        .btn-receipt:hover {
+            background: #1d4ed8;
+        }
+
+        #admin-map {
+            width: 100%;
+            height: 250px;
+            border-radius: 12px;
+            border: var(--gold-border-thin);
+            margin: 8px 0 12px 0;
+            z-index: 1;
+        }
+
+        .map-popup-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: bold;
+            color: #000;
+            font-size: 13px;
+        }
+        .map-popup-header img {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #d4af37;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+
+    <div class="leaf-decor leaf-top-right"></div>
+    <div class="leaf-decor leaf-bottom-left"></div>
+
+    <audio id="order-audio" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+    <div class="screen-frame">
+
+        <div id="sound-activation-banner" style="background: rgba(212, 175, 55, 0.15); border: 1px solid #d4af37; padding: 12px 16px; border-radius: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-size: 13px; font-weight: bold; color: var(--gold-text);">🚨 Oshxona signalini va fon rejimida bildirishnomani yoqish:</span>
+            <button onclick="enableAppPermissions()" style="padding: 10px 14px; background: var(--gold-btn-grad); color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase;">Bildirishnoma va Ovozni Yoqish</button>
+        </div>
+
+        <div class="app-header">
+            <img src="https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png" alt="CHEF HOTDOG Logo">
+            <h2>CHEF HOTDOG - ADMIN</h2>
+        </div>
+
         <div class="nav">
-            <button id="tab-kitchen" class="active-tab" onclick="switchTab('kitchen')">Oshxona</button>
-            <button id="tab-cashier" onclick="switchTab('cashier')">Kassa va Sotuv</button>
-            <button id="tab-menu" onclick="switchTab('menu')">Menyu Boshqaruvi</button>
-            <button id="tab-stock" onclick="switchTab('stock')">Ombor va Masalliqlar</button>
-            <button id="tab-reports" onclick="switchTab('reports')">Hisobotlar va Tahlil</button>
-            <button id="tab-settings" onclick="switchTab('settings')">Sozlamalar</button>
+            <button id="tab-pos" class="active-tab" onclick="switchTab('pos')">📱 Ofitsiant (Menyu)</button>
+            <button id="tab-kitchen" onclick="switchTab('kitchen')">👨‍🍳 Oshxona</button>
+            <button id="tab-recipes" onclick="switchTab('recipes')">📖 Menyu va Stop-List</button>
+            <button id="tab-stock" onclick="switchTab('stock')">📦 Ombor</button>
+            <button id="tab-market" onclick="switchTab('market')">🛒 Bozor</button>
+            <button id="tab-reports" onclick="switchTab('reports')">📊 Kassa va Sozlamalar</button>
         </div>
 
-        <!-- 1. OSHXONA BO'LIMI -->
-        <div id="kitchen-view" class="tab-content active">
-            <div class="card">
-                <h2>Oshxona Buyurtmalari (Real-vaqt)</h2>
-                <div id="kitchen-orders" class="grid" style="margin-top: 15px;"></div>
+        <!-- 1. OFITSIANT -->
+        <div id="pos" class="tab-content active">
+            <div style="background: rgba(15, 15, 18, 0.9); border: var(--gold-border-thin); padding: 12px; border-radius: 14px; margin-bottom: 14px;">
+                <label style="font-size: 13px; font-weight: bold; color: var(--gold-text);">
+                    🪑 Stol raqamini tanlang:
+                </label>
+                <select id="table-select" style="margin: 8px 0 0 0; padding: 10px; font-weight: bold;">
+                    <option value="1">1-Stol</option>
+                    <option value="2">2-Stol</option>
+                    <option value="3">3-Stol</option>
+                    <option value="4">4-Stol</option>
+                    <option value="5">5-Stol</option>
+                    <option value="6">6-Stol</option>
+                    <option value="7">7-Stol</option>
+                    <option value="8">8-Stol</option>
+                    <option value="VIP">VIP Xona</option>
+                    <option value="Soba">Soba / Gazebo</option>
+                </select>
             </div>
-            <div class="card">
-                <h2>Kunlik Bajarilgan Ishlar Tarixi</h2>
-                <div id="daily-history-list"></div>
-            </div>
+
+            <h3 style="color: var(--gold-text); font-size: 17px; margin-bottom: 2px;">🍽 Taomlar Katalogi</h3>
+            <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 12px;">Miqdorni tanlang va buyurtma bering:</p>
+            <div id="pos-menu-grid" class="pos-grid">Yuklanmoqda...</div>
         </div>
 
-        <!-- 2. KASSA VA SOTUV BO'LIMI -->
-        <div id="cashier-view" class="tab-content">
-            <div class="card">
-                <h2>Yangi Buyurtma Yaratish (Kassa)</h2>
-                <div class="grid">
+        <!-- 2. OSHXONA -->
+        <div id="kitchen" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="color:var(--gold-text);">👨‍🍳 Faol Buyurtmalar</h3>
+                <button onclick="oshxonaniYuklash()" style="padding:6px 12px; background:var(--gold-btn-grad); color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">🔄 Yangilash</button>
+            </div>
+            <div id="kitchen-orders-list">Yuklanmoqda...</div>
+
+            <!-- ESKI SAVDOLARNI QO'SHISH VA TAHRIRLASH BO'LIMI -->
+            <div style="background: rgba(212, 175, 55, 0.05); border: 1px dashed #d4af37; padding: 14px; border-radius: 14px; margin: 20px 0;">
+                <h3 style="color: var(--gold-text); font-size: 16px; margin-bottom: 8px;">📓 Daftardagi Eski Savdolarni Kiritish va Tahrirlash</h3>
+                <p style="font-size: 11px; color: #aaa; margin-bottom: 10px;">Xatoni tuzatish yoki eski savdolarni qo'shish uchun quyidagi shakldan foydalaning:</p>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <div>
-                        <label>Kategoriya</label>
-                        <select id="cashier-category-filter" onchange="filterCashierProducts()">
-                            <option value="all">Barcha kategoriyalar</option>
-                        </select>
-
-                        <label>Mahsulotni tanlang</label>
-                        <select id="cashier-product-select"></select>
-
-                        <label>Miqdori</label>
-                        <input type="number" id="cashier-qty" value="1" min="1">
-
-                        <button class="action-btn" onclick="addOrderToCart()">Savatga qo'shish</button>
+                        <label style="font-size: 11px; color: #aaa;">Sana:</label>
+                        <input type="date" id="old-sale-date" style="background:#000; color:#fff; margin-bottom:8px;">
                     </div>
                     <div>
-                        <h3>Savat</h3>
-                        <div id="cart-items" style="min-height: 120px; border: 1px dashed #29292e; padding: 10px; margin-top: 10px; border-radius: 6px;"></div>
-                        <h3 style="margin-top: 15px;">Jami: <span id="cart-total" style="color: #00b37e;">0</span> so'm</h3>
-                        
-                        <label style="margin-top: 10px; display: block;">To'lov turi</label>
-                        <select id="cashier-payment-type">
-                            <option value="Naqd">Naqd</option>
-                            <option value="Karta">Karta (Click/Payme)</option>
-                        </select>
-
-                        <button class="action-btn" style="background:#00b37e;" onclick="submitCartOrder()">Buyurtmani Rasmiylashtirish</button>
+                        <label style="font-size: 11px; color: #aaa;">Vaqt:</label>
+                        <input type="time" id="old-sale-time" value="12:00" style="background:#000; color:#fff; margin-bottom:8px;">
                     </div>
                 </div>
-            </div>
-            <div class="card">
-                <h2>Kassa Hisoboti (Bugun)</h2>
-                <div class="grid">
-                    <div class="stats-card">
-                        <h3>Jami Naqd Tushum</h3>
-                        <p id="cash-total">0 so'm</p>
-                    </div>
-                    <div class="stats-card">
-                        <h3>Jami Karta Tushum</h3>
-                        <p id="card-total">0 so'm</p>
-                    </div>
-                    <div class="stats-card">
-                        <h3>Umumiy Savdo</h3>
-                        <p id="grand-total">0 so'm</p>
-                    </div>
+                
+                <input type="text" id="old-sale-desc" placeholder="Menyu nomi / Izoh (masalan: 5x Hotdog)" style="background:#000; color:#fff;">
+                <input type="number" id="old-sale-amount" placeholder="Umumiy summa (so'mda)" style="background:#000; color:#fff;">
+                <input type="number" id="old-sale-cost" placeholder="Tan narxi (ixtiyoriy, masalan: 0)" style="background:#000; color:#fff;">
+
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-save" onclick="eskiSavdoniQoshish()" style="flex: 2; margin-top:0;">💾 Eski Savdoni Qo'shish</button>
+                    <button onclick="eskiSavdolarniTozalash()" style="flex: 1; background: #dc2626; color: #fff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 11px;">🗑 Hammasini Tozalash</button>
                 </div>
             </div>
-        </div>
 
-        <!-- 3. MENYU BOSHGARUVI -->
-        <div id="menu-view" class="tab-content">
-            <div class="card">
-                <h2>Yangi Mahsulot Qo'shish</h2>
-                <div class="grid">
-                    <div>
-                        <label>Mahsulot Nomi</label>
-                        <input type="text" id="menu-title" placeholder="Masalan: XL Hot-Dog">
-                    </div>
-                    <div>
-                        <label>Narxi (so'm)</label>
-                        <input type="number" id="menu-price" placeholder="25000">
-                    </div>
-                    <div>
-                        <label>Kategoriya</label>
-                        <input type="text" id="menu-category" placeholder="Fast-Food, Ichimliklar...">
-                    </div>
-                </div>
-                <button class="action-btn" onclick="addNewProduct()">Mahsulotni Saqlash</button>
-            </div>
-            <div class="card">
-                <h2>Mavjud Mahsulotlar Menyu Ro'yxati</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nomi</th>
-                            <th>Kategoriya</th>
-                            <th>Narxi</th>
-                            <th>Amallar</th>
-                        </tr>
-                    </thead>
-                    <tbody id="menu-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 4. OMBOR VA MASALLIQLAR BO'LIMI -->
-        <div id="stock-view" class="tab-content">
-            <div class="card">
-                <h2>Yangi Masalliq (Ingredient) Qo'shish</h2>
-                <div class="grid">
-                    <div>
-                        <label>Masalliq Nomi</label>
-                        <input type="text" id="stock-name" placeholder="Masalan: Sosiska">
-                    </div>
-                    <div>
-                        <label>Miqdori</label>
-                        <input type="number" id="stock-qty" placeholder="100">
-                    </div>
-                    <div>
-                        <label>O'lchov Birligi</label>
-                        <select id="stock-unit">
-                            <option value="dona">dona</option>
-                            <option value="kg">kg</option>
-                            <option value="litre">litre</option>
-                            <option value="g">gramm</option>
-                        </select>
-                    </div>
-                </div>
-                <button class="action-btn" onclick="addNewIngredient()">Masalliqni Omborga Qo'shish</button>
-            </div>
-            <div class="card">
-                <h2>Ombordagi Masalliqlar Qoldig'i</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nomi</th>
-                            <th>Qoldiq Miqdori</th>
-                            <th>Birligi</th>
-                            <th>Amallar</th>
-                        </tr>
-                    </thead>
-                    <tbody id="stock-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 5. HISOBOTLAR BO'LIMI -->
-        <div id="reports-view" class="tab-content">
-            <div class="card">
-                <h2>Sotuvlar Statistikasi va Tahlil</h2>
-                <canvas id="salesChart" style="max-height: 400px; width: 100%;"></canvas>
-            </div>
-        </div>
-
-        <!-- 6. SOZLAMALAR BO'LIMI -->
-        <div id="settings-view" class="tab-content">
-            <div class="card">
-                <h2>Tizim Sozlamalari</h2>
-                <p style="color: #a1a1aa; margin-bottom: 15px;">Supabase ma'lumotlar bazasi bilan doimiy aloqa o'rnatilgan.</p>
-                <button class="danger-btn" onclick="clearDailySalesHistory()">Kunlik Savdo Tarixini Tozalash (Reset)</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL OYNA: MAHSULOTNI TAHRIRLASH -->
-    <div id="editProductModal" class="modal">
-        <div class="modal-content">
-            <h2>Mahsulotni Tahrirlash</h2>
-            <input type="hidden" id="edit-product-id">
-            <label>Nomi</label>
-            <input type="text" id="edit-product-title">
-            <label>Narxi</label>
-            <input type="number" id="edit-product-price">
-            <label>Kategoriya</label>
-            <input type="text" id="edit-product-category">
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="action-btn" onclick="saveProductEdit()">Saqlash</button>
-                <button class="danger-btn" style="width: 100%; margin-top: 10px;" onclick="closeModal('editProductModal')">Bekor qilish</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Supabase Rekvizitlari
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        let cart = [];
-        let allProductsCache = [];
-        let salesChartInstance = null;
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active-tab'));
+            <hr style="margin: 20px 0; border-color:rgba(212, 175, 55, 0.2);">
             
-            document.getElementById(tabName + '-view').classList.add('active');
-            document.getElementById('tab-' + tabName).classList.add('active-tab');
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="color:var(--gold-text); margin:0;">📅 Sanalar bo'yicha Kunlik Buyurtmalar Tarixi</h3>
+                <button onclick="barchaTarixniTahrirlashModal()" style="padding: 6px 10px; background: #3b82f6; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px;">✏️ Xatolikni Tuzatish (Tarix)</button>
+            </div>
+            <div id="daily-history-list">Yuklanmoqda...</div>
+        </div>
 
-            if (tabName === 'kitchen') oshxonaniYuklash();
-            if (tabName === 'cashier') { tanlovlarniYuklash(); kassaHisobotiniYuklash(); }
-            if (tabName === 'menu') menyuniYuklash();
-            if (tabName === 'stock') masalliqlarniYuklash();
-            if (tabName === 'reports') hisobotlarniYuklash();
-        }
+        <!-- 3. MENYU VA STOP-LIST -->
+        <div id="recipes" class="tab-content">
+            <h3 id="menu-form-title" style="color:var(--gold-text); margin-bottom:10px;">Yangi Taom Yaratish</h3>
+            <input type="hidden" id="edit-menu-id" value="">
+            <input type="text" id="menu-title" placeholder="Taom nomi (masalan: Classic Hotdog)">
+            <input type="number" id="menu-price" placeholder="Sotuv narxi (masalan: 12000 so'm)">
+            <input type="number" id="menu-cost" placeholder="Tan narxi (masalan: 6000 so'm)">
+            
+            <label style="font-size:13px; font-weight:bold; color:#d4d4d8;">📱 Galereyadan rasm tanlang:</label>
+            <input type="file" id="menu-file" accept="image/*">
+            
+            <button class="btn-save" id="btn-save-menu" onclick="taomniSaqlashYokiQoshish()">Taomni Saqlash</button>
+            <button id="btn-cancel-edit" onclick="taomTahririniBekorQilish()" style="display:none; width:100%; padding:10px; background:#4b5563; color:#fff; border:none; border-radius:10px; font-weight:bold; cursor:pointer; margin-top:6px;">Tahrirlashni Bekor Qilish</button>
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
+            <h4 style="margin-top:15px; color:var(--gold-text);">Mavjud Taomlar Sozlamasi va Stop-List:</h4>
+            <div id="menu-with-cost-list" style="margin-top:10px;"></div>
+        </div>
 
-        // --- MENYU LOGIKASI ---
-        async function menyuniYuklash() {
+        <!-- 4. OMBOR -->
+        <div id="stock" class="tab-content">
+            <h3 style="color:var(--gold-text); margin-bottom:10px;">Ombor Masalliqlari</h3>
+            <input type="text" id="ing-name" placeholder="Masalliq nomi">
+            <input type="number" id="ing-qty" placeholder="Miqdori">
+            <input type="text" id="ing-unit" placeholder="Birligi (dona, kg, litr)">
+            <input type="number" id="ing-cost" placeholder="1 birlik narxi">
+            <button class="btn-save" onclick="masalliqQoshish()">Masalliq Saqlash</button>
+            
+            <h4 style="margin-top:15px; color:var(--gold-text);">Mavjud Masalliqlar:</h4>
+            <div id="stock-list" style="margin-top:10px;"></div>
+        </div>
+
+        <!-- 5. BOZOR OYNASI -->
+        <div id="market" class="tab-content">
+            <h3 style="color:var(--gold-text); margin-bottom:10px;">🛒 Bozor Xaridlari (Haftalik / Kunlik)</h3>
+            <p style="font-size: 12px; color: #aaa; margin-bottom: 12px;">Bozorga qilingan xaridlarni sana va vaqt asosida dona, kg, L va narxlarda kiriting. Xarid omborga qo'shiladi va bozor hisobotida yuritiladi:</p>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div>
+                    <label style="font-size: 11px; color: #aaa;">Sana:</label>
+                    <input type="date" id="market-date" style="background:#000; color:#fff; margin-bottom:8px;">
+                </div>
+                <div>
+                    <label style="font-size: 11px; color: #aaa;">Vaqt:</label>
+                    <input type="time" id="market-time" value="09:00" style="background:#000; color:#fff; margin-bottom:8px;">
+                </div>
+            </div>
+
+            <input type="text" id="market-item-name" placeholder="Mahsulot nomi (masalan: Go'sht, Un, Yog')" style="background:#000; color:#fff;">
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <input type="number" step="any" id="market-qty" placeholder="Miqdori (masalan: 5)" style="background:#000; color:#fff;">
+                <select id="market-unit" style="background:#000; color:#fff; margin-top:6px; padding:12px;">
+                    <option value="kg">kg (Kilogramm)</option>
+                    <option value="dona">dona (Dona)</option>
+                    <option value="L">L (Litr)</option>
+                    <option value="gr">gr (Gramm)</option>
+                    <option value="paket">paket (Paket)</option>
+                </select>
+            </div>
+
+            <input type="number" id="market-total-price" placeholder="Umumiy narxi (so'mda, masalan: 150000)" style="background:#000; color:#fff;">
+
+            <button class="btn-save" onclick="bozorXaridiniQoshish()">🛒 Xaridni Saqlash</button>
+
+            <!-- BOZOR HISOBOTI QISMI -->
+            <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.4); padding: 14px; border-radius: 16px; margin-top: 20px;">
+                <h3 style="color: var(--gold-text); margin-bottom: 12px; font-size: 16px;">📊 Bozor Hisoboti (Haftalik va Oylik)</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                    <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.2);">
+                        <span style="font-size: 11px; color: #aaa; display: block;">📅 Oxirgi 7 Kun (Haftalik Bozor):</span>
+                        <b id="market-weekly-cost" class="tag-cost" style="font-size: 15px;">0 so'm</b>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.2);">
+                        <span style="font-size: 11px; color: #aaa; display: block;">🗓 Joriy Oy (Oylik Bozor):</span>
+                        <b id="market-monthly-cost" class="tag-cost" style="font-size: 15px;">0 so'm</b>
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="margin-top:20px; color:var(--gold-text);">📋 Bozor Xaridlari Tarixi:</h4>
+            <div id="market-history-list" style="margin-top:10px;">Yuklanmoqda...</div>
+        </div>
+
+        <!-- 6. KASSA VA SOZLAMALAR -->
+        <div id="reports" class="tab-content">
+            <h3 style="color:var(--gold-text);">📊 Bugungi Kassa (<span id="today-date-str"></span>)</h3>
+            <div class="card" style="margin-top:10px;">Bugungi Tushum: <b id="rep-rev" class="tag-price">0</b> so'm</div>
+            <div class="card">Bugungi Tan Narx: <b id="rep-cost" class="tag-cost">0</b> so'm</div>
+            <div class="card">Bugungi Saf Foyda: <b id="rep-profit" style="color:#34d399; font-size:18px;">0</b> so'm</div>
+
+            <!-- HAFTALIK VA OYLIK HISOBOT QISMI -->
+            <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.4); padding: 14px; border-radius: 16px; margin-top: 20px;">
+                <h3 style="color: var(--gold-text); margin-bottom: 12px; font-size: 16px;">📈 Haftalik va Oylik Hisobot</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                    <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.2);">
+                        <span style="font-size: 11px; color: #aaa; display: block;">📅 Oxirgi 7 Kun (Haftalik):</span>
+                        <b id="weekly-rev" class="tag-price" style="font-size: 15px;">0 so'm</b>
+                        <div style="font-size: 11px; color: #34d399; margin-top: 4px;">Foyda: <span id="weekly-profit">0 so'm</span></div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.2);">
+                        <span style="font-size: 11px; color: #aaa; display: block;">🗓 Joriy Oy (Oylik):</span>
+                        <b id="monthly-rev" class="tag-price" style="font-size: 15px;">0 so'm</b>
+                        <div style="font-size: 11px; color: #34d399; margin-top: 4px;">Foyda: <span id="monthly-profit">0 so'm</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:25px;">
+                <h3 style="color:var(--gold-text); margin-bottom:12px;">📜 Kassa Tarixi (O'tgan kunlar hisoboti)</h3>
+                <div id="cash-history-list">Yuklanmoqda...</div>
+            </div>
+
+            <div style="background:#121218; border:1px solid rgba(212,175,55,0.4); padding:16px; border-radius:16px; margin-top:25px;">
+                <h3 style="color:#f5d061; margin-bottom:12px; font-size:16px;">💳 To'lov Rekvizitlarini Sozlash (Karta va QR)</h3>
+                
+                <label style="color:#aaa; font-size:11px;">Karta raqami (masalan: 9860 **** **** 1234):</label>
+                <input type="text" id="adm-card-number" placeholder="Karta raqamini kiriting" style="background:#000; color:#fff;">
+
+                <label style="color:#aaa; font-size:11px;">Karta egasining F.I.O:</label>
+                <input type="text" id="adm-card-holder" placeholder="Ism Familiya" style="background:#000; color:#fff;">
+
+                <label style="color:#aaa; font-size:11px;">QR Kod rasmini yuklash (Click/Payme QR):</label>
+                <input type="file" id="adm-qr-file" accept="image/*" style="background:#000; color:#fff; margin-bottom:10px;">
+                
+                <div id="current-qr-preview" style="margin-bottom:12px;"></div>
+
+                <button onclick="savePaymentSettings()" style="width:100%; padding:12px; background:linear-gradient(180deg, #f7e089 0%, #c8962c 100%); color:#000; font-weight:bold; border:none; border-radius:10px; cursor:pointer;">
+                    💾 To'lov Ma'lumotlarini Saqlash
+                </button>
+            </div>
+
+            <div style="background:#121218; border:1px solid rgba(212,175,55,0.4); padding:16px; border-radius:16px; margin-top:25px;">
+                <h3 style="color:#f5d061; margin-bottom:12px; font-size:16px;">🛵 Yetkazib Berish va Kafe Joylashuvini Sozlash</h3>
+                
+                <div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:10px; margin-bottom:12px;">
+                    <strong style="color:#f5d061; display:block; margin-bottom:6px;">📍 Kafe Joylashuvi:</strong>
+                    <p style="font-size:11px; color:#aaa; margin-bottom:8px;">Xaritaning ustiga bosing, belgilagichni sudrang yoki koordinatani qo'lda kiriting:</p>
+                    
+                    <div id="admin-map"></div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <div>
+                            <label style="color:#aaa; font-size:11px;">Latitude (Kenglik):</label>
+                            <input type="number" step="any" id="adm-cafe-lat" style="padding:8px; margin-bottom:0; background:#000; color:#fff; border:1px solid #444; border-radius:6px;" oninput="syncMapFromInputs()">
+                        </div>
+                        <div>
+                            <label style="color:#aaa; font-size:11px;">Longitude (Uzunlik):</label>
+                            <input type="number" step="any" id="adm-cafe-lng" style="padding:8px; margin-bottom:0; background:#000; color:#fff; border:1px solid #444; border-radius:6px;" oninput="syncMapFromInputs()">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+                    <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:10px;">
+                        <strong style="color:#f5d061; display:block; margin-bottom:8px;">🟢 1-Zona (Yaqin)</strong>
+                        <label style="color:#aaa; font-size:11px;">Maksimal masofa (km):</label>
+                        <input type="number" step="any" id="adm-zone1-km" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                        
+                        <label style="color:#aaa; font-size:11px;">Dostavka Narxi (so'm):</label>
+                        <input type="number" id="adm-zone1-price" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                        
+                        <label style="color:#aaa; font-size:11px;"><b>Eng kam buyurtma (so'm):</b></label>
+                        <input type="number" id="adm-zone1-min" placeholder="48000" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                    </div>
+                    
+                    <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:10px;">
+                        <strong style="color:#f5d061; display:block; margin-bottom:8px;">🟡 2-Zona (Uzoq)</strong>
+                        <label style="color:#aaa; font-size:11px;">Maksimal masofa (km):</label>
+                        <input type="number" step="any" id="adm-zone2-km" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                        
+                        <label style="color:#aaa; font-size:11px;">Dostavka Narxi (so'm):</label>
+                        <input type="number" id="adm-zone2-price" style="width:100%; padding:8px; margin-bottom:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                        
+                        <label style="color:#aaa; font-size:11px;"><b>Eng kam buyurtma (so'm):</b></label>
+                        <input type="number" id="adm-zone2-min" placeholder="70000" style="width:100%; padding:8px; background:#000; color:#fff; border:1px solid #444; border-radius:6px;">
+                    </div>
+                </div>
+                
+                <button onclick="saveDeliverySettings()" style="width:100%; padding:12px; background:linear-gradient(180deg, #f7e089 0%, #c8962c 100%); color:#000; font-weight:bold; border:none; border-radius:10px; cursor:pointer;">
+                    💾 Yetkazish Sozlamalarini Saqlash
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script> 
+        const SUPABASE_URL = "https://wrrsvrgdinfmnuwewtoa.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const TELEGRAM_BOT_TOKEN = "8992397944:AAFPRv6NKFKn7dLz6hxBcLSqf93z5VfAvNs"; 
+        const TELEGRAM_CHAT_ID = "8630700790";
+        const LOGO_URL = "https://wrrsvrgdinfmnuwewtoa.supabase.co/storage/v1/object/public/menu-images/Untitled%20folder/content.png";
+
+        let itemQuantities = {};
+        let adminMap, cafeMarker;
+        let isMapInitialized = false;
+        let lastKnownOrderCount = 0; 
+
+        async function sendTelegramMessage(text) {
+            if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
             try {
-                const { data: products, error } = await supabase.from('products').select('*').order('id', { ascending: true });
-                if (error) throw error;
-
-                const tbody = document.getElementById('menu-table-body');
-                if (!tbody) return;
-
-                tbody.innerHTML = (products || []).map(p => `
-                    <tr>
-                        <td>#${p.id}</td>
-                        <td><strong>${p.title}</strong></td>
-                        <td>${p.category || 'Umumiy'}</td>
-                        <td>${p.price} so'm</td>
-                        <td>
-                            <button class="action-btn" style="padding: 4px 8px; font-size: 12px; width: auto;" onclick="openEditProductModal('${p.id}', '${p.title}', ${p.price}, '${p.category || ''}')">Tahrirlash</button>
-                            <button class="danger-btn" style="padding: 4px 8px; font-size: 12px;" onclick="deleteProduct('${p.id}')">O'chirish</button>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (err) {
-                console.error("Menyuni yuklashda xatolik:", err);
+                await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: TELEGRAM_CHAT_ID,
+                        text: text,
+                        parse_mode: 'HTML'
+                    })
+                });
+            } catch (e) {
+                console.log("Telegramga xabar yuborish xatosi:", e);
             }
         }
 
-        async function addNewProduct() {
-            const title = document.getElementById('menu-title').value.trim();
-            const price = parseFloat(document.getElementById('menu-price').value);
-            const category = document.getElementById('menu-category').value.trim();
+        async function enableAppPermissions() {
+            const audio = document.getElementById('order-audio');
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }).catch(e => console.log("Audio xatosi:", e));
 
-            if (!title || isNaN(price)) return alert("Iltimos, mahsulot nomi va narxini to'g'ri kiriting!");
-
-            try {
-                const { error } = await supabase.from('products').insert([{ title, price, category }]);
-                if (error) throw error;
-
-                document.getElementById('menu-title').value = '';
-                document.getElementById('menu-price').value = '';
-                document.getElementById('menu-category').value = '';
-
-                alert("Yangi mahsulot qo'shildi!");
-                menyuniYuklash();
-            } catch (err) {
-                alert("Mahsulot qo'shishda xatolik yuz berdi!");
-            }
-        }
-
-        function openEditProductModal(id, title, price, category) {
-            document.getElementById('edit-product-id').value = id;
-            document.getElementById('edit-product-title').value = title;
-            document.getElementById('edit-product-price').value = price;
-            document.getElementById('edit-product-category').value = category;
-            document.getElementById('editProductModal').style.display = 'flex';
-        }
-
-        async function saveProductEdit() {
-            const id = document.getElementById('edit-product-id').value;
-            const title = document.getElementById('edit-product-title').value.trim();
-            const price = parseFloat(document.getElementById('edit-product-price').value);
-            const category = document.getElementById('edit-product-category').value.trim();
-
-            try {
-                const { error } = await supabase.from('products').update({ title, price, category }).eq('id', id);
-                if (error) throw error;
-
-                closeModal('editProductModal');
-                menyuniYuklash();
-                alert("Mahsulot yangilandi!");
-            } catch (err) {
-                alert("Tahrirlashda xatolik yuz berdi!");
-            }
-        }
-
-        async function deleteProduct(id) {
-            if (!confirm("Haqiqatdan ham ushbu mahsulotni o'chirmoqchimisiz?")) return;
-            try {
-                const { error } = await supabase.from('products').delete().eq('id', id);
-                if (error) throw error;
-                menyuniYuklash();
-            } catch (err) {
-                alert("O'chirishda xatolik!");
-            }
-        }
-
-        // --- OMBOR LOGIKASI ---
-        async function masalliqlarniYuklash() {
-            try {
-                const { data: ingredients, error } = await supabase.from('ingredients').select('*').order('id', { ascending: true });
-                if (error) throw error;
-
-                const tbody = document.getElementById('stock-table-body');
-                if (!tbody) return;
-
-                tbody.innerHTML = (ingredients || []).map(i => `
-                    <tr>
-                        <td><strong>${i.name}</strong></td>
-                        <td>${i.quantity}</td>
-                        <td>${i.unit || 'dona'}</td>
-                        <td>
-                            <button class="danger-btn" style="padding: 4px 8px; font-size: 12px;" onclick="deleteIngredient('${i.id}')">O'chirish</button>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (err) {
-                console.error("Omborni yuklashda xatolik:", err);
-            }
-        }
-
-        async function addNewIngredient() {
-            const name = document.getElementById('stock-name').value.trim();
-            const quantity = parseFloat(document.getElementById('stock-qty').value);
-            const unit = document.getElementById('stock-unit').value;
-
-            if (!name || isNaN(quantity)) return alert("Masalliq nomi va miqdorini to'liq kiriting!");
-
-            try {
-                const { error } = await supabase.from('ingredients').insert([{ name, quantity, unit }]);
-                if (error) throw error;
-
-                document.getElementById('stock-name').value = '';
-                document.getElementById('stock-qty').value = '';
-                masalliqlarniYuklash();
-                alert("Masalliq omborga qo'shildi!");
-            } catch (err) {
-                alert("Masalliq qo'shishda xatolik!");
-            }
-        }
-
-        async function deleteIngredient(id) {
-            if (!confirm("Ushbu masalliqni o'chirmoqchimisiz?")) return;
-            try {
-                const { error } = await supabase.from('ingredients').delete().eq('id', id);
-                if (error) throw error;
-                masalliqlarniYuklash();
-            } catch (err) {
-                alert("O'chirishda xatolik!");
-            }
-        }
-
-        // --- KASSA VA SAVAT LOGIKASI ---
-        async function tanlovlarniYuklash() {
-            try {
-                const { data: products, error } = await supabase.from('products').select('*');
-                if (error) throw error;
-
-                allProductsCache = products || [];
-
-                const catSelect = document.getElementById('cashier-category-filter');
-                const categories = [...new Set(allProductsCache.map(p => p.category).filter(Boolean))];
-
-                catSelect.innerHTML = '<option value="all">Barcha kategoriyalar</option>' + 
-                    categories.map(c => `<option value="${c}">${c}</option>`).join('');
-
-                filterCashierProducts();
-            } catch (err) {
-                console.error("Kassa tanlovlarini yuklash xatosi:", err);
-            }
-        }
-
-        function filterCashierProducts() {
-            const selectedCat = document.getElementById('cashier-category-filter').value;
-            const prodSelect = document.getElementById('cashier-product-select');
-
-            const filtered = selectedCat === 'all' ? allProductsCache : allProductsCache.filter(p => p.category === selectedCat);
-
-            prodSelect.innerHTML = filtered.map(p => `<option value="${p.id}" data-price="${p.price}" data-title="${p.title}">${p.title} - ${p.price} so'm</option>`).join('');
-        }
-
-        function addOrderToCart() {
-            const prodSelect = document.getElementById('cashier-product-select');
-            if (!prodSelect.value) return;
-
-            const selectedOption = prodSelect.options[prodSelect.selectedIndex];
-            const id = prodSelect.value;
-            const title = selectedOption.dataset.title;
-            const price = parseFloat(selectedOption.dataset.price);
-            const qty = parseInt(document.getElementById('cashier-qty').value) || 1;
-
-            const existing = cart.find(item => item.id === id);
-            if (existing) {
-                existing.qty += qty;
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    alert("✅ Tizimli bildirishnoma va ovoz muvaffaqiyatli yoqildi!");
+                    document.getElementById('sound-activation-banner').style.display = 'none';
+                } else {
+                    alert("⚠️ Bildirishnomaga ruxsat berilmadi.");
+                }
             } else {
-                cart.push({ id, title, price, qty });
+                alert("✅ Ovozli signal faollashdi!");
+                document.getElementById('sound-activation-banner').style.display = 'none';
             }
-
-            renderCart();
         }
 
-        function renderCart() {
-            const cartDiv = document.getElementById('cart-items');
-            let total = 0;
+        function playNotificationSoundAndPush(orderText) {
+            const audio = document.getElementById('order-audio');
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(err => console.log("Audio ijro etilmadi:", err));
+            }
 
-            if (cart.length === 0) {
-                cartDiv.innerHTML = '<p style="color:#a1a1aa;">Savat bo\'sh</p>';
-                document.getElementById('cart-total').innerText = '0';
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance("Diqqat! Yangi buyurtma keldi!");
+                utterance.lang = 'uz-UZ';
+                window.speechSynthesis.speak(utterance);
+            }
+
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.showNotification("CHEF Hotdog - Yangi Buyurtma!", {
+                            body: orderText || "Oshxonaga yangi buyurtma tushdi!",
+                            icon: LOGO_URL,
+                            vibrate: [200, 100, 200, 100, 200],
+                            tag: 'new-order'
+                        });
+                    }).catch(() => {
+                        new Notification("CHEF Hotdog - Yangi Buyurtma!", {
+                            body: orderText || "Oshxonaga yangi buyurtma tushdi!",
+                            icon: LOGO_URL
+                        });
+                    });
+                } catch (e) {
+                    new Notification("CHEF Hotdog - Yangi Buyurtma!", {
+                        body: orderText || "Oshxonaga yangi buyurtma tushdi!",
+                        icon: LOGO_URL
+                    });
+                }
+            }
+        }
+
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav button').forEach(btn => btn.classList.remove('active-tab'));
+            
+            document.getElementById(id).classList.add('active');
+            document.getElementById(`tab-${id}`).classList.add('active-tab');
+
+            if(id === 'stock') omborniYuklash();
+            if(id === 'market') bozorTarixiniYuklash();
+            if(id === 'pos' || id === 'recipes') tanlovlarniYuklash();
+            if(id === 'kitchen') oshxonaniYuklash();
+            if(id === 'reports') {
+                hisobotniYuklash();
+                loadPaymentSettings();
+                loadAdminDeliverySettings();
+                initAdminMap();
+            }
+        }
+
+        // TO'G'RILANGAN TASHKENT VAQTINI OLISH FUNKSIYALARI
+        function getTashkentDate(dateInput) {
+            let d = dateInput ? new Date(String(dateInput).replace(' ', 'T')) : new Date();
+            if (isNaN(d.getTime())) d = new Date();
+            // 5 soat qo'shib to'g'ri Toshkent vaqtini hosil qilamiz
+            return new Date(d.getTime() + (5 * 60 * 60 * 1000));
+        }
+
+        function getTashkentTimeString(dateInput) {
+            let correctedDate = getTashkentDate(dateInput);
+            return `${String(correctedDate.getUTCHours()).padStart(2, '0')}:${String(correctedDate.getUTCMinutes()).padStart(2, '0')}`;
+        }
+
+        function getTashkentDateString(dateInput) {
+            let correctedDate = getTashkentDate(dateInput);
+            return `${correctedDate.getUTCFullYear()}-${String(correctedDate.getUTCMonth() + 1).padStart(2, '0')}-${String(correctedDate.getUTCDate()).padStart(2, '0')}`;
+        }
+
+        function parseAndFormatOrderText(rawStatus) {
+            if (!rawStatus) return '';
+            
+            let cleaned = rawStatus.replace(/Chek:\s*https?:\/\/[^\s]+/gi, '')
+                                 .replace(/https?:\/\/[^\s]+/gi, '')
+                                 .replace(/GPS:\s*[0-9.,\s]+/gi, '');
+
+            cleaned = cleaned.replace(/\(x(\d+)\)/g, '<span class="qty-highlight">(x$1)</span>');
+            
+            return cleaned;
+        }
+
+        function getReceiptButton(s) {
+            let receiptUrl = '';
+            if (s.status) {
+                const match = s.status.match(/(https?:\/\/[^\s]+)/i);
+                if (match && (match[1].includes('supabase.co') || match[1].includes('receipt') || match[1].includes('png') || match[1].includes('jpg') || match[1].includes('jpeg'))) {
+                    receiptUrl = match[1];
+                }
+            }
+            if (!receiptUrl && s.receipt_url) {
+                receiptUrl = s.receipt_url;
+            }
+
+            if (receiptUrl) {
+                return `<a class="btn-receipt" href="${receiptUrl}" target="_blank">🧾 CHEK</a>`;
+            }
+            return '';
+        }
+
+        function getYandexButton(s) {
+            let lat = s.lat, lng = s.lng;
+            if ((!lat || !lng) && s.status) {
+                const match = s.status.match(/GPS:\s*([0-9.]+),\s*([0-9.]+)/i);
+                if (match) { lat = match[1]; lng = match[2]; }
+            }
+            if (lat && lng) return `<a class="btn-yandex" href="https://yandex.uz/maps/?rtext=~${lat},${lng}&rtt=auto" target="_blank">🗺 Yandex Navigatsiyada ochish</a>`;
+            return '';
+        }
+
+        async function loadPaymentSettings() {
+            const { data } = await db.from('payment_settings').select('*').maybeSingle();
+            if(data) {
+                document.getElementById('adm-card-number').value = data.card_number || '';
+                document.getElementById('adm-card-holder').value = data.card_holder || '';
+                if(data.qr_image_url) {
+                    document.getElementById('current-qr-preview').innerHTML = `<img src="${data.qr_image_url}" style="width:100px; height:100px; border-radius:8px; border:1px solid #d4af37; object-fit:cover;"><br><small style="color:#aaa;">Joriy QR kod</small>`;
+                }
+            }
+        }
+
+        async function savePaymentSettings() {
+            const card_number = document.getElementById('adm-card-number').value;
+            const card_holder = document.getElementById('adm-card-holder').value;
+            const qrFileInput = document.getElementById('adm-qr-file');
+            
+            let qr_image_url = '';
+            const { data: existingData } = await db.from('payment_settings').select('qr_image_url').maybeSingle();
+            if(existingData && existingData.qr_image_url) {
+                qr_image_url = existingData.qr_image_url;
+            }
+
+            if(qrFileInput.files.length > 0) {
+                const file = qrFileInput.files[0];
+                const fileExt = file.name.split('.').pop();
+                const fileName = `qr_${Date.now()}.${fileExt}`;
+                const { error: uploadErr } = await db.storage.from('menu-images').upload(fileName, file);
+                if(uploadErr) {
+                    return alert("QR rasmni yuklashda xatolik: " + uploadErr.message);
+                }
+                const { data: publicUrlData } = db.storage.from('menu-images').getPublicUrl(fileName);
+                qr_image_url = publicUrlData.publicUrl;
+            }
+
+            const { error } = await db.from('payment_settings').upsert({
+                id: 1,
+                card_number,
+                card_holder,
+                qr_image_url
+            });
+
+            if(error) alert("Xatolik: " + error.message);
+            else {
+                alert("✅ To'lov rekvizitlari muvaffaqiyatli saqlandi!");
+                loadPaymentSettings();
+            }
+        }
+
+        async function loadAdminDeliverySettings() {
+            const { data } = await db.from('delivery_settings').select('*').maybeSingle();
+            const defaultLat = 38.849449, defaultLng = 65.793410;
+
+            if(data) {
+                if(document.getElementById('adm-cafe-lat')) document.getElementById('adm-cafe-lat').value = data.cafe_lat || defaultLat;
+                if(document.getElementById('adm-cafe-lng')) document.getElementById('adm-cafe-lng').value = data.cafe_lng || defaultLng;
+
+                if(document.getElementById('adm-zone1-km')) document.getElementById('adm-zone1-km').value = data.zone1_km || 0.7;
+                if(document.getElementById('adm-zone1-price')) document.getElementById('adm-zone1-price').value = data.zone1_price || 5000;
+                if(document.getElementById('adm-zone1-min')) document.getElementById('adm-zone1-min').value = data.zone1_min_order || 48000;
+
+                if(document.getElementById('adm-zone2-km')) document.getElementById('adm-zone2-km').value = data.zone2_km || 2.0;
+                if(document.getElementById('adm-zone2-price')) document.getElementById('adm-zone2-price').value = data.zone2_price || 10000;
+                if(document.getElementById('adm-zone2-min')) document.getElementById('adm-zone2-min').value = data.zone2_min_order || 70000;
+            } else {
+                if(document.getElementById('adm-cafe-lat')) document.getElementById('adm-cafe-lat').value = defaultLat;
+                if(document.getElementById('adm-cafe-lng')) document.getElementById('adm-cafe-lng').value = defaultLng;
+            }
+
+            if(isMapInitialized) updateAdminMapMarker();
+        }
+
+        function initAdminMap() {
+            if (isMapInitialized) {
+                setTimeout(() => adminMap.invalidateSize(), 200);
                 return;
             }
 
-            cartDiv.innerHTML = cart.map((item, index) => {
-                const sum = item.price * item.qty;
-                total += sum;
-                return `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span>${item.title} (${item.qty}x)</span>
-                        <span>${sum} so'm <button class="danger-btn" style="padding: 2px 6px; font-size: 10px; margin-left: 5px;" onclick="removeFromCart(${index})">X</button></span>
+            let lat = parseFloat(document.getElementById('adm-cafe-lat').value) || 38.849449;
+            let lng = parseFloat(document.getElementById('adm-cafe-lng').value) || 65.793410;
+
+            adminMap = L.map('admin-map').setView([lat, lng], 14);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(adminMap);
+
+            cafeMarker = L.marker([lat, lng], { draggable: true }).addTo(adminMap)
+                .bindPopup(`<div class="map-popup-header"><img src="${LOGO_URL}" alt="Logo"> CHEF Hotdog Kafe Joylashuvi</div>`).openPopup();
+
+            cafeMarker.on('dragend', function () {
+                const coord = cafeMarker.getLatLng();
+                document.getElementById('adm-cafe-lat').value = coord.lat.toFixed(6);
+                document.getElementById('adm-cafe-lng').value = coord.lng.toFixed(6);
+            });
+
+            adminMap.on('click', function (e) {
+                cafeMarker.setLatLng(e.latlng);
+                document.getElementById('adm-cafe-lat').value = e.latlng.lat.toFixed(6);
+                document.getElementById('adm-cafe-lng').value = e.latlng.lng.toFixed(6);
+            });
+
+            isMapInitialized = true;
+            setTimeout(() => adminMap.invalidateSize(), 200);
+        }
+
+        function syncMapFromInputs() {
+            if (!isMapInitialized) return;
+            let lat = parseFloat(document.getElementById('adm-cafe-lat').value);
+            let lng = parseFloat(document.getElementById('adm-cafe-lng').value);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                cafeMarker.setLatLng([lat, lng]);
+                adminMap.panTo([lat, lng]);
+            }
+        }
+
+        function updateAdminMapMarker() {
+            let lat = parseFloat(document.getElementById('adm-cafe-lat').value) || 38.849449;
+            let lng = parseFloat(document.getElementById('adm-cafe-lng').value) || 65.793410;
+            if(cafeMarker) {
+                cafeMarker.setLatLng([lat, lng]);
+                adminMap.setView([lat, lng], 14);
+            }
+        }
+
+        async function saveDeliverySettings() {
+            const cafe_lat = parseFloat(document.getElementById('adm-cafe-lat').value) || 38.849449;
+            const cafe_lng = parseFloat(document.getElementById('adm-cafe-lng').value) || 65.793410;
+
+            const z1_km = parseFloat(document.getElementById('adm-zone1-km').value) || 0;
+            const z1_pr = parseFloat(document.getElementById('adm-zone1-price').value) || 0;
+            const z1_min = parseFloat(document.getElementById('adm-zone1-min').value) || 48000;
+
+            const z2_km = parseFloat(document.getElementById('adm-zone2-km').value) || 0;
+            const z2_pr = parseFloat(document.getElementById('adm-zone2-price').value) || 0;
+            const z2_min = parseFloat(document.getElementById('adm-zone2-min').value) || 70000;
+
+            const { error } = await db.from('delivery_settings').upsert({
+                id: 1,
+                cafe_lat: cafe_lat,
+                cafe_lng: cafe_lng,
+                zone1_km: z1_km,
+                zone1_price: z1_pr,
+                zone1_min_order: z1_min,
+                zone2_km: z2_km,
+                zone2_price: z2_pr,
+                zone2_min_order: z2_min
+            });
+
+            if(error) alert("Xatolik: " + error.message);
+            else alert("✅ Kafe joylashuvi va Dostavka zonalari saqlandi!");
+        }
+
+        async function taomniSaqlashYokiQoshish() {
+            const editId = document.getElementById('edit-menu-id').value;
+            const title = document.getElementById('menu-title').value;
+            const price = parseFloat(document.getElementById('menu-price').value);
+            const cost = parseFloat(document.getElementById('menu-cost').value) || 0;
+            const fileInput = document.getElementById('menu-file');
+            const saveBtn = document.getElementById('btn-save-menu');
+
+            if(!title || isNaN(price)) return alert("Taom nomi va sotuv narxini kiriting!");
+
+            let image_url = '';
+            if(editId) {
+                const { data: currentMenu } = await db.from('menu').select('image_url').eq('id', editId).single();
+                if(currentMenu) image_url = currentMenu.image_url;
+            }
+
+            if(fileInput.files.length > 0) {
+                saveBtn.innerText = "⏳ Rasm yuklanmoqda...";
+                saveBtn.disabled = true;
+
+                const file = fileInput.files[0];
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}.${fileExt}`;
+
+                const { data: uploadData, error: uploadErr } = await db.storage
+                    .from('menu-images')
+                    .upload(fileName, file);
+
+                if(uploadErr) {
+                    alert("Rasm yuklashda xatolik: " + uploadErr.message);
+                    saveBtn.innerText = "Taomni Saqlash";
+                    saveBtn.disabled = false;
+                    return;
+                }
+
+                const { data: publicUrlData } = db.storage.from('menu-images').getPublicUrl(fileName);
+                image_url = publicUrlData.publicUrl;
+            }
+
+            if(editId) {
+                const { error } = await db.from('menu').update({ title, price, cost, image_url }).eq('id', editId);
+                saveBtn.innerText = "Taomni Saqlash";
+                saveBtn.disabled = false;
+
+                if(error) alert("Xato: " + error.message);
+                else {
+                    alert("✅ Taom muvaffaqiyatli tahrirlandi!");
+                    taomTahririniBekorQilish();
+                    tanlovlarniYuklash();
+                }
+            } else {
+                const { error } = await db.from('menu').insert([{ title, price, cost, image_url, is_stopped: false }]);
+                saveBtn.innerText = "Taomni Saqlash";
+                saveBtn.disabled = false;
+
+                if(error) alert("Xato: " + error.message);
+                else { 
+                    alert("✅ Taom saqlandi!"); 
+                    document.getElementById('menu-title').value = '';
+                    document.getElementById('menu-price').value = '';
+                    document.getElementById('menu-cost').value = '';
+                    fileInput.value = '';
+                    tanlovlarniYuklash(); 
+                }
+            }
+        }
+
+        async function taomniTahrirlashgaOlish(id) {
+            const { data: m } = await db.from('menu').select('*').eq('id', id).single();
+            if(!m) return alert("Taom topilmadi!");
+
+            document.getElementById('edit-menu-id').value = m.id;
+            document.getElementById('menu-title').value = m.title;
+            document.getElementById('menu-price').value = m.price;
+            document.getElementById('menu-cost').value = m.cost || '';
+            document.getElementById('menu-form-title').innerText = "📝 Taomni Tahrirlash";
+            document.getElementById('btn-save-menu').innerText = "O'zgarishlarni Saqlash";
+            document.getElementById('btn-cancel-edit').style.display = 'block';
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function taomTahririniBekorQilish() {
+            document.getElementById('edit-menu-id').value = '';
+            document.getElementById('menu-title').value = '';
+            document.getElementById('menu-price').value = '';
+            document.getElementById('menu-cost').value = '';
+            document.getElementById('menu-file').value = '';
+            document.getElementById('menu-form-title').innerText = "Yangi Taom Yaratish";
+            document.getElementById('btn-save-menu').innerText = "Taomni Saqlash";
+            document.getElementById('btn-cancel-edit').style.display = 'none';
+        }
+
+        async function taomniOchirish(id, title) {
+            if(confirm(`"${title}" taomini o'chirmoqchimisiz?`)) {
+                await db.from('menu').delete().eq('id', id);
+                tanlovlarniYuklash();
+            }
+        }
+
+        async function toggleStopList(id, currentStatus) {
+            await db.from('menu').update({ is_stopped: !currentStatus }).eq('id', id);
+            tanlovlarniYuklash();
+        }
+
+        function changeQty(id, delta) {
+            if (!itemQuantities[id]) itemQuantities[id] = 1;
+            itemQuantities[id] += delta;
+            if (itemQuantities[id] < 1) itemQuantities[id] = 1;
+            document.getElementById(`qty-val-${id}`).innerText = itemQuantities[id];
+        }
+
+        async function tanlovlarniYuklash() {
+            const { data: menu } = await db.from('menu').select('*').order('id', { ascending: true });
+            const defaultImg = 'https://via.placeholder.com/150?text=Rasm+Yo%27q';
+
+            let posHtml = '';
+            (menu || []).forEach(m => {
+                if (!itemQuantities[m.id]) itemQuantities[m.id] = 1;
+                const imgSrc = m.image_url || defaultImg;
+                const isStopped = m.is_stopped;
+
+                posHtml += `
+                <div class="pos-card ${isStopped ? 'is-stopped' : ''}">
+                    <div>
+                        <img src="${imgSrc}" alt="${m.title}">
+                        <h4>${m.title}</h4>
+                        <div class="price">${m.price.toLocaleString()} so'm</div>
+                    </div>
+                    <div>
+                        <div class="qty-box">
+                            <button class="qty-btn" onclick="changeQty(${m.id}, -1)">-</button>
+                            <span class="qty-val" id="qty-val-${m.id}">${itemQuantities[m.id]}</span>
+                            <button class="qty-btn" onclick="changeQty(${m.id}, 1)">+</button>
+                        </div>
+                        <button class="btn-order" onclick="buyurtmaBeringDirect(${m.id})">🛒 Buyurtma</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('pos-menu-grid').innerHTML = posHtml || '<p style="grid-column:1/-1;">Hali taomlar qo\'shilmagan.</p>';
+
+            let menuCards = '';
+            (menu || []).forEach(m => {
+                const costVal = m.cost || 0;
+                const imgSrc = m.image_url || defaultImg;
+                const isStopped = m.is_stopped;
+
+                menuCards += `<div class="card">
+                    <div class="menu-card">
+                        <img src="${imgSrc}" class="menu-img" alt="${m.title}">
+                        <div style="flex-grow:1;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <b>${m.title}</b>
+                                <div style="display:flex; gap:4px;">
+                                    <button class="btn-edit" onclick="taomniTahrirlashgaOlish(${m.id})">📝 Tahrirlash</button>
+                                    <button class="${isStopped ? 'btn-activate' : 'btn-stop'}" onclick="toggleStopList(${m.id}, ${isStopped})">
+                                        ${isStopped ? '✅ Aktiv' : '🛑 Stop'}
+                                    </button>
+                                    <button class="btn-delete" onclick="taomniOchirish(${m.id}, '${m.title}')">🗑</button>
+                                </div>
+                            </div>
+                            <small>Sotuv: <span class="tag-price">${m.price.toLocaleString()} so'm</span></small><br>
+                            <small>Tan narx: <span class="tag-cost">${costVal.toLocaleString()} so'm</span></small>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('menu-with-cost-list').innerHTML = menuCards || 'Taomlar yo\'q';
+        }
+
+        async function buyurtmaBeringDirect(menu_id) {
+            const { data: menuItem } = await db.from('menu').select('*').eq('id', menu_id).single();
+            if(!menuItem) return alert("Taom topilmadi!");
+
+            if (menuItem.is_stopped) {
+                return alert("Ushbu taom STOP-LISTda!");
+            }
+
+            const tableNum = document.getElementById('table-select').value;
+            const qty = itemQuantities[menu_id] || 1;
+
+            const totalPrice = (menuItem.price || 0) * qty;
+            const totalCost = (menuItem.cost || 0) * qty;
+            const orderStatus = `Stol #${tableNum} - ${menuItem.title} (x${qty})`;
+
+            const { error } = await db.from('sales').insert([{ 
+                total_amount: totalPrice, 
+                total_cost: totalCost, 
+                profit: (totalPrice - totalCost),
+                status: orderStatus
+            }]);
+
+            if(error) {
+                alert("Xato: " + error.message);
+            } else {
+                await sendTelegramMessage(`🔥 <b>Yangi buyurtma! (Ofitsiant)</b>\n\n📌 ${orderStatus}\n💰 Summa: <b>${totalPrice.toLocaleString()} so'm</b>`);
+
+                alert(`✅ Stol #${tableNum}: ${qty}x ${menuItem.title} oshxonaga yuborildi!`);
+                itemQuantities[menu_id] = 1;
+                document.getElementById(`qty-val-${menu_id}`).innerText = 1;
+            }
+        }
+
+        async function eskiSavdoniQoshish() {
+            const dateVal = document.getElementById('old-sale-date').value;
+            const timeVal = document.getElementById('old-sale-time').value || '12:00';
+            const desc = document.getElementById('old-sale-desc').value;
+            const amount = parseFloat(document.getElementById('old-sale-amount').value);
+            const cost = parseFloat(document.getElementById('old-sale-cost').value) || 0;
+
+            if(!dateVal || !desc || isNaN(amount)) {
+                return alert("Iltimos, sana, savdo nomi va summani to'liq kiriting!");
+            }
+
+            const fullDateTime = `${dateVal}T${timeVal}:00+05:00`;
+
+            const { error } = await db.from('sales').insert([{
+                total_amount: amount,
+                total_cost: cost,
+                profit: (amount - cost),
+                status: `[ESKI SAVDO] ${desc}`,
+                created_at: fullDateTime
+            }]);
+
+            if(error) {
+                alert("Xatolik: " + error.message);
+            } else {
+                alert("✅ Eski savdo muvaffaqiyatli kiritildi va kassa tarixiga qo'shildi!");
+                document.getElementById('old-sale-desc').value = '';
+                document.getElementById('old-sale-amount').value = '';
+                document.getElementById('old-sale-cost').value = '';
+                oshxonaniYuklash();
+            }
+        }
+
+        async function eskiSavdolarniTozalash() {
+            if(confirm("Haqiqatan ham barcha eski savdo ma'lumotlarini o'chirib, asl holatiga qaytarmoqchimisiz?")) {
+                const { data, error } = await db.from('sales').select('id, status');
+                if(error) return alert("Xatolik: " + error.message);
+
+                let idsToDelete = [];
+                (data || []).forEach(item => {
+                    if(item.status && item.status.includes('[ESKI SAVDO]')) {
+                        idsToDelete.push(item.id);
+                    }
+                });
+
+                if(idsToDelete.length === 0) {
+                    return alert("O'chiriladigan eski savdolar topilmadi.");
+                }
+
+                for(let id of idsToDelete) {
+                    await db.from('sales').delete().eq('id', id);
+                }
+
+                alert("✅ Barcha kiritilgan eski savdolar tozalandi va asl holatiga qaytarildi!");
+                oshxonaniYuklash();
+            }
+        }
+
+        async function barchaTarixniTahrirlashModal() {
+            const { data, error } = await db.from('sales').select('id, created_at, status, total_amount').order('created_at', { ascending: false }).limit(20);
+            if(error || !data || data.length === 0) return alert("Tahrirlash uchun oxirgi savdolar topilmadi.");
+
+            let listStr = "Oxirgi savdolar ro'yxati (O'chirish uchun ID kerak):\n\n";
+            data.forEach(s => {
+                listStr += `ID: ${s.id} | Sana: ${getTashkentDateString(s.created_at)} | ${s.status} | ${Number(s.total_amount).toLocaleString()} so'm\n`;
+            });
+
+            let saleIdToDel = prompt(listStr + "\nO'chirmoqchi bo'lgan savdo ID raqamini kiriting:");
+            if (saleIdToDel) {
+                let idNum = parseInt(saleIdToDel);
+                if (!isNaN(idNum)) {
+                    const { error: delErr } = await db.from('sales').delete().eq('id', idNum);
+                    if (delErr) alert("Xatolik: " + delErr.message);
+                    else {
+                        alert("✅ Tanlangan savdo tarixidan muvaffaqiyatli o'chirildi!");
+                        oshxonaniYuklash();
+                    }
+                }
+            }
+        }
+
+        async function masalliqQoshish() {
+            const name = document.getElementById('ing-name').value;
+            const quantity = parseFloat(document.getElementById('ing-qty').value);
+            const unit = document.getElementById('ing-unit').value;
+            const cost_per_unit = parseFloat(document.getElementById('ing-cost').value);
+
+            if(!name || isNaN(quantity) || !unit) return alert("Nom va miqdorni kiriting!");
+
+            const { error } = await db.from('ingredients').insert([{ name, quantity, unit, cost_per_unit: cost_per_unit || 0 }]);
+            if(error) alert("Xato: " + error.message);
+            else { 
+                alert("Masalliq qo'shildi!"); 
+                document.getElementById('ing-name').value = '';
+                document.getElementById('ing-qty').value = '';
+                document.getElementById('ing-unit').value = '';
+                document.getElementById('ing-cost').value = '';
+                omborniYuklash(); 
+            }
+        }
+
+        async function omborniYuklash() {
+            const { data } = await db.from('ingredients').select('*');
+            let html = '';
+            (data || []).forEach(i => {
+                html += `<div class="card"><b>${i.name}</b>: ${i.quantity} ${i.unit} (${i.cost_per_unit || 0} so'm)</div>`;
+            });
+            document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
+        }
+
+        // --- BOZOR OYNASI VA HISOBOTI ---
+        async function bozorXaridiniQoshish() {
+            const dateVal = document.getElementById('market-date').value || getTashkentDateString();
+            const timeVal = document.getElementById('market-time').value || '09:00';
+            const itemName = document.getElementById('market-item-name').value;
+            const qty = parseFloat(document.getElementById('market-qty').value);
+            const unit = document.getElementById('market-unit').value;
+            const totalPrice = parseFloat(document.getElementById('market-total-price').value);
+
+            if(!itemName || isNaN(qty) || isNaN(totalPrice)) {
+                return alert("Mahsulot nomi, miqdori va umumiy narxini to'liq kiriting!");
+            }
+
+            const fullDateTime = `${dateVal}T${timeVal}:00+05:00`;
+            const unitPrice = totalPrice / qty;
+
+            const { error: salesErr } = await db.from('sales').insert([{
+                total_amount: 0,
+                total_cost: totalPrice,
+                profit: -totalPrice,
+                status: `[BOZOR XARIDI] ${qty} ${unit} ${itemName}`,
+                created_at: fullDateTime
+            }]);
+
+            if(salesErr) {
+                return alert("Xatolik: " + salesErr.message);
+            }
+
+            const { data: existingIng } = await db.from('ingredients').select('*').ilike('name', itemName).maybeSingle();
+            if(existingIng) {
+                let newQty = parseFloat(existingIng.quantity || 0) + qty;
+                await db.from('ingredients').update({ 
+                    quantity: newQty, 
+                    cost_per_unit: unitPrice 
+                }).eq('id', existingIng.id);
+            } else {
+                await db.from('ingredients').insert([{
+                    name: itemName,
+                    quantity: qty,
+                    unit: unit,
+                    cost_per_unit: unitPrice
+                }]);
+            }
+
+            alert("✅ Bozor xaridi muvaffaqiyatli saqlandi va omborga qo'shildi!");
+            document.getElementById('market-item-name').value = '';
+            document.getElementById('market-qty').value = '';
+            document.getElementById('market-total-price').value = '';
+            bozorTarixiniYuklash();
+        }
+
+        async function bozorTarixiniYuklash() {
+            const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
+            
+            let marketWeeklyCost = 0;
+            let marketMonthlyCost = 0;
+
+            const now = getTashkentDate();
+            const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+            const currentMonth = now.getUTCMonth();
+            const currentYear = now.getUTCFullYear();
+
+            let marketGroups = {};
+
+            (sales || []).forEach(s => {
+                if(s.status && s.status.includes('[BOZOR XARIDI]')) {
+                    const dateStr = getTashkentDateString(s.created_at);
+                    const costVal = parseFloat(s.total_cost || 0);
+                    let saleDate = getTashkentDate(s.created_at);
+
+                    if (saleDate >= sevenDaysAgo) marketWeeklyCost += costVal;
+                    if (saleDate.getUTCMonth() === currentMonth && saleDate.getUTCFullYear() === currentYear) marketMonthlyCost += costVal;
+
+                    if (!marketGroups[dateStr]) marketGroups[dateStr] = [];
+                    marketGroups[dateStr].push(s);
+                }
+            });
+
+            document.getElementById('market-weekly-cost').innerText = marketWeeklyCost.toLocaleString() + " so'm";
+            document.getElementById('market-monthly-cost').innerText = marketMonthlyCost.toLocaleString() + " so'm";
+
+            let marketHtml = '';
+            const sortedDates = Object.keys(marketGroups).sort().reverse();
+
+            sortedDates.forEach(date => {
+                let itemsHtml = '';
+                marketGroups[date].forEach(s => {
+                    const timeStr = getTashkentTimeString(s.created_at);
+                    const costVal = parseFloat(s.total_cost || 0);
+                    itemsHtml += `
+                        <div style="padding: 6px 0; border-bottom: 1px dashed rgba(16, 185, 129, 0.3); display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <b>⏰ ${timeStr}</b> - ${parseAndFormatOrderText(s.status)}<br>
+                                <small style="color:#f59e0b;">Xarajat: <b>${costVal.toLocaleString()} so'm</b></small>
+                            </div>
+                            <button onclick="bittaSavdoniOchirish(${s.id}); setTimeout(bozorTarixiniYuklash, 500);" style="background:#dc2626; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:bold; cursor:pointer;">🗑</button>
+                        </div>
+                    `;
+                });
+
+                marketHtml += `
+                    <div class="daily-green-block">
+                        <h4 style="color:#10b981; margin-bottom:8px; border-bottom:1px solid #10b981; padding-bottom:4px;">📅 Sana: ${date}</h4>
+                        ${itemsHtml}
                     </div>
                 `;
-            }).join('');
+            });
 
-            document.getElementById('cart-total').innerText = total;
+            document.getElementById('market-history-list').innerHTML = marketHtml || '<i>Hali bozor xaridlari kiritilmagan.</i>';
         }
 
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            renderCart();
-        }
+        async function oshxonaniYuklash(isAutoCheck = false, newOrderText = '') {
+            const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
+            
+            let activeHtml = '';
+            let dailyGroups = {};
+            let currentActiveCount = 0;
 
-        async function submitCartOrder() {
-            if (cart.length === 0) return alert("Savat bo'sh!");
+            (sales || []).forEach((s) => {
+                const statusStr = s.status || '';
+                
+                if(statusStr.includes('[BOZOR XARIDI]')) return;
 
-            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const paymentType = document.getElementById('cashier-payment-type').value;
+                const isReady = statusStr.includes('TAYYOR BO\'LDI') || statusStr.includes('[KURYERGA BERILDI]') || statusStr.includes('[ESKI SAVDO]');
+                const timeStr = getTashkentTimeString(s.created_at);
+                const dateStr = getTashkentDateString(s.created_at);
 
-            try {
-                const { error } = await supabase.from('sales').insert([{
-                    total_price: total,
-                    payment_type: paymentType,
-                    status: 'Yangi',
-                    items: cart
-                }]);
+                const isDeliveryOrder = statusStr.toLowerCase().includes('dostavka') || 
+                                        statusStr.toLowerCase().includes('yetkazish') || 
+                                        statusStr.toLowerCase().includes('manzil') ||
+                                        statusStr.includes('NAQD');
 
-                if (error) throw error;
-
-                cart = [];
-                renderCart();
-                alert("Buyurtma muvaffaqiyatli qabul qilindi!");
-                kassaHisobotiniYuklash();
-                oshxonaniYuklash();
-            } catch (err) {
-                alert("Buyurtmani saqlashda xatolik!");
-            }
-        }
-
-        // --- KASSA HISOBOTI LOGIKASI ---
-        async function kassaHisobotiniYuklash() {
-            try {
-                const today = new Date().toISOString().split('T')[0];
-                const { data: sales, error } = await supabase
-                    .from('sales')
-                    .select('*')
-                    .gte('created_at', today + 'T00:00:00');
-
-                if (error) throw error;
-
-                let cashTotal = 0;
-                let cardTotal = 0;
-
-                (sales || []).forEach(sale => {
-                    const price = parseFloat(sale.total_price || 0);
-                    if (sale.payment_type === 'Naqd') {
-                        cashTotal += price;
-                    } else if (sale.payment_type === 'Karta') {
-                        cardTotal += price;
-                    }
-                });
-
-                document.getElementById('cash-total').innerText = cashTotal + " so'm";
-                document.getElementById('card-total').innerText = cardTotal + " so'm";
-                document.getElementById('grand-total').innerText = (cashTotal + cardTotal) + " so'm";
-            } catch (err) {
-                console.error("Kassa hisobotida xatolik:", err);
-            }
-        }
-
-        // --- HISOBOTLAR VA TAHLIL (CHART.JS) ---
-        async function hisobotlarniYuklash() {
-            try {
-                const { data: sales, error } = await supabase
-                    .from('sales')
-                    .select('*')
-                    .order('created_at', { ascending: true });
-
-                if (error) throw error;
-
-                const salesByDate = {};
-                (sales || []).forEach(s => {
-                    const date = s.created_at ? s.created_at.split('T')[0] : 'Noma\'lum';
-                    salesByDate[date] = (salesByDate[date] || 0) + parseFloat(s.total_price || 0);
-                });
-
-                const labels = Object.keys(salesByDate);
-                const values = Object.values(salesByDate);
-
-                const ctx = document.getElementById('salesChart');
-                if (!ctx) return;
-
-                if (salesChartInstance) {
-                    salesChartInstance.destroy();
+                let paymentStatusBadge = '';
+                if (statusStr.toUpperCase().includes('NAQD')) {
+                    paymentStatusBadge = `<span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; border:1px solid #f59e0b; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">NAQD PUL</span>`;
+                } else {
+                    paymentStatusBadge = `<span style="background:rgba(16, 185, 129, 0.2); color:#10b981; border:1px solid #10b981; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">TULANGAN</span>`;
                 }
 
-                salesChartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Kungi umumiy savdo (so\'m)',
-                            data: values,
-                            borderColor: '#00b37e',
-                            backgroundColor: 'rgba(0, 179, 126, 0.1)',
-                            fill: true,
-                            tension: 0.3
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { labels: { color: '#e1e1e6' } }
-                        },
-                        scales: {
-                            x: { ticks: { color: '#a1a1aa' }, grid: { color: '#29292e' } },
-                            y: { ticks: { color: '#a1a1aa' }, grid: { color: '#29292e' } }
-                        }
-                    }
-                });
-            } catch (err) {
-                console.error("Hisobotlarni yuklashda xatolik:", err);
-            }
-        }
+                if (!isReady) {
+                    currentActiveCount++;
+                    const receiptBtn = getReceiptButton(s);
+                    const yandexBtn = getYandexButton(s);
 
-        // --- OSHXONA LOGIKASI ---
-        async function oshxonaniYuklash(isAutoRefresh = false) {
-            try {
-                const { data: sales, error } = await supabase
-                    .from('sales')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-
-                const ordersContainer = document.getElementById('kitchen-orders');
-                if (ordersContainer) {
-                    if (!sales || sales.length === 0) {
-                        ordersContainer.innerHTML = '<p style="color:#a1a1aa;">Hozircha faol buyurtmalar yo\'q.</p>';
+                    let actionButtonHtml = '';
+                    if (isDeliveryOrder) {
+                        actionButtonHtml = `<button class="btn-ready" onclick="kuryergaBerildi(${s.id}, '${statusStr}')" style="background:#3b82f6;">🛵 KURYERGA BERILDI</button>`;
                     } else {
-                        ordersContainer.innerHTML = sales.map(order => `
-                            <div class="card" style="margin: 0; background: #18181b;">
-                                <h3>Buyurtma #${order.id || ''}</h3>
-                                <p style="margin-top: 5px;">
-                                    Status: <span class="badge ${order.status === 'Tayyor' ? 'badge-ready' : order.status === 'Bekor qilindi' ? 'badge-cancelled' : 'badge-pending'}">${order.status || 'Yangi'}</span>
-                                </p>
-                                <p style="margin-top: 5px;">Summa: <strong>${order.total_price || 0} so'm</strong></p>
-                                <p style="margin-top: 5px; font-size: 12px; color: #a1a1aa;">To'lov: ${order.payment_type || 'Naqd'}</p>
-                                ${order.status !== 'Tayyor' ? `<button class="action-btn" onclick="statusniOzgash('${order.id}', 'Tayyor')">Tayyor deb belgilash</button>` : ''}
+                        actionButtonHtml = `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${statusStr}')">✅ TAYYOR BO'LDI</button>`;
+                    }
+
+                    activeHtml += `<div class="card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <b>⏰ ${timeStr}</b>
+                            <span class="status-pending">⏱ TAYYORLANMOQDA</span>
+                        </div>
+                        <div style="margin-bottom:6px;">${paymentStatusBadge}</div>
+                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff; line-height: 1.4;">${parseAndFormatOrderText(statusStr)}</p>
+                        <p style="margin-top:4px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
+                        <div style="margin-top: 8px;">
+                            ${receiptBtn}
+                            ${yandexBtn}
+                        </div>
+
+                        <div class="kitchen-actions">
+                            ${actionButtonHtml}
+                            <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
+                        </div>
+                    </div>`;
+                } else {
+                    if (!dailyGroups[dateStr]) {
+                        dailyGroups[dateStr] = { rev: 0, count: 0, orders: [] };
+                    }
+                    dailyGroups[dateStr].rev += parseFloat(s.total_amount || 0);
+                    dailyGroups[dateStr].count += 1;
+                    dailyGroups[dateStr].orders.push(s);
+                }
+            });
+
+            if (isAutoCheck && currentActiveCount > lastKnownOrderCount && lastKnownOrderCount !== 0) {
+                playNotificationSoundAndPush(newOrderText);
+            }
+            lastKnownOrderCount = currentActiveCount;
+
+            document.getElementById('kitchen-orders-list').innerHTML = activeHtml || '<p style="color:#a1a1aa; padding:10px 0;">Hozircha tayyorlanayotgan faol buyurtmalar yo\'q.</p>';
+
+            let historyHtml = '';
+            const sortedDates = Object.keys(dailyGroups).sort().reverse();
+
+            sortedDates.forEach(date => {
+                const item = dailyGroups[date];
+                let ordersInsideHtml = '';
+
+                item.orders.forEach(ord => {
+                    const timeStr = getTashkentTimeString(ord.created_at);
+                    const receiptBtn = getReceiptButton(ord);
+                    const yandexBtn = getYandexButton(ord);
+
+                    ordersInsideHtml += `
+                        <div style="padding: 8px 0; border-bottom: 1px dashed rgba(212, 175, 55, 0.2); display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-size:13px; flex-grow:1;">
+                                <span><b>⏰ ${timeStr}</b> (ID: ${ord.id}) - ${parseAndFormatOrderText(ord.status)}</span><br>
+                                <b style="color:var(--gold-text);">${Number(ord.total_amount || 0).toLocaleString()} so'm</b>
+                                <div style="margin-top: 4px;">
+                                    ${receiptBtn}
+                                    ${yandexBtn}
+                                </div>
                             </div>
-                        `).join('');
+                            <button onclick="bittaSavdoniOchirish(${ord.id})" style="background:#dc2626; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:bold; cursor:pointer; height:fit-content;">🗑 O'chirish</button>
+                        </div>
+                    `;
+                });
+
+                historyHtml += `
+                    <div class="daily-green-block">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #10b981; padding-bottom:8px; margin-bottom:10px;">
+                            <h4 style="color:#10b981; margin:0; font-size:15px;">📅 Sana: ${date}</h4>
+                            <span style="color:var(--gold-text); font-weight:bold; font-size:13px;">Savdo: ${item.rev.toLocaleString()} so'm (${item.count} ta)</span>
+                        </div>
+                        ${ordersInsideHtml}
+                    </div>
+                `;
+            });
+
+            document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali bajarilgan buyurtmalar yo\'q.</i>';
+        }
+
+        async function bittaSavdoniOchirish(id) {
+            if(confirm(`ID: ${id} bo'lgan ushbu yozuvni o'chirmoqchimisiz?`)) {
+                const { error } = await db.from('sales').delete().eq('id', id);
+                if(error) alert("Xatolik: " + error.message);
+                else {
+                    oshxonaniYuklash();
+                    if (document.getElementById('reports').classList.contains('active')) {
+                        hisobotniYuklash();
                     }
                 }
+            }
+        }
 
-                const historyHtml = sales ? sales.map(s => `
-                    <div style="padding: 10px 0; border-bottom: 1px solid #29292e; display: flex; justify-content: space-between;">
-                        <span>#${s.id} - ${s.total_price} so'm (${s.payment_type || 'Naqd'})</span> 
-                        <small style="color: #a1a1aa;">${new Date(s.created_at).toLocaleTimeString()}</small>
+        async function buyurtmaniTayyorLash(id, currentStatus) {
+            const updatedStatus = currentStatus + " [TAYYOR BO'LDI]";
+            const { error } = await db.from('sales').update({ status: updatedStatus }).eq('id', id);
+            if(error) alert("Xatolik: " + error.message);
+            else {
+                oshxonaniYuklash();
+                if (document.getElementById('reports').classList.contains('active')) {
+                    hisobotniYuklash();
+                }
+            }
+        }
+
+        async function kuryergaBerildi(id, currentStatus) {
+            const updatedStatus = currentStatus + " [KURYERGA BERILDI]";
+            const { error } = await db.from('sales').update({ status: updatedStatus }).eq('id', id);
+            if(error) alert("Xatolik: " + error.message);
+            else {
+                alert("📦 Buyurtma kuryerga berildi deb belgilandi!");
+                oshxonaniYuklash();
+                if (document.getElementById('reports').classList.contains('active')) {
+                    hisobotniYuklash();
+                }
+            }
+        }
+
+        async function buyurtmaniBekorQilish(id) {
+            if(confirm("Ushbu buyurtmani bekor qilmoqchimisiz?")) {
+                const { error } = await db.from('sales').delete().eq('id', id);
+                if(error) alert("Xatolik: " + error.message);
+                else {
+                    oshxonaniYuklash();
+                    if (document.getElementById('reports').classList.contains('active')) {
+                        hisobotniYuklash();
+                    }
+                }
+            }
+        }
+
+        async function hisobotniYuklash() {
+            const todayStr = getTashkentDateString();
+            document.getElementById('today-date-str').innerText = todayStr;
+
+            const { data: sales } = await db.from('sales').select('*');
+
+            let todayRev = 0, todayCost = 0, todayProfit = 0;
+            let weeklyRev = 0, weeklyProfit = 0;
+            let monthlyRev = 0, monthlyProfit = 0;
+            
+            let dailyFinancials = {};
+
+            const now = getTashkentDate();
+            const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+            const currentMonth = now.getUTCMonth();
+            const currentYear = now.getUTCFullYear();
+
+            (sales || []).forEach(s => {
+                if(s.status && s.status.includes('[BOZOR XARIDI]')) return;
+
+                const dateStr = getTashkentDateString(s.created_at);
+                const rev = parseFloat(s.total_amount || 0);
+                const cost = parseFloat(s.total_cost || 0);
+                const profit = parseFloat(s.profit || (rev - cost));
+
+                let saleDate = getTashkentDate(s.created_at);
+
+                if (dateStr === todayStr) {
+                    todayRev += rev;
+                    todayCost += cost;
+                    todayProfit += profit;
+                }
+
+                if (saleDate >= sevenDaysAgo) {
+                    weeklyRev += rev;
+                    weeklyProfit += profit;
+                }
+
+                if (saleDate.getUTCMonth() === currentMonth && saleDate.getUTCFullYear() === currentYear) {
+                    monthlyRev += rev;
+                    monthlyProfit += profit;
+                }
+
+                if (!dailyFinancials[dateStr]) {
+                    dailyFinancials[dateStr] = { rev: 0, cost: 0, profit: 0, count: 0 };
+                }
+                dailyFinancials[dateStr].rev += rev;
+                dailyFinancials[dateStr].cost += cost;
+                dailyFinancials[dateStr].profit += profit;
+                if(rev > 0) dailyFinancials[dateStr].count += 1;
+            });
+
+            document.getElementById('rep-rev').innerText = todayRev.toLocaleString();
+            document.getElementById('rep-cost').innerText = todayCost.toLocaleString();
+            document.getElementById('rep-profit').innerText = todayProfit.toLocaleString();
+
+            document.getElementById('weekly-rev').innerText = weeklyRev.toLocaleString() + " so'm";
+            document.getElementById('weekly-profit').innerText = weeklyProfit.toLocaleString() + " so'm";
+
+            document.getElementById('monthly-rev').innerText = monthlyRev.toLocaleString() + " so'm";
+            document.getElementById('monthly-profit').innerText = monthlyProfit.toLocaleString() + " so'm";
+
+            let cashHistoryHtml = '';
+            const sortedDates = Object.keys(dailyFinancials).sort().reverse();
+
+            sortedDates.forEach(date => {
+                const item = dailyFinancials[date];
+                cashHistoryHtml += `
+                    <div class="cash-history-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <b style="color:var(--gold-text); font-size:15px;">📅 ${date}</b>
+                            <span style="font-size:12px; color:#aaa;">${item.count} ta buyurtma</span>
+                        </div>
+                        <div style="font-size:13px; color:#d4d4d8; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:6px;">
+                            <div>Savdo:<br><b class="tag-price">${item.rev.toLocaleString()}</b></div>
+                            <div>Tan narx:<br><b class="tag-cost">${item.cost.toLocaleString()}</b></div>
+                            <div>Saf foyda:<br><b style="color:#34d399;">${item.profit.toLocaleString()}</b></div>
+                        </div>
                     </div>
-                `).join('') : '';
+                `;
+            });
 
-                document.getElementById('daily-history-list').innerHTML = historyHtml || '<p style="color:#a1a1aa; padding:10px 0;">Hozircha o\'tgan kunlar tarixi yo\'q.</p>';
-
-            } catch (err) {
-                console.error("Oshxona ma'lumotlarini yuklashda xatolik:", err);
-            }
+            document.getElementById('cash-history-list').innerHTML = cashHistoryHtml || '<i>Kassa tarixi topilmadi.</i>';
         }
 
-        async function statusniOzgash(orderId, newStatus) {
-            try {
-                const { error } = await supabase
-                    .from('sales')
-                    .update({ status: newStatus })
-                    .eq('id', orderId);
+        function initRealtimeListener() {
+            db.channel('public:sales')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sales' }, payload => {
+                    playNotificationSoundAndPush(payload.new.status);
+                    oshxonaniYuklash();
+                })
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sales' }, payload => {
+                    oshxonaniYuklash();
+                })
+                .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'sales' }, payload => {
+                    oshxonaniYuklash();
+                })
+                .subscribe();
 
-                if (error) throw error;
-                oshxonaniYuklash();
-            } catch (err) {
-                alert("Statusni o'zgartirishda xatolik yuz berdi");
-            }
+            setInterval(() => {
+                oshxonaniYuklash(true, "Yangi buyurtma keldi!");
+            }, 5000);
         }
 
-        // --- SOZLAMALAR LOGIKASI ---
-        async function clearDailySalesHistory() {
-            if (!confirm("Diqqat! Bugungi barcha savdo tarixini tozalashni tasdiqlaysizmi?")) return;
-            try {
-                const today = new Date().toISOString().split('T')[0];
-                const { error } = await supabase
-                    .from('sales')
-                    .delete()
-                    .gte('created_at', today + 'T00:00:00');
-
-                if (error) throw error;
-
-                alert("Kunlik savdo tarixi tozalandi!");
-                oshxonaniYuklash();
-                kassaHisobotiniYuklash();
-            } catch (err) {
-                alert("Tarixni tozalashda xatolik yuz berdi!");
-            }
-        }
-
-        // DASTLABKI YUKLANISH VA REAL-TIME OBSERVER
-        window.onload = function() {
+        window.addEventListener('DOMContentLoaded', () => {
+            loadAdminDeliverySettings();
+            loadPaymentSettings();
             tanlovlarniYuklash();
             oshxonaniYuklash();
-
-            // Har 10 soniyada avto-yangilash
-            setInterval(() => {
-                const activeTab = document.querySelector('.nav button.active-tab');
-                if (activeTab && activeTab.id === 'tab-kitchen') {
-                    oshxonaniYuklash(true);
-                }
-            }, 10000);
-        };
+            initRealtimeListener();
+        });
     </script>
 </body>
 </html>
