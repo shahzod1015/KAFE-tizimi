@@ -1358,7 +1358,9 @@
 
             (sales || []).forEach((s) => {
                 const statusStr = s.status || '';
-                
+               // 1360-satrdan keyin mos ravishda joylashtiring:
+const itemsText = s.items || s.order_items || s.items_text || s.title || s.description || 'Taom nomi ko\'rsatilmadi';
+const totalSum = s.total_amount || s.total_price || s.summa || s.price || 0; 
                 if(statusStr.includes('[BOZOR XARIDI]')) return;
 
                 const isReady = statusStr.includes('TAYYOR BO\'LDI') || statusStr.includes('[KURYERGA BERILDI]') || statusStr.includes('[ESKI SAVDO]');
@@ -1395,8 +1397,8 @@
                             <span class="status-pending">⏱ TAYYORLANMOQDA</span>
                         </div>
                         <div style="margin-bottom:6px;">${paymentStatusBadge}</div>
-                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff; line-height: 1.4;">${parseAndFormatOrderText(statusStr)}</p>
-                        <p style="margin-top:4px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
+                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${itemsText}</p>
+                        <p style="margin-top:4px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold,#eab308);">${totalSum} so'm</b></p>
                         <div style="margin-top: 8px;">
                             ${receiptBtn}
                             ${yandexBtn}
