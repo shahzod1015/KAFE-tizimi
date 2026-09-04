@@ -1358,7 +1358,8 @@
 
             (sales || []).forEach((s) => {
                 const statusStr = s.status || '';
-               // 1360-satrdan keyin mos ravishda joylashtiring:
+               const tableNum = s.table_number || s.table || s.stol || '';
+                // 1360-satrdan keyin mos ravishda joylashtiring:
 let itemsText = '';
 if (Array.isArray(s.items)) {
     itemsText = s.items.map(i => `${i.name || i.title || 'Taom'} (${i.quantity || i.count || 1} ta)`).join(', ');
