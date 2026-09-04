@@ -1602,22 +1602,43 @@
         }
 
         function initRealtimeListener() {
-            db.channel('public:sales')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sales' }, payload => {
-                    playNotificationSoundAndPush(payload.new.status);
-                    oshxonaniYuklash();
-                })
-                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sales' }, payload => {
-                    oshxonaniYuklash();
-                })
-                .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'sales' }, payload => {
-                    oshxonaniYuklash();
-                })
-                .subscribe();
+            console.log("Realtime (sales) ulash boshlandi...");
 
+            // Barcha eski ulanishlarni tozalaymiz
+            db.removeAllChannels();
+
+            const salesChannel = db.channel('sales_realtime_channel')
+                .on('postgres_changes', { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'sales' 
+                }, (payload) => {
+                    console.log('⚡️ Realtime hodisa tushdi:', payload);
+
+                    if (payload.eventType === 'INSERT') {
+                        // Yangi buyurtma tushganda ovoz va push bildirishnoma chalish
+                        playNotificationSoundAndPush(payload.new.status || "Yangi buyurtma keldi!");
+                    }
+                    
+                    // Oshxona va kassani darhol yangilash
+                    oshxonaniYuklash();
+                    if (document.getElementById('reports').classList.contains('active')) {
+                        hisobotniYuklash();
+                    }
+                })
+                .subscribe((status, err) => {
+                    if (status === 'SUBSCRIBED') {
+                        console.log('✅ Realtime ulanishi MUVAFFAQIYATLI amalga oshdi!');
+                    }
+                    if (status === 'CHANNEL_ERROR') {
+                        console.error('❌ Realtime ulanish xatosi:', err);
+                    }
+                });
+
+            // Ehtiyot shart: Har 7 soniyada tarmoq uzilib qolsa ham foniy yangilab turish
             setInterval(() => {
                 oshxonaniYuklash(true, "Yangi buyurtma keldi!");
-            }, 5000);
+            }, 7000);
         }
 
         window.addEventListener('DOMContentLoaded', () => {
