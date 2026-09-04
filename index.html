@@ -1350,7 +1350,7 @@
         }
 
         async function oshxonaniYuklash(isAutoCheck = false, newOrderText = '') {
-            const { data: sales } = await db.from('orders').select('*');.order('created_at', { ascending: false });
+            const { data: sales } = await db.from('orders').select('*').order('created_at', { ascending: false });
             
             let activeHtml = '';
             let dailyGroups = {};
