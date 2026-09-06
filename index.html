@@ -385,7 +385,6 @@
             </div>
             <div id="kitchen-orders-list">Yuklanmoqda...</div>
 
-            <!-- ESKI SAVDOLARNI QO'SHISH VA TAHRIRLASH BO'LIMI -->
             <div style="background: rgba(212, 175, 55, 0.05); border: 1px dashed #d4af37; padding: 14px; border-radius: 14px; margin: 20px 0;">
                 <h3 style="color: var(--gold-text); font-size: 16px; margin-bottom: 8px;">📓 Daftardagi Eski Savdolarni Kiritish va Tahrirlash</h3>
                 <p style="font-size: 11px; color: #aaa; margin-bottom: 10px;">Xatoni tuzatish yoki eski savdolarni qo'shish uchun quyidagi shakldan foydalaning:</p>
@@ -484,7 +483,6 @@
 
             <button class="btn-save" onclick="bozorXaridiniQoshish()">🛒 Xaridni Saqlash</button>
 
-            <!-- BOZOR HISOBOTI QISMI -->
             <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.4); padding: 14px; border-radius: 16px; margin-top: 20px;">
                 <h3 style="color: var(--gold-text); margin-bottom: 12px; font-size: 16px;">📊 Bozor Hisoboti (Haftalik va Oylik)</h3>
                 
@@ -511,7 +509,6 @@
             <div class="card">Bugungi Tan Narx: <b id="rep-cost" class="tag-cost">0</b> so'm</div>
             <div class="card">Bugungi Saf Foyda: <b id="rep-profit" style="color:#34d399; font-size:18px;">0</b> so'm</div>
 
-            <!-- HAFTALIK VA OYLIK HISOBOT QISMI -->
             <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.4); padding: 14px; border-radius: 16px; margin-top: 20px;">
                 <h3 style="color: var(--gold-text); margin-bottom: 12px; font-size: 16px;">📈 Haftalik va Oylik Hisobot</h3>
                 
@@ -607,7 +604,6 @@
         </div>
 
     </div>
-
     <script> 
         const SUPABASE_URL = "https://wrrsvrgdinfmnuwewtoa.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndycnN2cmdkaW5mbW51d2V3dG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NzM0ODIsImV4cCI6MjEwMjU0OTQ4Mn0.YRHratsKVG42IY6YKokDycRy23oU8N3b7jO-o3tpQF4";
@@ -641,10 +637,12 @@
 
         async function enableAppPermissions() {
             const audio = document.getElementById('order-audio');
-            audio.play().then(() => {
-                audio.pause();
-                audio.currentTime = 0;
-            }).catch(e => console.log("Audio xatosi:", e));
+            if (audio) {
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }).catch(e => console.log("Audio xatosi:", e));
+            }
 
             if ('Notification' in window) {
                 const permission = await Notification.requestPermission();
@@ -716,11 +714,9 @@
             }
         }
 
-        // TO'G'RILANGAN TASHKENT VAQTINI OLISH FUNKSIYALARI
         function getTashkentDate(dateInput) {
             let d = dateInput ? new Date(String(dateInput).replace(' ', 'T')) : new Date();
             if (isNaN(d.getTime())) d = new Date();
-            // 5 soat qo'shib to'g'ri Toshkent vaqtini hosil qilamiz
             return new Date(d.getTime() + (5 * 60 * 60 * 1000));
         }
 
@@ -742,7 +738,6 @@
                                  .replace(/GPS:\s*[0-9.,\s]+/gi, '');
 
             cleaned = cleaned.replace(/\(x(\d+)\)/g, '<span class="qty-highlight">(x$1)</span>');
-            
             return cleaned;
         }
 
@@ -1111,7 +1106,9 @@
             const totalCost = (menuItem.cost || 0) * qty;
             const orderStatus = `Stol #${tableNum} - ${menuItem.title} (x${qty})`;
 
-            const { error } = await db.from('sales').insert([{ 
+            const { error } = await db.from('orders').insert([{ 
+                table_number: tableNum,
+                items: [{ name: menuItem.title, quantity: qty, price: menuItem.price }],
                 total_amount: totalPrice, 
                 total_cost: totalCost, 
                 profit: (totalPrice - totalCost),
@@ -1126,6 +1123,7 @@
                 alert(`✅ Stol #${tableNum}: ${qty}x ${menuItem.title} oshxonaga yuborildi!`);
                 itemQuantities[menu_id] = 1;
                 document.getElementById(`qty-val-${menu_id}`).innerText = 1;
+                oshxonaniYuklash();
             }
         }
 
@@ -1142,7 +1140,7 @@
 
             const fullDateTime = `${dateVal}T${timeVal}:00+05:00`;
 
-            const { error } = await db.from('sales').insert([{
+            const { error } = await db.from('orders').insert([{
                 total_amount: amount,
                 total_cost: cost,
                 profit: (amount - cost),
@@ -1163,7 +1161,7 @@
 
         async function eskiSavdolarniTozalash() {
             if(confirm("Haqiqatan ham barcha eski savdo ma'lumotlarini o'chirib, asl holatiga qaytarmoqchimisiz?")) {
-                const { data, error } = await db.from('sales').select('id, status');
+                const { data, error } = await db.from('orders').select('id, status');
                 if(error) return alert("Xatolik: " + error.message);
 
                 let idsToDelete = [];
@@ -1178,7 +1176,7 @@
                 }
 
                 for(let id of idsToDelete) {
-                    await db.from('sales').delete().eq('id', id);
+                    await db.from('orders').delete().eq('id', id);
                 }
 
                 alert("✅ Barcha kiritilgan eski savdolar tozalandi va asl holatiga qaytarildi!");
@@ -1187,19 +1185,19 @@
         }
 
         async function barchaTarixniTahrirlashModal() {
-            const { data, error } = await db.from('sales').select('id, created_at, status, total_amount').order('created_at', { ascending: false }).limit(20);
+            const { data, error } = await db.from('orders').select('id, created_at, status, total_amount').order('created_at', { ascending: false }).limit(20);
             if(error || !data || data.length === 0) return alert("Tahrirlash uchun oxirgi savdolar topilmadi.");
 
             let listStr = "Oxirgi savdolar ro'yxati (O'chirish uchun ID kerak):\n\n";
             data.forEach(s => {
-                listStr += `ID: ${s.id} | Sana: ${getTashkentDateString(s.created_at)} | ${s.status} | ${Number(s.total_amount).toLocaleString()} so'm\n`;
+                listStr += `ID: ${s.id} | Sana: ${getTashkentDateString(s.created_at)} | ${s.status || ''} | ${Number(s.total_amount || 0).toLocaleString()} so'm\n`;
             });
 
             let saleIdToDel = prompt(listStr + "\nO'chirmoqchi bo'lgan savdo ID raqamini kiriting:");
             if (saleIdToDel) {
                 let idNum = parseInt(saleIdToDel);
                 if (!isNaN(idNum)) {
-                    const { error: delErr } = await db.from('sales').delete().eq('id', idNum);
+                    const { error: delErr } = await db.from('orders').delete().eq('id', idNum);
                     if (delErr) alert("Xatolik: " + delErr.message);
                     else {
                         alert("✅ Tanlangan savdo tarixidan muvaffaqiyatli o'chirildi!");
@@ -1238,7 +1236,6 @@
             document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
-        // --- BOZOR OYNASI VA HISOBOTI ---
         async function bozorXaridiniQoshish() {
             const dateVal = document.getElementById('market-date').value || getTashkentDateString();
             const timeVal = document.getElementById('market-time').value || '09:00';
@@ -1254,7 +1251,7 @@
             const fullDateTime = `${dateVal}T${timeVal}:00+05:00`;
             const unitPrice = totalPrice / qty;
 
-            const { error: salesErr } = await db.from('sales').insert([{
+            const { error: salesErr } = await db.from('orders').insert([{
                 total_amount: 0,
                 total_cost: totalPrice,
                 profit: -totalPrice,
@@ -1290,7 +1287,7 @@
         }
 
         async function bozorTarixiniYuklash() {
-            const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
+            const { data: sales } = await db.from('orders').select('*').order('created_at', { ascending: false });
             
             let marketWeeklyCost = 0;
             let marketMonthlyCost = 0;
@@ -1358,17 +1355,19 @@
 
             (sales || []).forEach((s) => {
                 const statusStr = s.status || '';
-               const tableNum = s.table_number || s.table || s.stol || '';
-                // 1360-satrdan keyin mos ravishda joylashtiring:
-let itemsText = '';
-if (Array.isArray(s.items)) {
-    itemsText = s.items.map(i => `${i.name || i.title || 'Taom'} (${i.quantity || i.count || 1} ta)`).join(', ');
-} else if (typeof s.items === 'object' && s.items !== null) {
-    itemsText = Object.values(s.items).map(i => `${i.name || i.title || 'Taom'}`).join(', ');
-} else {
-    itemsText = s.items || s.order_items || s.title || 'Taom nomi ko\'rsatilmadi';
-}
-const totalSum = s.total_amount || s.total_price || s.summa || s.price || 0; 
+                const tableNum = s.table_number || s.table || s.stol || '';
+
+                let itemsText = '';
+                if (Array.isArray(s.items)) {
+                    itemsText = s.items.map(i => `${i.name || i.title || 'Taom'} (${i.quantity || i.count || 1} ta)`).join(', ');
+                } else if (typeof s.items === 'object' && s.items !== null) {
+                    itemsText = Object.values(s.items).map(i => `${i.name || i.title || 'Taom'}`).join(', ');
+                } else {
+                    itemsText = s.items || s.order_items || s.title || parseAndFormatOrderText(statusStr) || 'Taom ko\'rsatilmadi';
+                }
+
+                const totalSum = Number(s.total_amount || s.total_price || s.summa || s.price || 0).toLocaleString();
+
                 if(statusStr.includes('[BOZOR XARIDI]')) return;
 
                 const isReady = statusStr.includes('TAYYOR BO\'LDI') || statusStr.includes('[KURYERGA BERILDI]') || statusStr.includes('[ESKI SAVDO]');
@@ -1400,10 +1399,9 @@ const totalSum = s.total_amount || s.total_price || s.summa || s.price || 0;
                     }
 
                     activeHtml += `<div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <b>⏰ ${timeStr}</b>${tableNum ? `<span style="color:#14b8a6 !important; font-weight:900 !important; font-size:18px !important; margin-left:8px; background:rgba(13,148,136,0.2) !important; padding:4px 10px; border-radius:8px; border:2px solid #14b8a6 !important; display:inline-block;">${tableNum} - stol</span>` : ''}
-        <span class="status-pending">⏱ TAYYORLANMOQDA</span>
-      </div>`;
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                            <b>⏰ ${timeStr}</b> ${tableNum ? `<span style="color:#14b8a6 !important; font-weight:900 !important; font-size:18px !important; margin-left:8px; background:rgba(13,148,136,0.2) !important; padding:4px 10px; border-radius:8px; border:2px solid #14b8a6 !important; display:inline-block;">${tableNum} - stol</span>` : ''}
+                            <span class="status-pending">⏱ TAYYORLANMOQDA</span>
                         </div>
                         <div style="margin-bottom:6px;">${paymentStatusBadge}</div>
                         <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff;">${itemsText}</p>
@@ -1491,7 +1489,7 @@ const totalSum = s.total_amount || s.total_price || s.summa || s.price || 0;
 
         async function buyurtmaniTayyorLash(id, currentStatus) {
             const updatedStatus = currentStatus + " [TAYYOR BO'LDI]";
-            const { error } = await db.from('sales').update({ status: updatedStatus }).eq('id', id);
+            const { error } = await db.from('orders').update({ status: updatedStatus }).eq('id', id);
             if(error) alert("Xatolik: " + error.message);
             else {
                 oshxonaniYuklash();
@@ -1503,7 +1501,7 @@ const totalSum = s.total_amount || s.total_price || s.summa || s.price || 0;
 
         async function kuryergaBerildi(id, currentStatus) {
             const updatedStatus = currentStatus + " [KURYERGA BERILDI]";
-            const { error } = await db.from('sales').update({ status: updatedStatus }).eq('id', id);
+            const { error } = await db.from('orders').update({ status: updatedStatus }).eq('id', id);
             if(error) alert("Xatolik: " + error.message);
             else {
                 alert("📦 Buyurtma kuryerga berildi deb belgilandi!");
@@ -1516,7 +1514,7 @@ const totalSum = s.total_amount || s.total_price || s.summa || s.price || 0;
 
         async function buyurtmaniBekorQilish(id) {
             if(confirm("Ushbu buyurtmani bekor qilmoqchimisiz?")) {
-                const { error } = await db.from('sales').delete().eq('id', id);
+                const { error } = await db.from('orders').delete().eq('id', id);
                 if(error) alert("Xatolik: " + error.message);
                 else {
                     oshxonaniYuklash();
@@ -1531,7 +1529,7 @@ const totalSum = s.total_amount || s.total_price || s.summa || s.price || 0;
             const todayStr = getTashkentDateString();
             document.getElementById('today-date-str').innerText = todayStr;
 
-            const { data: sales } = await db.from('sales').select('*');
+            const { data: sales } = await db.from('orders').select('*');
 
             let todayRev = 0, todayCost = 0, todayProfit = 0;
             let weeklyRev = 0, weeklyProfit = 0;
@@ -1613,34 +1611,31 @@ const totalSum = s.total_amount || s.total_price || s.summa || s.price || 0;
         }
 
         function initRealtimeListener() {
-    console.log("Realtime (orders) ulash boshlandi...");
+            console.log("Realtime (orders) ulash boshlandi...");
 
-    db.removeAllChannels();
+            db.removeAllChannels();
 
-    const ordersChannel = db.channel('orders_realtime_channel')
-        .on('postgres_changes', { 
-            event: '*', 
-            schema: 'public', 
-            table: 'orders' 
-        }, (payload) => {
-            console.log('⚡️ Realtime hodisa tushdi:', payload);
+            db.channel('orders_realtime_channel')
+                .on('postgres_changes', { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'orders' 
+                }, (payload) => {
+                    if (payload.eventType === 'INSERT') {
+                        playNotificationSoundAndPush(payload.new.status || "Yangi buyurtma keldi!");
+                    }
+                    oshxonaniYuklash();
+                })
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        console.log('✅ Realtime ulanishi MUVAFFAQIYATLI amalga oshdi!');
+                    }
+                });
 
-            if (payload.eventType === 'INSERT') {
-                playNotificationSoundAndPush(payload.new.status || "Yangi buyurtma keldi!");
-            }
-            
-            oshxonaniYuklash();
-        })
-        .subscribe((status, err) => {
-            if (status === 'SUBSCRIBED') {
-                console.log('✅ Realtime ulanishi MUVAFFAQIYATLI amalga oshdi!');
-            }
-        });
-
-    setInterval(() => {
-        oshxonaniYuklash(true, "Yangi buyurtma keldi!");
-    }, 7000);
-}
+            setInterval(() => {
+                oshxonaniYuklash(true, "Yangi buyurtma keldi!");
+            }, 7000);
+        }
 
         window.addEventListener('DOMContentLoaded', () => {
             loadAdminDeliverySettings();
