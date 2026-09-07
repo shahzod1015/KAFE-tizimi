@@ -165,23 +165,6 @@
             color: #f1f5f9; 
         }
 
-        /* OSHXONADAGI ULKAN STOL RAQAMI BLOKI (3 SATRLI SIZ O'YLAGANDAY) */
-        .huge-table-badge {
-            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-            color: #ffffff;
-            padding: 12px;
-            border-radius: 14px;
-            text-align: center;
-            font-weight: 900;
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-            margin-bottom: 12px;
-            border: 2px solid #34d399;
-            line-height: 1.1;
-        }
-        .huge-table-badge .line-1 { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.9; }
-        .huge-table-badge .line-2 { font-size: 42px; text-transform: uppercase; margin: 4px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.6); }
-        .huge-table-badge .line-3 { font-size: 16px; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 8px; display: inline-block; margin-top: 2px; }
-
         .daily-green-block {
             border: 2px solid #10b981 !important;
             border-radius: 14px;
@@ -751,7 +734,6 @@
             return `${correctedDate.getUTCFullYear()}-${String(correctedDate.getUTCMonth() + 1).padStart(2, '0')}-${String(correctedDate.getUTCDate()).padStart(2, '0')}`;
         }
 
-        // BUYURTMA MATNIDAN STOL RAQAMINI VA MA'LUMOTLARNI AJRATIB OLISH
         function parseAndFormatOrderText(rawStatus) {
             if (!rawStatus) return '';
             
@@ -762,33 +744,6 @@
             cleaned = cleaned.replace(/\(x(\d+)\)/g, '<span class="qty-highlight">(x$1)</span>');
             
             return cleaned;
-        }
-
-        // OSHXONADA STOL RAQAMINI ULKAN (3 SATRLI) QILIB KO'RSATISH FUNKSIYASI
-        function getTableBadgeHtml(rawStatus) {
-            if (!rawStatus) return '';
-            
-            let tableMatch = rawStatus.match(/Stol\s*#?([^\s-]+)/i);
-            if (tableMatch) {
-                let tableNum = tableMatch[1];
-                return `
-                <div class="huge-table-badge">
-                    <div class="line-1">STOL RAQAMI</div>
-                    <div class="line-2"># ${tableNum}</div>
-                    <div class="line-3">KAFE ICHIDA</div>
-                </div>`;
-            }
-            
-            if (rawStatus.toLowerCase().includes('dostavka') || rawStatus.toLowerCase().includes('yetkazish')) {
-                return `
-                <div class="huge-table-badge" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); border-color: #fca5a5;">
-                    <div class="line-1">BUYURTMA TURI</div>
-                    <div class="line-2">🛵 DOSTAVKA</div>
-                    <div class="line-3">MANZILGA YETKAZISH</div>
-                </div>`;
-            }
-
-            return '';
         }
 
         function getReceiptButton(s) {
@@ -1205,205 +1160,53 @@
                 oshxonaniYuklash();
             }
         }
-       async function eskiSavdolarniTozalash() {
-            if(!confirm("⚠️ DIQQAT! Barcha kassa va buyurtmalar tarixini butunlay o'chirib tashlamoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi!")) {
-                return;
-            }
 
-            const confirmCode = prompt("Tizimni tozalash uchun 'DELETE' so'zini kiriting:");
-            if (confirmCode !== 'DELETE') {
-                return alert("Bekor qilindi. Tasdiqlash kodi noto'g'ri.");
-            }
+        async function eskiSavdolarniTozalash() {
+            if(confirm("Haqiqatan ham barcha eski savdo ma'lumotlarini o'chirib, asl holatiga qaytarmoqchimisiz?")) {
+                const { data, error } = await db.from('sales').select('id, status');
+                if(error) return alert("Xatolik: " + error.message);
 
-            const { error } = await db.from('sales').delete().neq('id', 0);
-            if(error) {
-                alert("O'chirishda xatolik: " + error.message);
-            } else {
-                alert("🗑 Barcha savdolar va kassa tarixi muvaffaqiyatli tozalandi!");
-                oshxonaniYuklash();
-            }
-        }
-
-        async function oshxonaniYuklash() {
-            // Faol (Kutilayotgan) buyurtmalar
-            const { data: sales, error } = await db.from('sales')
-                .select('*')
-                .or('is_completed.is.null,is_completed.eq.false')
-                .order('created_at', { ascending: false });
-
-            if (error) console.error("Oshxona yuklash xatosi:", error);
-
-            if (sales && sales.length > lastKnownOrderCount && lastKnownOrderCount !== 0) {
-                const latestOrder = sales[0];
-                playNotificationSoundAndPush(latestOrder.status);
-            }
-            lastKnownOrderCount = sales ? sales.length : 0;
-
-            let html = '';
-            (sales || []).forEach(s => {
-                const timeStr = getTashkentTimeString(s.created_at);
-                const tableBadge = getTableBadgeHtml(s.status);
-                const orderTextFormatted = parseAndFormatOrderText(s.status);
-
-                html += `
-                <div class="card" style="border-left: 4px solid #f59e0b; background: rgba(18, 18, 22, 0.95); padding: 14px; margin-bottom: 14px;">
-                    ${tableBadge}
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span class="status-pending">⏳ Kutilmoqda (${timeStr})</span>
-                        <b class="tag-price" style="font-size:16px;">${s.total_amount.toLocaleString()} so'm</b>
-                    </div>
-                    
-                    <div style="font-size:15px; font-weight:600; line-height:1.5; color:#ffffff; margin:10px 0; background:rgba(255,255,255,0.03); padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
-                        ${orderTextFormatted}
-                    </div>
-
-                    <div>
-                        ${getReceiptButton(s)}
-                        ${getYandexButton(s)}
-                    </div>
-
-                    <div class="kitchen-actions">
-                        <button class="btn-ready" onclick="buyurtmaniYakunlash(${s.id})">✅ Tayyor (Yopish)</button>
-                        <button class="btn-cancel" onclick="buyurtmaniOchirish(${s.id})">Bekor qilish</button>
-                    </div>
-                </div>`;
-            });
-            document.getElementById('kitchen-orders-list').innerHTML = html || '<div style="text-align:center; padding:20px; color:#aaa;">Hozircha faol buyurtmalar yo\'q.</div>';
-
-            // Sanalar bo'yicha guruhlangan tarixlarni yuklash
-            loadDailyHistory();
-        }
-
-        async function loadDailyHistory() {
-            const { data: allSales } = await db.from('sales')
-                .select('*')
-                .eq('is_completed', true)
-                .order('created_at', { ascending: false });
-
-            if (!allSales || allSales.length === 0) {
-                document.getElementById('daily-history-list').innerHTML = '<div style="color:#aaa; text-align:center; padding:15px;">Tarixda yakunlangan buyurtmalar topilmadi.</div>';
-                return;
-            }
-
-            const groupedByDate = {};
-            allSales.forEach(s => {
-                const dateKey = getTashkentDateString(s.created_at);
-                if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
-                groupedByDate[dateKey].push(s);
-            });
-
-            let historyHtml = '';
-            for (const [date, orders] of Object.entries(groupedByDate)) {
-                let dayTotalRevenue = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
-                let dayTotalCost = orders.reduce((sum, o) => sum + (o.total_cost || 0), 0);
-                let dayTotalProfit = dayTotalRevenue - dayTotalCost;
-
-                historyHtml += `
-                <div class="daily-green-block">
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #10b981; padding-bottom:8px; margin-bottom:10px;">
-                        <span style="font-size:16px; font-weight:800; color:#34d399;">📅 ${date}</span>
-                        <span style="font-size:13px; color:#aaa;">Jami: <b>${orders.length} ta buyurtma</b></span>
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; background:rgba(0,0,0,0.4); padding:8px; border-radius:8px; margin-bottom:10px; font-size:11px; text-align:center;">
-                        <div>Tushum:<br><b class="tag-price">${dayTotalRevenue.toLocaleString()} so'm</b></div>
-                        <div>Tan narx:<br><b class="tag-cost">${dayTotalCost.toLocaleString()} so'm</b></div>
-                        <div>Foyda:<br><b style="color:#34d399;">${dayTotalProfit.toLocaleString()} so'm</b></div>
-                    </div>
-
-                    <div style="display:flex; flex-direction:column; gap:8px;">`;
-
-                orders.forEach(o => {
-                    const timeStr = getTashkentTimeString(o.created_at);
-                    const formattedOrderText = parseAndFormatOrderText(o.status);
-
-                    historyHtml += `
-                        <div style="background:rgba(0,0,0,0.5); padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
-                            <div style="font-size:12px; color:#ddd; flex:1;">
-                                <span style="color:#aaa; font-size:10px;">[${timeStr}]</span> ${formattedOrderText}
-                            </div>
-                            <div style="text-align:right; margin-left:10px;">
-                                <span style="font-size:12px; font-weight:bold; color:var(--gold-text);">${o.total_amount.toLocaleString()} so'm</span>
-                                <div style="display:flex; gap:4px; margin-top:2px; justify-content:flex-end;">
-                                    <button onclick="yakkaBuyurtmaniTahrirlash(${o.id}, ${o.total_amount}, ${o.total_cost || 0}, '${o.status.replace(/'/g, "\\'")}')" style="background:#3b82f6; color:#fff; border:none; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer;">✏️</button>
-                                    <button onclick="buyurtmaniOchirish(${o.id})" style="background:#dc2626; color:#fff; border:none; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer;">🗑</button>
-                                </div>
-                            </div>
-                        </div>`;
+                let idsToDelete = [];
+                (data || []).forEach(item => {
+                    if(item.status && item.status.includes('[ESKI SAVDO]')) {
+                        idsToDelete.push(item.id);
+                    }
                 });
 
-                historyHtml += `
-                    </div>
-                </div>`;
-            }
+                if(idsToDelete.length === 0) {
+                    return alert("O'chiriladigan eski savdolar topilmadi.");
+                }
 
-            document.getElementById('daily-history-list').innerHTML = historyHtml;
-        }
+                for(let id of idsToDelete) {
+                    await db.from('sales').delete().eq('id', id);
+                }
 
-        async function yakkaBuyurtmaniTahrirlash(id, currentAmount, currentCost, currentStatus) {
-            const newAmount = prompt("Yangi sotuv summasini kiriting (so'mda):", currentAmount);
-            if (newAmount === null) return;
-
-            const newCost = prompt("Yangi tan narxini kiriting (so'mda):", currentCost);
-            if (newCost === null) return;
-
-            const newStatus = prompt("Buyurtma matni/izohini tahrirlang:", currentStatus);
-            if (newStatus === null) return;
-
-            const parsedAmount = parseFloat(newAmount) || 0;
-            const parsedCost = parseFloat(newCost) || 0;
-            const parsedProfit = parsedAmount - parsedCost;
-
-            const { error } = await db.from('sales').update({
-                total_amount: parsedAmount,
-                total_cost: parsedCost,
-                profit: parsedProfit,
-                status: newStatus
-            }).eq('id', id);
-
-            if(error) {
-                alert("Tahrirlashda xatolik: " + error.message);
-            } else {
-                alert("✅ Buyurtma muvaffaqiyatli tuzatildi!");
+                alert("✅ Barcha kiritilgan eski savdolar tozalandi va asl holatiga qaytarildi!");
                 oshxonaniYuklash();
-                hisobotniYuklash();
             }
         }
 
         async function barchaTarixniTahrirlashModal() {
-            const saleId = prompt("Tahrirlamoqchi bo'lgan buyurtmangizning ID raqamini yoki izohini qidirish uchun ID kiriting:");
-            if(!saleId) return;
+            const { data, error } = await db.from('sales').select('id, created_at, status, total_amount').order('created_at', { ascending: false }).limit(20);
+            if(error || !data || data.length === 0) return alert("Tahrirlash uchun oxirgi savdolar topilmadi.");
 
-            const { data: s } = await db.from('sales').select('*').eq('id', saleId).single();
-            if(!s) return alert("Bunday ID dagi buyurtma topilmadi!");
-
-            yakkaBuyurtmaniTahrirlash(s.id, s.total_amount, s.total_cost || 0, s.status);
-        }
-
-        async function buyurtmaniYakunlash(id) {
-            const { error } = await db.from('sales').update({ is_completed: true }).eq('id', id);
-            if (error) alert("Xato: " + error.message);
-            else oshxonaniYuklash();
-        }
-
-        async function buyurtmaniOchirish(id) {
-            if(confirm("Haqiqatdan ham ushbu buyurtmani o'chirmoqchimisiz?")) {
-                const { error } = await db.from('sales').delete().eq('id', id);
-                if (error) alert("Xato: " + error.message);
-                else oshxonaniYuklash();
-            }
-        }
-
-        async function omborniYuklash() {
-            const { data: stock } = await db.from('ingredients').select('*');
-            let html = '';
-            (stock || []).forEach(i => {
-                html += `<div class="card">
-                    <b>${i.name}</b>: ${i.quantity} ${i.unit} (${i.cost_per_unit} so'm/birlik)
-                    <button class="btn-delete" style="float:right;" onclick="masalliqOchirish(${i.id})">🗑</button>
-                </div>`;
+            let listStr = "Oxirgi savdolar ro'yxati (O'chirish uchun ID kerak):\n\n";
+            data.forEach(s => {
+                listStr += `ID: ${s.id} | Sana: ${getTashkentDateString(s.created_at)} | ${s.status} | ${Number(s.total_amount).toLocaleString()} so'm\n`;
             });
-            document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
+
+            let saleIdToDel = prompt(listStr + "\nO'chirmoqchi bo'lgan savdo ID raqamini kiriting:");
+            if (saleIdToDel) {
+                let idNum = parseInt(saleIdToDel);
+                if (!isNaN(idNum)) {
+                    const { error: delErr } = await db.from('sales').delete().eq('id', idNum);
+                    if (delErr) alert("Xatolik: " + delErr.message);
+                    else {
+                        alert("✅ Tanlangan savdo tarixidan muvaffaqiyatli o'chirildi!");
+                        oshxonaniYuklash();
+                    }
+                }
+            }
         }
 
         async function masalliqQoshish() {
@@ -1412,129 +1215,304 @@
             const unit = document.getElementById('ing-unit').value;
             const cost_per_unit = parseFloat(document.getElementById('ing-cost').value);
 
-            if(!name || isNaN(quantity)) return alert("Ma'lumotlarni to'liq kiriting!");
+            if(!name || isNaN(quantity) || !unit) return alert("Nom va miqdorni kiriting!");
 
-            await db.from('ingredients').insert([{ name, quantity, unit, cost_per_unit }]);
-            
-            document.getElementById('ing-name').value = '';
-            document.getElementById('ing-qty').value = '';
-            document.getElementById('ing-unit').value = '';
-            document.getElementById('ing-cost').value = '';
-
-            omborniYuklash();
-        }
-
-        async function masalliqOchirish(id) {
-            if(confirm("Masalliqni o'chirmoqchimisiz?")) {
-                await db.from('ingredients').delete().eq('id', id);
-                omborniYuklash();
+            const { error } = await db.from('ingredients').insert([{ name, quantity, unit, cost_per_unit: cost_per_unit || 0 }]);
+            if(error) alert("Xato: " + error.message);
+            else { 
+                alert("Masalliq qo'shildi!"); 
+                document.getElementById('ing-name').value = '';
+                document.getElementById('ing-qty').value = '';
+                document.getElementById('ing-unit').value = '';
+                document.getElementById('ing-cost').value = '';
+                omborniYuklash(); 
             }
         }
 
-        // BOZOR XARIDLARINI YUKLASH VA QO'SHISH
-        async function bozorTarixiniYuklash() {
-            const todayStr = getTashkentDateString();
-            document.getElementById('market-date').value = todayStr;
-
-            const { data: marketData, error } = await db.from('market_purchases').select('*').order('created_at', { ascending: false });
-            
-            if (error) {
-                console.error("Bozor tarixini yuklash xatosi:", error);
-                document.getElementById('market-history-list').innerHTML = '<div style="color:#aaa;">Xaridlar tarixini yuklashda xatolik yuz berdi.</div>';
-                return;
-            }
-
-            let weeklyCost = 0;
-            let monthlyCost = 0;
-
-            const now = new Date();
-            const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
-            const currentMonth = now.getUTCMonth();
-            const currentYear = now.getUTCFullYear();
-
+        async function omborniYuklash() {
+            const { data } = await db.from('ingredients').select('*');
             let html = '';
-            (marketData || []).forEach(m => {
-                const itemDate = new Date(m.created_at);
-                const timeStr = getTashkentTimeString(m.created_at);
-                const dateStr = getTashkentDateString(m.created_at);
-
-                if (itemDate >= sevenDaysAgo) {
-                    weeklyCost += (m.total_price || 0);
-                }
-                if (itemDate.getUTCMonth() === currentMonth && itemDate.getUTCFullYear() === currentYear) {
-                    monthlyCost += (m.total_price || 0);
-                }
-
-                html += `
-                <div class="card" style="border-left: 4px solid #3b82f6;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <b style="font-size:15px; color:#fff;">${m.item_name}</b>
-                            <div style="font-size:12px; color:#aaa; margin-top:2px;">
-                                Miqdori: <b style="color:var(--qty-purple);">${m.quantity} ${m.unit}</b> | Sana: <span>${dateStr} ${timeStr}</span>
-                            </div>
-                        </div>
-                        <div style="text-align:right;">
-                            <span class="tag-cost" style="font-size:14px;">${m.total_price.toLocaleString()} so'm</span>
-                            <br>
-                            <button class="btn-delete" style="margin-top:4px;" onclick="bozorXaridiniOchirish(${m.id})">🗑 O'chirish</button>
-                        </div>
-                    </div>
-                </div>`;
+            (data || []).forEach(i => {
+                html += `<div class="card"><b>${i.name}</b>: ${i.quantity} ${i.unit} (${i.cost_per_unit || 0} so'm)</div>`;
             });
-
-            document.getElementById('market-weekly-cost').innerText = `${weeklyCost.toLocaleString()} so'm`;
-            document.getElementById('market-monthly-cost').innerText = `${monthlyCost.toLocaleString()} so'm`;
-            document.getElementById('market-history-list').innerHTML = html || '<div style="color:#aaa; text-align:center; padding:15px;">Hali bozor xaridlari kiritilmagan.</div>';
+            document.getElementById('stock-list').innerHTML = html || 'Ombor bo\'sh';
         }
 
+        // --- BOZOR OYNASI VA HISOBOTI ---
         async function bozorXaridiniQoshish() {
-            const dateVal = document.getElementById('market-date').value;
+            const dateVal = document.getElementById('market-date').value || getTashkentDateString();
             const timeVal = document.getElementById('market-time').value || '09:00';
             const itemName = document.getElementById('market-item-name').value;
             const qty = parseFloat(document.getElementById('market-qty').value);
             const unit = document.getElementById('market-unit').value;
             const totalPrice = parseFloat(document.getElementById('market-total-price').value);
 
-            if(!dateVal || !itemName || isNaN(qty) || isNaN(totalPrice)) {
-                return alert("Iltimos, sana, mahsulot nomi, miqdori va narxini to'liq kiriting!");
+            if(!itemName || isNaN(qty) || isNaN(totalPrice)) {
+                return alert("Mahsulot nomi, miqdori va umumiy narxini to'liq kiriting!");
             }
 
             const fullDateTime = `${dateVal}T${timeVal}:00+05:00`;
-            const unitCost = qty > 0 ? (totalPrice / qty) : totalPrice;
+            const unitPrice = totalPrice / qty;
 
-            const { error } = await db.from('market_purchases').insert([{
-                item_name: itemName,
-                quantity: qty,
-                unit: unit,
-                total_price: totalPrice,
-                unit_price: unitCost,
+            const { error: salesErr } = await db.from('sales').insert([{
+                total_amount: 0,
+                total_cost: totalPrice,
+                profit: -totalPrice,
+                status: `[BOZOR XARIDI] ${qty} ${unit} ${itemName}`,
                 created_at: fullDateTime
             }]);
 
-            if(error) {
-                alert("Xatolik: " + error.message);
+            if(salesErr) {
+                return alert("Xatolik: " + salesErr.message);
+            }
+
+            const { data: existingIng } = await db.from('ingredients').select('*').ilike('name', itemName).maybeSingle();
+            if(existingIng) {
+                let newQty = parseFloat(existingIng.quantity || 0) + qty;
+                await db.from('ingredients').update({ 
+                    quantity: newQty, 
+                    cost_per_unit: unitPrice 
+                }).eq('id', existingIng.id);
             } else {
-                // Omborga ham avtomatsizlashtirilgan tarzda qo'shish
                 await db.from('ingredients').insert([{
                     name: itemName,
                     quantity: qty,
                     unit: unit,
-                    cost_per_unit: unitCost
+                    cost_per_unit: unitPrice
                 }]);
+            }
 
-                alert("✅ Bozor xaridi muvaffaqiyatli saqlandi va omborga qo'shildi!");
-                document.getElementById('market-item-name').value = '';
-                document.getElementById('market-qty').value = '';
-                document.getElementById('market-total-price').value = '';
-                bozorTarixiniYuklash();
+            alert("✅ Bozor xaridi muvaffaqiyatli saqlandi va omborga qo'shildi!");
+            document.getElementById('market-item-name').value = '';
+            document.getElementById('market-qty').value = '';
+            document.getElementById('market-total-price').value = '';
+            bozorTarixiniYuklash();
+        }
+
+        async function bozorTarixiniYuklash() {
+            const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
+            
+            let marketWeeklyCost = 0;
+            let marketMonthlyCost = 0;
+
+            const now = getTashkentDate();
+            const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+            const currentMonth = now.getUTCMonth();
+            const currentYear = now.getUTCFullYear();
+
+            let marketGroups = {};
+
+            (sales || []).forEach(s => {
+                if(s.status && s.status.includes('[BOZOR XARIDI]')) {
+                    const dateStr = getTashkentDateString(s.created_at);
+                    const costVal = parseFloat(s.total_cost || 0);
+                    let saleDate = getTashkentDate(s.created_at);
+
+                    if (saleDate >= sevenDaysAgo) marketWeeklyCost += costVal;
+                    if (saleDate.getUTCMonth() === currentMonth && saleDate.getUTCFullYear() === currentYear) marketMonthlyCost += costVal;
+
+                    if (!marketGroups[dateStr]) marketGroups[dateStr] = [];
+                    marketGroups[dateStr].push(s);
+                }
+            });
+
+            document.getElementById('market-weekly-cost').innerText = marketWeeklyCost.toLocaleString() + " so'm";
+            document.getElementById('market-monthly-cost').innerText = marketMonthlyCost.toLocaleString() + " so'm";
+
+            let marketHtml = '';
+            const sortedDates = Object.keys(marketGroups).sort().reverse();
+
+            sortedDates.forEach(date => {
+                let itemsHtml = '';
+                marketGroups[date].forEach(s => {
+                    const timeStr = getTashkentTimeString(s.created_at);
+                    const costVal = parseFloat(s.total_cost || 0);
+                    itemsHtml += `
+                        <div style="padding: 6px 0; border-bottom: 1px dashed rgba(16, 185, 129, 0.3); display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <b>⏰ ${timeStr}</b> - ${parseAndFormatOrderText(s.status)}<br>
+                                <small style="color:#f59e0b;">Xarajat: <b>${costVal.toLocaleString()} so'm</b></small>
+                            </div>
+                            <button onclick="bittaSavdoniOchirish(${s.id}); setTimeout(bozorTarixiniYuklash, 500);" style="background:#dc2626; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:bold; cursor:pointer;">🗑</button>
+                        </div>
+                    `;
+                });
+
+                marketHtml += `
+                    <div class="daily-green-block">
+                        <h4 style="color:#10b981; margin-bottom:8px; border-bottom:1px solid #10b981; padding-bottom:4px;">📅 Sana: ${date}</h4>
+                        ${itemsHtml}
+                    </div>
+                `;
+            });
+
+            document.getElementById('market-history-list').innerHTML = marketHtml || '<i>Hali bozor xaridlari kiritilmagan.</i>';
+        }
+
+        async function oshxonaniYuklash(isAutoCheck = false, newOrderText = '') {
+            const { data: sales } = await db.from('sales').select('*').order('created_at', { ascending: false });
+            
+            let activeHtml = '';
+            let dailyGroups = {};
+            let currentActiveCount = 0;
+
+            (sales || []).forEach((s) => {
+                const statusStr = s.status || '';
+                
+                if(statusStr.includes('[BOZOR XARIDI]')) return;
+
+                const isReady = statusStr.includes('TAYYOR BO\'LDI') || statusStr.includes('[KURYERGA BERILDI]') || statusStr.includes('[ESKI SAVDO]');
+                const timeStr = getTashkentTimeString(s.created_at);
+                const dateStr = getTashkentDateString(s.created_at);
+
+                const isDeliveryOrder = statusStr.toLowerCase().includes('dostavka') || 
+                                        statusStr.toLowerCase().includes('yetkazish') || 
+                                        statusStr.toLowerCase().includes('manzil') ||
+                                        statusStr.includes('NAQD');
+
+                let paymentStatusBadge = '';
+                if (statusStr.toUpperCase().includes('NAQD')) {
+                    paymentStatusBadge = `<span style="background:rgba(245, 158, 11, 0.2); color:#f59e0b; border:1px solid #f59e0b; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">NAQD PUL</span>`;
+                } else {
+                    paymentStatusBadge = `<span style="background:rgba(16, 185, 129, 0.2); color:#10b981; border:1px solid #10b981; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold;">TULANGAN</span>`;
+                }
+
+                if (!isReady) {
+                    currentActiveCount++;
+                    const receiptBtn = getReceiptButton(s);
+                    const yandexBtn = getYandexButton(s);
+
+                    let actionButtonHtml = '';
+                    if (isDeliveryOrder) {
+                        actionButtonHtml = `<button class="btn-ready" onclick="kuryergaBerildi(${s.id}, '${statusStr}')" style="background:#3b82f6;">🛵 KURYERGA BERILDI</button>`;
+                    } else {
+                        actionButtonHtml = `<button class="btn-ready" onclick="buyurtmaniTayyorLash(${s.id}, '${statusStr}')">✅ TAYYOR BO'LDI</button>`;
+                    }
+
+                    activeHtml += `<div class="card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <b>⏰ ${timeStr}</b>
+                            <span class="status-pending">⏱ TAYYORLANMOQDA</span>
+                        </div>
+                        <div style="margin-bottom:6px;">${paymentStatusBadge}</div>
+                        <p style="margin-top:6px; font-size:15px; font-weight:bold; color:#ffffff; line-height: 1.4;">${parseAndFormatOrderText(statusStr)}</p>
+                        <p style="margin-top:4px; font-size:13px; color:#d4d4d8;">Summa: <b style="color:var(--gold-text);">${Number(s.total_amount || 0).toLocaleString()}</b> so'm</p>
+                        <div style="margin-top: 8px;">
+                            ${receiptBtn}
+                            ${yandexBtn}
+                        </div>
+
+                        <div class="kitchen-actions">
+                            ${actionButtonHtml}
+                            <button class="btn-cancel" onclick="buyurtmaniBekorQilish(${s.id})">❌ Bekor qilish</button>
+                        </div>
+                    </div>`;
+                } else {
+                    if (!dailyGroups[dateStr]) {
+                        dailyGroups[dateStr] = { rev: 0, count: 0, orders: [] };
+                    }
+                    dailyGroups[dateStr].rev += parseFloat(s.total_amount || 0);
+                    dailyGroups[dateStr].count += 1;
+                    dailyGroups[dateStr].orders.push(s);
+                }
+            });
+
+            if (isAutoCheck && currentActiveCount > lastKnownOrderCount && lastKnownOrderCount !== 0) {
+                playNotificationSoundAndPush(newOrderText);
+            }
+            lastKnownOrderCount = currentActiveCount;
+
+            document.getElementById('kitchen-orders-list').innerHTML = activeHtml || '<p style="color:#a1a1aa; padding:10px 0;">Hozircha tayyorlanayotgan faol buyurtmalar yo\'q.</p>';
+
+            let historyHtml = '';
+            const sortedDates = Object.keys(dailyGroups).sort().reverse();
+
+            sortedDates.forEach(date => {
+                const item = dailyGroups[date];
+                let ordersInsideHtml = '';
+
+                item.orders.forEach(ord => {
+                    const timeStr = getTashkentTimeString(ord.created_at);
+                    const receiptBtn = getReceiptButton(ord);
+                    const yandexBtn = getYandexButton(ord);
+
+                    ordersInsideHtml += `
+                        <div style="padding: 8px 0; border-bottom: 1px dashed rgba(212, 175, 55, 0.2); display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-size:13px; flex-grow:1;">
+                                <span><b>⏰ ${timeStr}</b> (ID: ${ord.id}) - ${parseAndFormatOrderText(ord.status)}</span><br>
+                                <b style="color:var(--gold-text);">${Number(ord.total_amount || 0).toLocaleString()} so'm</b>
+                                <div style="margin-top: 4px;">
+                                    ${receiptBtn}
+                                    ${yandexBtn}
+                                </div>
+                            </div>
+                            <button onclick="bittaSavdoniOchirish(${ord.id})" style="background:#dc2626; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:bold; cursor:pointer; height:fit-content;">🗑 O'chirish</button>
+                        </div>
+                    `;
+                });
+
+                historyHtml += `
+                    <div class="daily-green-block">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #10b981; padding-bottom:8px; margin-bottom:10px;">
+                            <h4 style="color:#10b981; margin:0; font-size:15px;">📅 Sana: ${date}</h4>
+                            <span style="color:var(--gold-text); font-weight:bold; font-size:13px;">Savdo: ${item.rev.toLocaleString()} so'm (${item.count} ta)</span>
+                        </div>
+                        ${ordersInsideHtml}
+                    </div>
+                `;
+            });
+
+            document.getElementById('daily-history-list').innerHTML = historyHtml || '<i>Hali bajarilgan buyurtmalar yo\'q.</i>';
+        }
+
+        async function bittaSavdoniOchirish(id) {
+            if(confirm(`ID: ${id} bo'lgan ushbu yozuvni o'chirmoqchimisiz?`)) {
+                const { error } = await db.from('sales').delete().eq('id', id);
+                if(error) alert("Xatolik: " + error.message);
+                else {
+                    oshxonaniYuklash();
+                    if (document.getElementById('reports').classList.contains('active')) {
+                        hisobotniYuklash();
+                    }
+                }
             }
         }
 
-        async function bozorXaridiniOchirish(id) {
-            if(confirm("Ushbu bozor xaridini o'chirmoqchimisiz?")) {
-                await db.from('market_purchases').delete().eq('id', id);
-                bozorTarixiniYuklash();
+        async function buyurtmaniTayyorLash(id, currentStatus) {
+            const updatedStatus = currentStatus + " [TAYYOR BO'LDI]";
+            const { error } = await db.from('sales').update({ status: updatedStatus }).eq('id', id);
+            if(error) alert("Xatolik: " + error.message);
+            else {
+                oshxonaniYuklash();
+                if (document.getElementById('reports').classList.contains('active')) {
+                    hisobotniYuklash();
+                }
+            }
+        }
+
+        async function kuryergaBerildi(id, currentStatus) {
+            const updatedStatus = currentStatus + " [KURYERGA BERILDI]";
+            const { error } = await db.from('sales').update({ status: updatedStatus }).eq('id', id);
+            if(error) alert("Xatolik: " + error.message);
+            else {
+                alert("📦 Buyurtma kuryerga berildi deb belgilandi!");
+                oshxonaniYuklash();
+                if (document.getElementById('reports').classList.contains('active')) {
+                    hisobotniYuklash();
+                }
+            }
+        }
+
+        async function buyurtmaniBekorQilish(id) {
+            if(confirm("Ushbu buyurtmani bekor qilmoqchimisiz?")) {
+                const { error } = await db.from('sales').delete().eq('id', id);
+                if(error) alert("Xatolik: " + error.message);
+                else {
+                    oshxonaniYuklash();
+                    if (document.getElementById('reports').classList.contains('active')) {
+                        hisobotniYuklash();
+                    }
+                }
             }
         }
 
@@ -1544,110 +1522,111 @@
 
             const { data: sales } = await db.from('sales').select('*');
 
-            let todayRev = 0, todayCost = 0;
-            let weeklyRev = 0, weeklyCost = 0;
-            let monthlyRev = 0, monthlyCost = 0;
+            let todayRev = 0, todayCost = 0, todayProfit = 0;
+            let weeklyRev = 0, weeklyProfit = 0;
+            let monthlyRev = 0, monthlyProfit = 0;
+            
+            let dailyFinancials = {};
 
-            const now = new Date();
+            const now = getTashkentDate();
             const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
             const currentMonth = now.getUTCMonth();
             const currentYear = now.getUTCFullYear();
 
             (sales || []).forEach(s => {
-                const sDate = new Date(s.created_at);
-                const sDateStr = getTashkentDateString(s.created_at);
+                if(s.status && s.status.includes('[BOZOR XARIDI]')) return;
 
-                const rev = s.total_amount || 0;
-                const cost = s.total_cost || 0;
+                const dateStr = getTashkentDateString(s.created_at);
+                const rev = parseFloat(s.total_amount || 0);
+                const cost = parseFloat(s.total_cost || 0);
+                const profit = parseFloat(s.profit || (rev - cost));
 
-                if (sDateStr === todayStr) {
+                let saleDate = getTashkentDate(s.created_at);
+
+                if (dateStr === todayStr) {
                     todayRev += rev;
                     todayCost += cost;
+                    todayProfit += profit;
                 }
 
-                if (sDate >= sevenDaysAgo) {
+                if (saleDate >= sevenDaysAgo) {
                     weeklyRev += rev;
-                    weeklyCost += cost;
+                    weeklyProfit += profit;
                 }
 
-                if (sDate.getUTCMonth() === currentMonth && sDate.getUTCFullYear() === currentYear) {
+                if (saleDate.getUTCMonth() === currentMonth && saleDate.getUTCFullYear() === currentYear) {
                     monthlyRev += rev;
-                    monthlyCost += cost;
+                    monthlyProfit += profit;
                 }
+
+                if (!dailyFinancials[dateStr]) {
+                    dailyFinancials[dateStr] = { rev: 0, cost: 0, profit: 0, count: 0 };
+                }
+                dailyFinancials[dateStr].rev += rev;
+                dailyFinancials[dateStr].cost += cost;
+                dailyFinancials[dateStr].profit += profit;
+                if(rev > 0) dailyFinancials[dateStr].count += 1;
             });
 
             document.getElementById('rep-rev').innerText = todayRev.toLocaleString();
             document.getElementById('rep-cost').innerText = todayCost.toLocaleString();
-            document.getElementById('rep-profit').innerText = (todayRev - todayCost).toLocaleString();
+            document.getElementById('rep-profit').innerText = todayProfit.toLocaleString();
 
-            document.getElementById('weekly-rev').innerText = `${weeklyRev.toLocaleString()} so'm`;
-            document.getElementById('weekly-profit').innerText = `${(weeklyRev - weeklyCost).toLocaleString()} so'm`;
+            document.getElementById('weekly-rev').innerText = weeklyRev.toLocaleString() + " so'm";
+            document.getElementById('weekly-profit').innerText = weeklyProfit.toLocaleString() + " so'm";
 
-            document.getElementById('monthly-rev').innerText = `${monthlyRev.toLocaleString()} so'm`;
-            document.getElementById('monthly-profit').innerText = `${(monthlyRev - monthlyCost).toLocaleString()} so'm`;
+            document.getElementById('monthly-rev').innerText = monthlyRev.toLocaleString() + " so'm";
+            document.getElementById('monthly-profit').innerText = monthlyProfit.toLocaleString() + " so'm";
 
-            // Kassa tarixini guruhlab ko'rsatish
-            const historyByDate = {};
-            (sales || []).forEach(s => {
-                const dKey = getTashkentDateString(s.created_at);
-                if(!historyByDate[dKey]) {
-                    historyByDate[dKey] = { rev: 0, cost: 0, count: 0 };
-                }
-                historyByDate[dKey].rev += (s.total_amount || 0);
-                historyByDate[dKey].cost += (s.total_cost || 0);
-                historyByDate[dKey].count += 1;
+            let cashHistoryHtml = '';
+            const sortedDates = Object.keys(dailyFinancials).sort().reverse();
+
+            sortedDates.forEach(date => {
+                const item = dailyFinancials[date];
+                cashHistoryHtml += `
+                    <div class="cash-history-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <b style="color:var(--gold-text); font-size:15px;">📅 ${date}</b>
+                            <span style="font-size:12px; color:#aaa;">${item.count} ta buyurtma</span>
+                        </div>
+                        <div style="font-size:13px; color:#d4d4d8; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:6px;">
+                            <div>Savdo:<br><b class="tag-price">${item.rev.toLocaleString()}</b></div>
+                            <div>Tan narx:<br><b class="tag-cost">${item.cost.toLocaleString()}</b></div>
+                            <div>Saf foyda:<br><b style="color:#34d399;">${item.profit.toLocaleString()}</b></div>
+                        </div>
+                    </div>
+                `;
             });
 
-            let historyCardsHtml = '';
-            const sortedDates = Object.keys(historyByDate).sort().reverse();
-            
-            sortedDates.forEach(dateKey => {
-                const item = historyByDate[dateKey];
-                const profit = item.rev - item.cost;
-
-                historyCardsHtml += `
-                <div class="cash-history-card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <span style="font-weight:800; color:var(--gold-text); font-size:15px;">📅 ${dateKey}</span>
-                        <span style="font-size:12px; color:#aaa;">Buyurtmalar: <b>${item.count} ta</b></span>
-                    </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px; font-size:12px; text-align:center; background:rgba(0,0,0,0.3); padding:8px; border-radius:8px;">
-                        <div>Tushum:<br><b class="tag-price">${item.rev.toLocaleString()} so'm</b></div>
-                        <div>Tan narx:<br><b class="tag-cost">${item.cost.toLocaleString()} so'm</b></div>
-                        <div>Foyda:<br><b style="color:#34d399;">${profit.toLocaleString()} so'm</b></div>
-                    </div>
-                </div>`;
-            });
-
-            document.getElementById('cash-history-list').innerHTML = historyCardsHtml || '<div style="color:#aaa; text-align:center;">Kassa tarixi yo\'q</div>';
+            document.getElementById('cash-history-list').innerHTML = cashHistoryHtml || '<i>Kassa tarixi topilmadi.</i>';
         }
 
-        // SUPABASE REALTIME (JONLI BUYURTMALAR) SIKLI
-        function initRealtimeSales() {
+        function initRealtimeListener() {
             db.channel('public:sales')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, payload => {
-                    if (document.getElementById('kitchen').classList.contains('active')) {
-                        oshxonaniYuklash();
-                    }
-                    if (document.getElementById('reports').classList.contains('active')) {
-                        hisobotniYuklash();
-                    }
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sales' }, payload => {
+                    playNotificationSoundAndPush(payload.new.status);
+                    oshxonaniYuklash();
+                })
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sales' }, payload => {
+                    oshxonaniYuklash();
+                })
+                .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'sales' }, payload => {
+                    oshxonaniYuklash();
                 })
                 .subscribe();
+
+            setInterval(() => {
+                oshxonaniYuklash(true, "Yangi buyurtma keldi!");
+            }, 5000);
         }
 
-        // ILOVA ISHGA TUSHGANDA
         window.addEventListener('DOMContentLoaded', () => {
+            loadAdminDeliverySettings();
+            loadPaymentSettings();
             tanlovlarniYuklash();
-            initRealtimeSales();
-
-            // Interval orqali har 10 sekunda oshxona va kassanigizni avto-yangilab turadi
-            setInterval(() => {
-                if (document.getElementById('kitchen').classList.contains('active')) {
-                    oshxonaniYuklash();
-                }
-            }, 10000);
+            oshxonaniYuklash();
+            initRealtimeListener();
         });
     </script>
 </body>
-</html> 
+</html>
